@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quantum Drift Forecasting — Interactive Research Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="nav-inner">
+      <span class="nav-logo">⟨ψ| Quantum Drift</span>
+      <div class="nav-links">
+        <a href="#demo">Demo</a>
+        <a href="#notebooks">Notebooks</a>
+        <a href="#models">Models</a>
+        <a href="#summary">Summary</a>
+        <a href="https://github.com/mohuyn/Quantum-Drift-Forecasting" target="_blank" rel="noopener">GitHub ↗</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero" id="top">
+    <div class="hero-inner">
+      <div class="badge-row">
+        <span class="badge badge-primary">Research Demo</span>
+        <span class="badge badge-secondary">PyTorch · Flask · Transformer</span>
+        <span class="badge badge-tag">Time-Series Analysis</span>
+      </div>
+      <h1 class="hero-title">Quantum Drift Forecasting</h1>
+      <p class="hero-subtitle">
+        Time-Series and Transformer-Based Modeling of Quantum Hardware Behavior,
+        Calibration Drift, and Noise Analysis
+      </p>
+      <p class="hero-desc">
+        Superconducting quantum processors undergo continuous decoherence-time
+        (<em>T</em><sub>1</sub>, <em>T</em><sub>2</sub>) drift and gate-fidelity
+        degradation between calibration cycles. This project trains recurrent and
+        Transformer architectures on multi-qubit telemetry to <strong>forecast
+        calibration metrics</strong>, <strong>detect anomalous drift</strong>, and
+        <strong>schedule proactive recalibration</strong>.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#demo">Live Demo</a>
+        <a class="btn btn-secondary" href="#notebooks">View Notebooks</a>
+        <a class="btn btn-secondary" href="https://github.com/mohuyn/Quantum-Drift-Forecasting" target="_blank" rel="noopener">GitHub Repo</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="demo">
+    <div class="container">
+      <h2 class="section-title">Interactive Drift Simulation</h2>
+      <p class="section-desc">
+        Configure qubit signal parameters, generate a synthetic T₁ coherence-time
+        series, then run the forecaster. Queries the local Flask API if available;
+        falls back to an in-browser exponential-smoothing model.
+      </p>
+      <div class="demo-grid">
+        <div class="controls-panel card">
+          <h3 class="panel-title">Signal Parameters</h3>
+          <div class="control-group">
+            <label class="control-label">Time steps <span class="control-val" id="steps-val">60</span></label>
+            <input type="range" id="steps-range" class="range-input" min="30" max="120" value="60" step="5" />
+            <div class="range-bounds"><span>30</span><span>120</span></div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Noise level σ (µs) <span class="control-val" id="noise-val">3.0</span></label>
+            <input type="range" id="noise-range" class="range-input" min="0.5" max="10" value="3.0" step="0.5" />
+            <div class="range-bounds"><span>0.5</span><span>10.0</span></div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Drift rate (µs/step) <span class="control-val" id="drift-val">0.050</span></label>
+            <input type="range" id="drift-range" class="range-input" min="0" max="0.25" value="0.05" step="0.005" />
+            <div class="range-bounds"><span>0.000</span><span>0.250</span></div>
+          </div>
+          <div class="button-row">
+            <button id="generate" class="btn btn-secondary">Generate Signal</button>
+            <button id="forecast-btn" class="btn btn-primary">Forecast Drift</button>
+          </div>
+          <p class="hint-text" id="chart-hint">60 steps · 8-step forecast</p>
+          <div class="drift-status stable" id="drift-status">⬤ STABLE — drift 0.0%</div>
+        </div>
+
+        <div class="chart-panel card">
+          <h3 class="panel-title">T₁ Coherence Time Forecast</h3>
+          <div class="chart-wrap">
+            <svg id="drift-svg" role="img" aria-label="T1 time series with forecast"></svg>
+          </div>
+          <div id="result-panel" class="result-panel hidden">
+            <h4 class="result-title">Forecast Results</h4>
+            <div class="result-row highlight">
+              <span class="result-label">8-step T₁ forecast (first 4)</span>
+              <span class="result-value" id="res-forecast">—</span>
+            </div>
+            <div class="result-row" id="drift-prob-row">
+              <span class="result-label">Drift probability</span>
+              <span class="result-value" id="res-drift-prob">—</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Anomaly score</span>
+              <span class="result-value" id="res-anomaly">—</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Mean T₁ (µs)</span>
+              <span class="result-value" id="res-mean-t1">—</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Min T₁ (µs)</span>
+              <span class="result-value" id="res-min-t1">—</span>
+            </div>
+            <div id="source-badge" class="source-badge hidden browser"></div>
+          </div>
+          <div id="error-panel" class="error-panel hidden">
+            <strong>Error:</strong> <span id="error-msg"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="notebooks">
+    <div class="container">
+      <h2 class="section-title">Jupyter Notebook Reports</h2>
+      <div class="notebook-grid">
+        <div class="notebook-card card">
+          <div class="notebook-icon">📊</div>
+          <h3>RNN Drift Forecasting</h3>
+          <p>VanillaRNN, LSTM, GRU on qubit-0 telemetry. MC-Dropout uncertainty + conformal intervals.</p>
+          <div class="notebook-tags">
+            <span class="tag">LSTM</span><span class="tag">GRU</span><span class="tag">MC-Dropout</span>
+          </div>
+          <div class="notebook-actions">
+            <a class="btn btn-secondary btn-sm" href="../notebooks/rnn_drift_forecast.ipynb">Download .ipynb</a>
+            <a class="btn btn-primary btn-sm" href="notebooks_html/rnn_drift_forecast.html">View HTML</a>
+          </div>
+        </div>
+        <div class="notebook-card card">
+          <div class="notebook-icon">🔬</div>
+          <h3>Transformer Calibration</h3>
+          <p>Pre-LN Transformer + attention heat maps. AnomalyDetector trained on stable windows.</p>
+          <div class="notebook-tags">
+            <span class="tag">Transformer</span><span class="tag">Attention</span><span class="tag">Anomaly</span>
+          </div>
+          <div class="notebook-actions">
+            <a class="btn btn-secondary btn-sm" href="../notebooks/transformer_calibration.ipynb">Download .ipynb</a>
+            <a class="btn btn-primary btn-sm" href="notebooks_html/transformer_calibration.html">View HTML</a>
+          </div>
+        </div>
+        <div class="notebook-card card">
+          <div class="notebook-icon">⚛️</div>
+          <h3>Combined Multi-Qubit Pipeline</h3>
+          <p>All 4 models × 5 qubits. Recalibration trigger simulation vs. fixed-interval baseline.</p>
+          <div class="notebook-tags">
+            <span class="tag">Multi-Qubit</span><span class="tag">Comparison</span><span class="tag">Stats</span>
+          </div>
+          <div class="notebook-actions">
+            <a class="btn btn-secondary btn-sm" href="../notebooks/quantum_drift_combined.ipynb">Download .ipynb</a>
+            <a class="btn btn-primary btn-sm" href="notebooks_html/quantum_drift_combined.html">View HTML</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="models">
+    <div class="container">
+      <h2 class="section-title">Model Architectures</h2>
+      <div class="model-grid">
+        <div class="model-card card">
+          <div class="model-type rnn">RNN</div>
+          <h3>VanillaRNN</h3>
+          <p>Baseline Elman RNN. Short-range dependencies. ~18 K parameters.</p>
+        </div>
+        <div class="model-card card">
+          <div class="model-type lstm">LSTM</div>
+          <h3>LSTMForecaster</h3>
+          <p>2-layer stacked LSTM, dropout 0.2. ~133 K parameters.</p>
+        </div>
+        <div class="model-card card">
+          <div class="model-type gru">GRU</div>
+          <h3>GRUForecaster</h3>
+          <p>2-layer GRU, fewer params than LSTM with comparable accuracy. ~100 K.</p>
+        </div>
+        <div class="model-card card">
+          <div class="model-type transformer">TF</div>
+          <h3>TransformerForecaster</h3>
+          <p>Pre-LN encoder, d=128, 4 heads, 3 layers. ~265 K parameters.</p>
+        </div>
+        <div class="model-card card">
+          <div class="model-type anomaly">AE</div>
+          <h3>AnomalyDetector</h3>
+          <p>Encoder-decoder autoencoder trained unsupervised on stable windows.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="summary">
+    <div class="container">
+      <h2 class="section-title">Research Summary</h2>
+      <div class="summary-cols">
+        <div class="summary-col card">
+          <div class="summary-num">01</div>
+          <h3>Data Acquisition</h3>
+          <p>5 qubits × 200 time steps at 0.5 h resolution. 7 calibration features per step.</p>
+        </div>
+        <div class="summary-col card">
+          <div class="summary-num">02</div>
+          <h3>Sequence Modeling</h3>
+          <p>Sliding windows (seq_len=48, horizon=8). Temporal 80/20 train-test split.</p>
+        </div>
+        <div class="summary-col card">
+          <div class="summary-num">03</div>
+          <h3>Training</h3>
+          <p>AdamW + CosineAnnealing. Combined loss α·MSE + (1−α)·BCE.</p>
+        </div>
+        <div class="summary-col card">
+          <div class="summary-num">04</div>
+          <h3>Deployment</h3>
+          <p>Flask REST API, MC-Dropout + conformal intervals, ~30% fewer wasted calibration cycles.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p><strong>Quantum Drift Forecasting</strong></p>
+      <p class="footer-sub">
+        <a href="https://github.com/mohuyn/Quantum-Drift-Forecasting" target="_blank" rel="noopener">View on GitHub ↗</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="demo.js"></script>
+</body>
+</html>
