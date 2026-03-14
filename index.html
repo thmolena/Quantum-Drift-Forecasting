@@ -170,12 +170,11 @@
         <div class="notebook-card card">
           <div class="notebook-icon">📊</div>
           <h3>RNN Drift Forecasting</h3>
-          <p>Trains VanillaRNN, LSTM, and GRU models on qubit-0 T₁/T₂ data. Covers
-             sequence construction, 40-epoch training, MC-Dropout uncertainty, conformal
-             prediction intervals, and horizon-wise MAE breakdown.</p>
+          <p>Deep tutorial on VanillaRNN, LSTM &amp; GRU for qubit drift forecasting. Derives all gate equations, ACF/PSD stationarity analysis, AdamW + CosineAnnealing training, PR curves &amp; threshold selection, MC-Dropout Bayesian uncertainty, conformal prediction intervals, and practical deployment applications.</p>
           <div class="notebook-tags">
             <span class="tag">LSTM</span><span class="tag">GRU</span>
             <span class="tag">MC-Dropout</span><span class="tag">Conformal</span>
+            <span class="tag">ACF/ADF</span><span class="tag">PR Curves</span>
           </div>
           <div class="notebook-actions">
             <a class="btn btn-secondary btn-sm"
@@ -188,12 +187,11 @@
         <div class="notebook-card card">
           <div class="notebook-icon">🔬</div>
           <h3>Transformer Calibration</h3>
-          <p>Pre-LayerNorm Transformer encoder (d=128, 4 heads, 3 layers) trained on
-             48-step windows. Attention-weight heat maps via forward hooks, plus
-             AnomalyDetector trained unsupervised on stable sequences.</p>
+          <p>Comprehensive Transformer tutorial: derives multi-head self-attention, sinusoidal positional encoding, Pre-LN vs Post-LN stability, GELU activation, attention pattern visualisation, unsupervised anomaly detection with encoder-decoder AE, early-warning classification, and cross-qubit transfer learning applications.</p>
           <div class="notebook-tags">
-            <span class="tag">Transformer</span><span class="tag">Attention</span>
-            <span class="tag">Anomaly Detection</span><span class="tag">EWMA</span>
+            <span class="tag">Transformer</span><span class="tag">Self-Attention</span>
+            <span class="tag">Anomaly Detection</span><span class="tag">Transfer Learning</span>
+            <span class="tag">Pos. Encoding</span><span class="tag">Early Warning</span>
           </div>
           <div class="notebook-actions">
             <a class="btn btn-secondary btn-sm"
@@ -206,12 +204,11 @@
         <div class="notebook-card card">
           <div class="notebook-icon">⚛️</div>
           <h3>Combined Multi-Qubit Pipeline</h3>
-          <p>Unified analysis across all 5 qubits. Compares all four architectures by
-             MAE, RMSE, and AUC-ROC; simulates recalibration trigger policies vs
-             fixed-interval baselines; bootstrap CIs + paired t-tests.</p>
+          <p>Unified 5-qubit pipeline: cross-qubit T₁ correlation heatmaps, macro-averaged MAPE evaluation, Youden J-statistic threshold optimisation, cost-model recalibration policy simulation, bootstrap confidence intervals, paired Wilcoxon signed-rank tests with Bonferroni correction, and adaptive scheduling deployment guide.</p>
           <div class="notebook-tags">
-            <span class="tag">Multi-Qubit</span><span class="tag">Comparison</span>
-            <span class="tag">Recalibration</span><span class="tag">Statistics</span>
+            <span class="tag">Multi-Qubit</span><span class="tag">Cost Model</span>
+            <span class="tag">Bootstrap CI</span><span class="tag">Wilcoxon Test</span>
+            <span class="tag">Recalibration</span><span class="tag">Deployment</span>
           </div>
           <div class="notebook-actions">
             <a class="btn btn-secondary btn-sm"
