@@ -1,114 +1,44 @@
 # Quantum-Drift-Forecasting
 
-## Overview
+## Abstract
 
-This repository is a reproducible benchmark of adaptive sequence models for real operational time series. The core contribution is not a generic deep-learning demo; it is a comparative study of when recurrent gating and long-context self-attention provide technically defensible gains on CPU-runnable public datasets.
+Quantum-Drift-Forecasting is a reproducible benchmark for adaptive sequence models on real operational time series. The repository evaluates recurrent gating and long-context attention on public Numenta Anomaly Benchmark datasets, then packages the results as executed notebook reports suitable for technical review, presentation, and re-execution.
 
-The three primary reports are fully executed Jupyter notebooks built on the Numenta Anomaly Benchmark (NAB):
+The central conclusion is deliberately narrow. The experiments do not support a claim that one architecture dominates every forecasting and anomaly-detection objective. Instead, they show that model selection should be objective-aware: `GRU` is the strongest low-error aggregate choice in this benchmark, `LSTM` is the strongest mean-F1 choice, and the Transformer report is most convincing when interpreted through calibration and ranking quality rather than a single thresholded F1 score.
 
-- `machine_temperature_system_failure` for incident-aware thermal drift forecasting
-- `ec2_cpu_utilization_24ae8d` for long-context cloud telemetry forecasting and anomaly scoring
-- `nyc_taxi` for cross-domain robustness in the capstone comparison
+## What The Repository Shows
 
-Each notebook has been refreshed and exported to HTML for presentation use.
+1. Adaptive recurrent gating materially improves over a plain `VanillaRNN` on incident-bearing thermal telemetry.
+2. The Transformer configuration achieves strong cloud-telemetry ranking quality with `ROC-AUC = 0.7987`, even though its chosen operating threshold does not maximize test-set F1.
+3. Cross-dataset benchmarking favors different models depending on the metric being optimized, so claims of a universal winner are not technically defensible.
 
-## Report Suite
+## Visual Evidence
 
-- [notebooks/rnn_drift_forecast.ipynb](/Users/mohuyn/Library/CloudStorage/OneDrive-SAS/Documents/GitHub/Quantum-Drift-Forecasting/notebooks/rnn_drift_forecast.ipynb)
-- [notebooks/transformer_calibration.ipynb](/Users/mohuyn/Library/CloudStorage/OneDrive-SAS/Documents/GitHub/Quantum-Drift-Forecasting/notebooks/transformer_calibration.ipynb)
-- [notebooks/quantum_drift_combined.ipynb](/Users/mohuyn/Library/CloudStorage/OneDrive-SAS/Documents/GitHub/Quantum-Drift-Forecasting/notebooks/quantum_drift_combined.ipynb)
-- [website/notebooks_html/rnn_drift_forecast.html](/Users/mohuyn/Library/CloudStorage/OneDrive-SAS/Documents/GitHub/Quantum-Drift-Forecasting/website/notebooks_html/rnn_drift_forecast.html)
-- [website/notebooks_html/transformer_calibration.html](/Users/mohuyn/Library/CloudStorage/OneDrive-SAS/Documents/GitHub/Quantum-Drift-Forecasting/website/notebooks_html/transformer_calibration.html)
-- [website/notebooks_html/quantum_drift_combined.html](/Users/mohuyn/Library/CloudStorage/OneDrive-SAS/Documents/GitHub/Quantum-Drift-Forecasting/website/notebooks_html/quantum_drift_combined.html)
+The repository includes two exported visual artifacts in `outputs/` and three full HTML notebook reports in `website/notebooks_html/`.
 
-## Best Results
+### Simulated Drift Trajectories
 
-### 1. Adaptive Recurrent Forecasting On Thermal Failure Data
+<p align="center">
+  <img src="outputs/qubit_trajectories.png" alt="Simulated qubit coherence trajectories used by the drift forecasting demo" width="92%" />
+</p>
 
-The recurrent notebook tests whether gated recurrence materially improves over a plain Elman RNN on a real failure-bearing telemetry trace.
+This figure summarizes the synthetic drift behavior used by the interactive demo and server-facing forecasting pipeline.
 
-Observed results from the executed notebook:
+### Feature Correlation Structure
 
-- `GRU` achieved `MAE = 51.7912`, `RMSE = 55.3463`, `F1 = 0.2574`, `ROC-AUC = 0.7182`
-- `LSTM` achieved `MAE = 51.4838`, `RMSE = 54.9950`, but `F1 = 0.0000`, `ROC-AUC = 0.4234`
-- `VanillaRNN` trailed with `MAE = 61.3660`, `RMSE = 64.9298`, `F1 = 0.0000`, `ROC-AUC = 0.4083`
-- Relative to `VanillaRNN`, the `GRU` reduced MAE by `15.60%` while also achieving the only non-zero incident F1 in the comparison
+<p align="center">
+  <img src="outputs/correlation_matrix.png" alt="Feature correlation matrix for the drift forecasting data pipeline" width="72%" />
+</p>
 
-Figure map for the report:
+This plot provides a compact view of the engineered feature relationships used in the forecasting workflow.
 
-- `Figure 1` shows the raw telemetry stream, anomaly windows, and engineered temporal features
-- `Figure 2` shows training behavior and metric comparisons across VanillaRNN, LSTM, and GRU
-- `Figure 3` shows uncertainty-aware forecast behavior and residual structure for the strongest recurrent model
-- `Figure 4` shows the accuracy-efficiency frontier, residual separation, and calibration comparison used for final model selection
+## Executed Report Suite
 
-The most important visual argument is concentrated in `Figure 4`, with `Figure 2` and `Figure 3` supplying the supporting evidence for why adaptive gating is more useful than plain recurrence under incident supervision.
-
-### 2. Transformer Calibration And Anomaly Concentration On Real Cloud Telemetry
-
-The Transformer notebook asks a narrower question: whether long-context self-attention improves periodic alignment and anomaly concentration on real cloud telemetry.
-
-Observed results from the executed notebook:
-
-- `MAE = 0.043637`
-- `RMSE = 0.133462`
-- `ROC-AUC = 0.798664`
-- `threshold = 0.100000`
-- `parameter_count = 226765`
-
-The test-set `F1` is `0.0000`, so this notebook should not be framed as a universal anomaly-detection win. Its technical value is instead the combination of low forecast error, strong ranking quality by ROC-AUC, and visualization-rich evidence that reconstruction scores concentrate differently in nominal and incident regimes.
-
-Figure map for the report:
-
-- `Figure 1` introduces the cloud telemetry trace, anomaly interval, and temporal covariates
-- `Figure 2` shows optimization behavior for the Transformer forecaster and reconstruction model
-- `Figure 3` shows forecast alignment, anomaly-score concentration, and representation structure
-- `Figure 4` shows threshold response, regime separation, and hourly error diagnostics
-
-The most presentation-ready evidence is `Figure 4`, with `Figure 3` providing the supporting anomaly-alignment and ranking-quality context. That is the correct framing for this notebook's strongest contribution.
-
-### 3. Cross-Domain Benchmarking Across Three Real Datasets
-
-The capstone notebook compares compact credible model families rather than weak strawman baselines.
-
-Aggregate results from the executed notebook:
-
-- `GRU` achieved the lowest mean forecast error with `mean_mae = 1337.3327` and the best mean ROC-AUC with `0.6603`
-- `LSTM` achieved the best mean F1 with `0.1057`
-- `Transformer` delivered the weakest aggregate cross-dataset performance in this compact comparison with `mean_mae = 1436.2461`, `mean_f1 = 0.0530`, `mean_auc = 0.1955`
-
-Per-dataset winners:
-
-- `EC2 CPU Utilization`: `LSTM` won MAE by a margin of `0.002698`
-- `Machine Temperature System Failure`: `GRU` won MAE by `2.834884`
-- `NYC Taxi Demand`: `GRU` won MAE by `293.907471`
-- `LSTM` won F1 on all three datasets, including a margin of `0.034689` on `NYC Taxi Demand`
-
-Figure map for the report:
-
-- `Figure 1` shows the raw benchmark series across the three real datasets
-- `Figure 2` shows per-dataset error and incident-sensitivity heatmaps
-- `Figure 3` shows the aggregate summary by model family
-- `Figure 4` shows mean ranks, cross-dataset frontiers, win counts, and leader margins
-
-The decisive capstone evidence is `Figure 4`, with `Figure 2` and `Figure 3` supplying the per-dataset and aggregate context needed to defend an objective-aware model-selection claim.
-
-## Contribution Claims
-
-The repository supports three defensible contribution claims.
-
-1. Adaptive recurrent gating improves materially over a plain RNN on real incident-bearing telemetry.
-2. Long-context self-attention provides strong calibration and ranking behavior on real cloud metrics, even when a single threshold does not maximize test-set F1.
-3. Cross-dataset model choice should be objective-aware: `GRU` is the most robust low-MAE model in the aggregate benchmark, while `LSTM` delivers the best mean incident F1.
-
-## Best Visual Evidence
-
-If the project needs to be presented quickly, these are the highest-value artifacts to show first.
-
-1. The recurrent notebook's `Figure 4`, supported by `Figure 2` and `Figure 3`.
-2. The Transformer notebook's `Figure 4`, supported by `Figure 3`.
-3. The combined notebook's `Figure 4`, supported by `Figure 2` and `Figure 3`.
-
-Those three `Figure 4` views communicate the full argument quickly, while the paired `Figure 2` and `Figure 3` panels in each report provide the technical evidence needed to survive deeper questioning.
+| Report | Technical Question | Strongest Result | Artifacts |
+| --- | --- | --- | --- |
+| `rnn_drift_forecast` | Does adaptive recurrent memory improve forecasting and incident discrimination on thermal failure telemetry? | `GRU` achieved `MAE = 51.7912`, `RMSE = 55.3463`, `F1 = 0.2574`, and `ROC-AUC = 0.7182`, with a `15.60%` MAE reduction versus `VanillaRNN`. | [Notebook](notebooks/rnn_drift_forecast.ipynb) · [HTML](website/notebooks_html/rnn_drift_forecast.html) |
+| `transformer_calibration` | Does long-context self-attention improve calibration and anomaly ranking on cloud telemetry? | The Transformer achieved `MAE = 0.043637`, `RMSE = 0.133462`, and `ROC-AUC = 0.798664`; the report is strongest as a calibration and ranking analysis. | [Notebook](notebooks/transformer_calibration.ipynb) · [HTML](website/notebooks_html/transformer_calibration.html) |
+| `quantum_drift_combined` | Which compact architecture is most robust across three real datasets? | `GRU` achieved the best mean MAE (`1337.3327`) and mean ROC-AUC (`0.6603`), while `LSTM` achieved the best mean F1 (`0.1057`). | [Notebook](notebooks/quantum_drift_combined.ipynb) · [HTML](website/notebooks_html/quantum_drift_combined.html) |
 
 ## Repository Structure
 
@@ -121,13 +51,15 @@ Quantum-Drift-Forecasting/
 │   ├── quantum_device_metrics.csv
 │   └── nab/
 ├── notebooks/
-│   ├── quantum_drift_combined.ipynb
 │   ├── rnn_drift_forecast.ipynb
-│   └── transformer_calibration.ipynb
+│   ├── transformer_calibration.ipynb
+│   └── quantum_drift_combined.ipynb
 ├── outputs/
 │   ├── anomaly_scores.csv
 │   ├── calibration_forecast.csv
-│   └── drift_predictions.csv
+│   ├── correlation_matrix.png
+│   ├── drift_predictions.csv
+│   └── qubit_trajectories.png
 ├── src/
 │   ├── data.py
 │   ├── evaluate.py
@@ -136,14 +68,15 @@ Quantum-Drift-Forecasting/
 │   ├── server.py
 │   └── train.py
 └── website/
-    ├── demo.js
+    ├── index.html
     ├── style.css
+    ├── demo.js
     └── notebooks_html/
 ```
 
 ## Environment And Reproduction
 
-The notebooks were executed in the `qaoa` conda environment.
+Use the `qaoa` conda environment for every notebook and script run in this repository.
 
 ```bash
 conda activate qaoa
@@ -151,7 +84,7 @@ pip install -r requirements.txt
 jupyter lab
 ```
 
-To regenerate the HTML reports:
+To regenerate the executed notebook reports and their HTML exports:
 
 ```bash
 conda activate qaoa
@@ -161,24 +94,21 @@ jupyter nbconvert --to notebook --execute --inplace notebooks/quantum_drift_comb
 jupyter nbconvert --to html --output-dir website/notebooks_html notebooks/rnn_drift_forecast.ipynb notebooks/transformer_calibration.ipynb notebooks/quantum_drift_combined.ipynb
 ```
 
+To run the optional demo-backed API locally:
+
+```bash
+conda activate qaoa
+python -m src.server --port 5000
+```
+
 ## Code Components
 
-- `src/models.py` defines the recurrent, Transformer, and anomaly-detection architectures
-- `src/real_benchmark.py` loads NAB datasets, generates features, and prepares temporal splits
-- `src/evaluate.py` computes forecast and classification metrics and produces the main figures
-- `src/train.py` provides a training entry point for the packaged models
-- `src/server.py` exposes an inference endpoint for the demo
+- `src/models.py` defines the recurrent, Transformer, and anomaly-detection architectures.
+- `src/real_benchmark.py` loads NAB datasets, engineers features, and constructs time-respecting splits.
+- `src/evaluate.py` computes forecast and classification metrics and produces the exported figures.
+- `src/train.py` provides the packaged training entry point.
+- `src/server.py` exposes the local inference endpoint used by the website demo.
 
-## Practical Reading Of The Results
+## Interpretation
 
-This repository should not be presented as evidence that one architecture dominates every operational time-series task. The executed notebooks support a more precise conclusion:
-
-- choose `GRU` when the requirement is stable low forecast error across heterogeneous datasets
-- choose `LSTM` when event sensitivity is the main selection criterion in the cross-dataset benchmark
-- choose the Transformer report when the audience wants to inspect calibration behavior, threshold response, and long-context anomaly ranking on real cloud telemetry
-
-That narrower claim is more rigorous, and it is also the stronger interview presentation because it survives technical scrutiny.
-
-## License
-
-This project is released under the terms of the repository license.
+The most defensible way to present this project is as a benchmark about tradeoffs rather than architectural supremacy. Use the recurrent report when discussing incident-aware forecasting gains, the Transformer report when discussing calibration and anomaly ranking, and the combined report when the audience wants a cross-dataset model-selection argument.
