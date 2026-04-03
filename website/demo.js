@@ -114,6 +114,25 @@ syncSlider(driftRangeEl,  driftValEl,  v => parseFloat(v).toFixed(3));
 
 // ── Chart rendering ────────────────────────────────────────────────────────
 function renderChart(series, probs, forecast, threshold) {
+  const isLightTheme = document.body.classList.contains('light-theme');
+  const palette = isLightTheme
+    ? {
+        background: '#ffffff',
+        shade: 'rgba(248,113,113,0.10)',
+        grid: '#d9e2ec',
+        axis: '#64748b',
+        area: 'rgba(52,211,153,0.12)',
+        separator: '#94a3b8',
+      }
+    : {
+        background: '#151824',
+        shade: 'rgba(248,113,113,0.07)',
+        grid: '#2d3148',
+        axis: '#64748b',
+        area: 'rgba(52,211,153,0.06)',
+        separator: '#475569',
+      };
+
   const W  = svgEl.parentElement.clientWidth || 640;
   const H  = 260;
   const pd = { top: 20, right: 20, bottom: 35, left: 52 };
@@ -137,7 +156,7 @@ function renderChart(series, probs, forecast, threshold) {
   const bg = document.createElementNS(ns, 'rect');
   bg.setAttribute('x', 0); bg.setAttribute('y', 0);
   bg.setAttribute('width', W); bg.setAttribute('height', H);
-  bg.setAttribute('fill', '#151824');
+  bg.setAttribute('fill', palette.background);
   svgEl.appendChild(bg);
 
   // Drift alert shading (where prob > threshold)
@@ -151,7 +170,7 @@ function renderChart(series, probs, forecast, threshold) {
         r.setAttribute('y',      pd.top);
         r.setAttribute('width',  Math.max(1, xR - xL));
         r.setAttribute('height', cH);
-        r.setAttribute('fill', 'rgba(248,113,113,0.07)');
+        r.setAttribute('fill', palette.shade);
         svgEl.appendChild(r);
       }
     }
@@ -164,11 +183,11 @@ function renderChart(series, probs, forecast, threshold) {
     const line = document.createElementNS(ns, 'line');
     line.setAttribute('x1', pd.left); line.setAttribute('x2', W - pd.right);
     line.setAttribute('y1', y); line.setAttribute('y2', y);
-    line.setAttribute('stroke', '#2d3148'); line.setAttribute('stroke-width', '1');
+    line.setAttribute('stroke', palette.grid); line.setAttribute('stroke-width', '1');
     svgEl.appendChild(line);
     const lbl = document.createElementNS(ns, 'text');
     lbl.setAttribute('x', pd.left - 6); lbl.setAttribute('y', y + 4);
-    lbl.setAttribute('text-anchor', 'end'); lbl.setAttribute('fill', '#64748b');
+    lbl.setAttribute('text-anchor', 'end'); lbl.setAttribute('fill', palette.axis);
     lbl.setAttribute('font-size', '10'); lbl.setAttribute('font-family', 'Inter, sans-serif');
     lbl.textContent = yv.toFixed(0);
     svgEl.appendChild(lbl);
@@ -179,7 +198,7 @@ function renderChart(series, probs, forecast, threshold) {
   xlabel.setAttribute('x', pd.left + cW / 2);
   xlabel.setAttribute('y', H - 5);
   xlabel.setAttribute('text-anchor', 'middle');
-  xlabel.setAttribute('fill', '#64748b');
+  xlabel.setAttribute('fill', palette.axis);
   xlabel.setAttribute('font-size', '10');
   xlabel.setAttribute('font-family', 'Inter, sans-serif');
   xlabel.textContent = 'Time step (0.5 h intervals)';
@@ -190,7 +209,7 @@ function renderChart(series, probs, forecast, threshold) {
   ylabel.setAttribute('x', 14);
   ylabel.setAttribute('y', pd.top + cH / 2);
   ylabel.setAttribute('text-anchor', 'middle');
-  ylabel.setAttribute('fill', '#64748b');
+  ylabel.setAttribute('fill', palette.axis);
   ylabel.setAttribute('font-size', '10');
   ylabel.setAttribute('font-family', 'Inter, sans-serif');
   ylabel.setAttribute('transform', `rotate(-90, 14, ${pd.top + cH / 2})`);
@@ -238,14 +257,14 @@ function renderChart(series, probs, forecast, threshold) {
     + ` L${fcPts2[0].x.toFixed(1)},${(pd.top+cH).toFixed(1)} Z`;
   const areaPath = document.createElementNS(ns, 'path');
   areaPath.setAttribute('d', areaD);
-  areaPath.setAttribute('fill', 'rgba(52,211,153,0.06)');
+  areaPath.setAttribute('fill', palette.area);
   svgEl.appendChild(areaPath);
 
   // Forecast separator line
   const sep = document.createElementNS(ns, 'line');
   sep.setAttribute('x1', fcXStart); sep.setAttribute('x2', fcXStart);
   sep.setAttribute('y1', pd.top);   sep.setAttribute('y2', pd.top + cH);
-  sep.setAttribute('stroke', '#475569'); sep.setAttribute('stroke-width', '1');
+  sep.setAttribute('stroke', palette.separator); sep.setAttribute('stroke-width', '1');
   sep.setAttribute('stroke-dasharray', '3 3');
   svgEl.appendChild(sep);
 

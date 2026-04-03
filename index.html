@@ -8,8 +8,170 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="website/style.css" />
+  <style>
+    body.light-theme {
+      background: #f6f8fc;
+      color: #162033;
+    }
+
+    body.light-theme a {
+      color: #1d4ed8;
+    }
+
+    body.light-theme .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.92);
+      border-bottom: 1px solid #d9e2ec;
+      backdrop-filter: blur(12px);
+    }
+
+    body.light-theme .nav-inner {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    body.light-theme .nav-logo,
+    body.light-theme .section-title,
+    body.light-theme .key-card h3,
+    body.light-theme .visual-copy h3,
+    body.light-theme .report-card h3,
+    body.light-theme .model-card h3,
+    body.light-theme .panel-title {
+      color: #0f172a;
+    }
+
+    body.light-theme .nav-logo {
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    body.light-theme .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    body.light-theme .nav-links a {
+      color: #475569;
+      font-weight: 500;
+    }
+
+    body.light-theme .hero {
+      background: linear-gradient(180deg, #fcfdff 0%, #eef5fb 100%);
+      border-bottom: 1px solid #d9e2ec;
+    }
+
+    body.light-theme .hero h1 {
+      background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 58%, #0891b2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    body.light-theme .hero-subtitle,
+    body.light-theme .hero-desc,
+    body.light-theme .section-desc,
+    body.light-theme .key-card p,
+    body.light-theme .visual-copy p,
+    body.light-theme .report-card p,
+    body.light-theme .model-card p,
+    body.light-theme .result-label,
+    body.light-theme .control-label,
+    body.light-theme .range-bounds,
+    body.light-theme .hint-text,
+    body.light-theme .footer-sub {
+      color: #475569;
+    }
+
+    body.light-theme .badge {
+      background: rgba(255, 255, 255, 0.75);
+      border: 1px solid #c7d7ea;
+      color: #1e3a8a;
+    }
+
+    body.light-theme .section-alt {
+      background: #eef4f9;
+    }
+
+    body.light-theme .card,
+    body.light-theme .chart-panel,
+    body.light-theme .model-card,
+    body.light-theme .result-panel {
+      background: #ffffff;
+      border-color: #d9e2ec;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+    }
+
+    body.light-theme .visual-frame {
+      background: linear-gradient(180deg, #f8fbff 0%, #edf4fb 100%);
+      border-color: #d9e2ec;
+    }
+
+    body.light-theme .btn-secondary {
+      background: #ffffff;
+      color: #1d4ed8;
+      border: 1px solid #bfd0ea;
+    }
+
+    body.light-theme .btn-secondary:hover {
+      background: #eff6ff;
+    }
+
+    body.light-theme input[type=range] {
+      background: #d9e2ec;
+    }
+
+    body.light-theme .result-value,
+    body.light-theme .metric-list,
+    body.light-theme .footer-inner,
+    body.light-theme .code-block {
+      color: #0f172a;
+    }
+
+    body.light-theme .metric-list code,
+    body.light-theme .key-card code,
+    body.light-theme .report-card code,
+    body.light-theme .section-desc code,
+    body.light-theme .result-panel code {
+      color: #0f4ab8;
+      background: rgba(37, 99, 235, 0.08);
+      border-color: rgba(37, 99, 235, 0.16);
+    }
+
+    body.light-theme .code-block {
+      background: #f8fafc;
+      border-color: #d9e2ec;
+    }
+
+    body.light-theme .site-footer {
+      background: #ffffff;
+      border-top: 1px solid #d9e2ec;
+    }
+
+    body.light-theme .source-badge.browser {
+      background: rgba(245, 158, 11, 0.12);
+    }
+
+    body.light-theme .source-badge.api {
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    @media (max-width: 720px) {
+      body.light-theme .nav-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
-<body>
+<body class="light-theme">
   <header class="site-header">
     <nav class="nav-inner">
       <span class="nav-logo">Quantum Drift Forecasting</span>
