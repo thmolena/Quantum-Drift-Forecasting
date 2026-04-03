@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quantum Drift Forecasting — Interactive Research Demo</title>
+  <title>Quantum Drift Forecasting — Real Time-Series Benchmark Reports</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -14,9 +14,10 @@
   <!-- ── Site header ─────────────────────────────────────────────────────── -->
   <header class="site-header">
     <nav class="nav-inner">
-      <span class="nav-logo">⟨ψ| Quantum Drift</span>
+      <span class="nav-logo">Quantum Drift Reports</span>
       <div class="nav-links">
         <a href="#demo">Demo</a>
+        <a href="#figures">Best Figures</a>
         <a href="#notebooks">Notebooks</a>
         <a href="#models">Models</a>
         <a href="#summary">Summary</a>
@@ -29,28 +30,92 @@
   <section class="hero" id="top">
     <div class="hero-inner">
       <div class="badge-row">
-        <span class="badge badge-primary">Research Demo</span>
-        <span class="badge badge-secondary">PyTorch · Flask · Transformer</span>
-        <span class="badge badge-tag">Time-Series Analysis</span>
+        <span class="badge badge-primary">Executed Notebook Reports</span>
+        <span class="badge badge-secondary">NAB Real-World Datasets</span>
+        <span class="badge badge-tag">Forecasting · Detection · Calibration</span>
       </div>
-      <h1 class="hero-title">Quantum Drift Forecasting</h1>
+      <h1 class="hero-title">Adaptive Forecasting On Real Operational Time Series</h1>
       <p class="hero-subtitle">
-        Time-Series and Transformer-Based Modeling of Quantum Hardware Behavior,
-        Calibration Drift, and Noise Analysis
+        Three presentation-ready reports comparing recurrent gating and long-context
+        attention on thermal failure, cloud telemetry, and cross-domain demand data
       </p>
       <p class="hero-desc">
-        Superconducting quantum processors undergo continuous decoherence-time
-        (<em>T</em><sub>1</sub>, <em>T</em><sub>2</sub>) drift and gate-fidelity
-        degradation between calibration cycles. This project trains recurrent and
-        Transformer architectures on multi-qubit telemetry to <strong>forecast
-        calibration metrics</strong>, <strong>detect anomalous drift</strong>, and
-        <strong>schedule proactive recalibration</strong> — reducing wasted compute
-        time on mis-calibrated devices.
+        The strongest evidence in this repository comes from three executed Jupyter
+        notebooks built on public Numenta Anomaly Benchmark traces. The technical
+        conclusions are specific and defensible: <strong>GRU is the most robust
+        low-error model in the aggregate benchmark</strong>, <strong>LSTM is the
+        strongest mean-F1 model across datasets</strong>, and <strong>the Transformer
+        report is best read as a calibration and ranking-quality result rather than
+        a single-threshold F1 win</strong>.
       </p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="#demo">Live Demo</a>
+        <a class="btn btn-primary" href="#notebooks">View Best Reports</a>
         <a class="btn btn-secondary" href="#notebooks">View Notebooks</a>
         <a class="btn btn-secondary" href="https://github.com/mohuyn/Quantum-Drift-Forecasting" target="_blank" rel="noopener">GitHub Repo</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-alt" id="figures">
+    <div class="container">
+      <h2 class="section-title">Best Figures</h2>
+      <p class="section-desc">
+        These preview cards point to the most effective visuals in the three HTML reports.
+        They now track the same report numbering used inside the notebooks, so the public landing page, the README, and the notebook narrative all refer to the same Figure 1-4 anchors.
+      </p>
+      <div class="figure-grid">
+        <a class="figure-card card" href="website/notebooks_html/rnn_drift_forecast.html" aria-label="Open the recurrent forecasting HTML report">
+          <div class="figure-thumb thumb-rnn">
+            <div class="thumb-caption">Figure 4: Accuracy-Efficiency + Residual Separation</div>
+            <div class="thumb-bars">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="thumb-trend"></div>
+          </div>
+          <h3>GRU Beats Plain Recurrence</h3>
+          <p class="figure-reference"><strong>Notebook anchor:</strong> Figure 4 in the recurrent report summarizes the accuracy-efficiency frontier, residual separation, and calibration comparison.</p>
+          <p>The recurrent report shows the clearest operational win: lower error than VanillaRNN and the only non-zero incident F1 in the comparison.</p>
+          <div class="figure-meta">
+            <span class="tag">MAE 51.79</span>
+            <span class="tag">F1 0.257</span>
+            <span class="tag">ROC-AUC 0.718</span>
+          </div>
+        </a>
+
+        <a class="figure-card card" href="website/notebooks_html/transformer_calibration.html" aria-label="Open the Transformer calibration HTML report">
+          <div class="figure-thumb thumb-transformer">
+            <div class="thumb-caption">Figure 4: Threshold Curve + Calibration Scatter</div>
+            <div class="thumb-grid"></div>
+            <div class="thumb-dots">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <h3>Transformer Excels At Ranking Quality</h3>
+          <p class="figure-reference"><strong>Notebook anchor:</strong> Figure 4 in the Transformer report contains the threshold response, regime separation, and hourly error diagnostics used in the written interpretation.</p>
+          <p>The cloud telemetry report is strongest when read as calibration and anomaly-ranking evidence, supported by threshold sensitivity and regime-split score plots.</p>
+          <div class="figure-meta">
+            <span class="tag">MAE 0.0436</span>
+            <span class="tag">ROC-AUC 0.7987</span>
+            <span class="tag">Threshold 0.1</span>
+          </div>
+        </a>
+
+        <a class="figure-card card" href="website/notebooks_html/quantum_drift_combined.html" aria-label="Open the combined benchmark HTML report">
+          <div class="figure-thumb thumb-combined">
+            <div class="thumb-caption">Figure 4: Mean Rank + Cross-Dataset Frontiers</div>
+            <div class="thumb-bars stacked">
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <div class="thumb-line dual"></div>
+          </div>
+          <h3>Objective-Aware Model Selection</h3>
+          <p class="figure-reference"><strong>Notebook anchor:</strong> Figure 4 in the combined benchmark report consolidates mean ranks, frontiers, win counts, and leader margins across datasets.</p>
+          <p>The capstone report shows why a single winner is the wrong framing: GRU leads on mean MAE and ROC-AUC, while LSTM leads on mean F1.</p>
+          <div class="figure-meta">
+            <span class="tag">GRU Mean MAE 1337.33</span>
+            <span class="tag">LSTM Mean F1 0.1057</span>
+          </div>
+        </a>
       </div>
     </div>
   </section>
@@ -64,7 +129,8 @@
         coherence-time series, then run the forecaster. If the local Flask API
         server is running (<code>python -m src.server</code>), the LSTM model
         is queried directly — otherwise an exponential-smoothing fallback runs
-        entirely in your browser.
+        entirely in your browser. This demo is illustrative; the strongest empirical
+        results on this page come from the executed real-data notebook reports below.
       </p>
 
       <div class="demo-grid">
@@ -160,21 +226,23 @@
     <div class="container">
       <h2 class="section-title">Jupyter Notebook Reports</h2>
       <p class="section-desc">
-        Each notebook is a self-contained end-to-end experiment covering data
-        exploration, model training, evaluation, and uncertainty quantification.
-        Run them locally with <code>jupyter lab</code> or view the pre-rendered
-        HTML exports below.
+        Each notebook is a self-contained technical report with executed figures,
+        tables, and conclusions. The cards below now reference the same Figure 1-4
+        labels used inside each report so the narrative stays consistent between the
+        landing page and the notebooks themselves.
       </p>
       <div class="notebook-grid">
 
         <div class="notebook-card card">
           <div class="notebook-icon">📊</div>
-          <h3>RNN Drift Forecasting</h3>
-          <p>Deep tutorial on VanillaRNN, LSTM &amp; GRU for qubit drift forecasting. Derives all gate equations, ACF/PSD stationarity analysis, AdamW + CosineAnnealing training, PR curves &amp; threshold selection, MC-Dropout Bayesian uncertainty, conformal prediction intervals, and practical deployment applications.</p>
+          <h3>Incident-Aware Recurrent Forecasting</h3>
+          <p>Real thermal failure telemetry benchmark comparing VanillaRNN, LSTM, and GRU. The strongest result is the <strong>GRU accuracy-efficiency compromise</strong>: <strong>MAE 51.79</strong>, <strong>RMSE 55.35</strong>, <strong>F1 0.257</strong>, <strong>ROC-AUC 0.718</strong>, with a <strong>15.6% MAE reduction</strong> versus VanillaRNN.</p>
+          <p class="figure-reference"><strong>Figure map:</strong> Figure 1 shows raw telemetry and engineered features, Figure 2 training and metric comparisons, Figure 3 uncertainty-aware forecast and residual behavior, and Figure 4 the frontier-calibration synthesis used for model selection.</p>
+          <p><strong>Best visuals:</strong> Figure 2 establishes the gated-model advantage, Figure 3 shows forecast fidelity under uncertainty, and Figure 4 makes the final accuracy-efficiency argument explicit.</p>
           <div class="notebook-tags">
-            <span class="tag">LSTM</span><span class="tag">GRU</span>
-            <span class="tag">MC-Dropout</span><span class="tag">Conformal</span>
-            <span class="tag">ACF/ADF</span><span class="tag">PR Curves</span>
+            <span class="tag">GRU Best MAE/F1 Mix</span><span class="tag">LSTM</span>
+            <span class="tag">Residual Separation</span><span class="tag">Uncertainty</span>
+            <span class="tag">Real Failure Trace</span><span class="tag">CPU Runnable</span>
           </div>
           <div class="notebook-actions">
             <a class="btn btn-secondary btn-sm"
@@ -186,12 +254,14 @@
 
         <div class="notebook-card card">
           <div class="notebook-icon">🔬</div>
-          <h3>Transformer Calibration</h3>
-          <p>Comprehensive Transformer tutorial: derives multi-head self-attention, sinusoidal positional encoding, Pre-LN vs Post-LN stability, GELU activation, attention pattern visualisation, unsupervised anomaly detection with encoder-decoder AE, early-warning classification, and cross-qubit transfer learning applications.</p>
+          <h3>Transformer Calibration On Cloud Telemetry</h3>
+          <p>Long-context forecasting and reconstruction-based anomaly scoring on real EC2 CPU telemetry. The executed report shows <strong>MAE 0.0436</strong>, <strong>RMSE 0.1335</strong>, <strong>ROC-AUC 0.7987</strong>, and a selected <strong>threshold of 0.1</strong> with <strong>226,765 trainable parameters</strong>.</p>
+          <p class="figure-reference"><strong>Figure map:</strong> Figure 1 introduces the telemetry and temporal covariates, Figure 2 the optimization traces, Figure 3 the forecast and anomaly-alignment diagnostics, and Figure 4 the threshold-response and hourly error analysis.</p>
+          <p><strong>Best visuals:</strong> Figure 3 shows ranking quality and anomaly alignment, while Figure 4 supports the calibration-focused interpretation rather than a single-threshold F1 claim.</p>
           <div class="notebook-tags">
-            <span class="tag">Transformer</span><span class="tag">Self-Attention</span>
-            <span class="tag">Anomaly Detection</span><span class="tag">Transfer Learning</span>
-            <span class="tag">Pos. Encoding</span><span class="tag">Early Warning</span>
+            <span class="tag">ROC-AUC 0.799</span><span class="tag">Threshold Curve</span>
+            <span class="tag">Calibration</span><span class="tag">Anomaly Histograms</span>
+            <span class="tag">Transformer</span><span class="tag">Real Cloud Metrics</span>
           </div>
           <div class="notebook-actions">
             <a class="btn btn-secondary btn-sm"
@@ -203,12 +273,14 @@
 
         <div class="notebook-card card">
           <div class="notebook-icon">⚛️</div>
-          <h3>Combined Multi-Qubit Pipeline</h3>
-          <p>Unified 5-qubit pipeline: cross-qubit T₁ correlation heatmaps, macro-averaged MAPE evaluation, Youden J-statistic threshold optimisation, cost-model recalibration policy simulation, bootstrap confidence intervals, paired Wilcoxon signed-rank tests with Bonferroni correction, and adaptive scheduling deployment guide.</p>
+          <h3>Cross-Domain Benchmark Comparison</h3>
+          <p>Capstone comparison across machine temperature, EC2 CPU utilization, and NYC taxi demand. In the executed aggregate summary, <strong>GRU</strong> achieved the <strong>lowest mean MAE (1337.33)</strong> and the <strong>best mean ROC-AUC (0.6603)</strong>, while <strong>LSTM</strong> achieved the <strong>best mean F1 (0.1057)</strong>.</p>
+          <p class="figure-reference"><strong>Figure map:</strong> Figure 1 shows the raw benchmark series, Figure 2 the per-dataset heatmaps, Figure 3 the aggregate model-family summary, and Figure 4 the rank, frontier, and win-count synthesis.</p>
+          <p><strong>Best visuals:</strong> Figure 2 exposes per-dataset tradeoffs, Figure 3 summarizes aggregate performance, and Figure 4 makes the objective-aware selection argument explicit.</p>
           <div class="notebook-tags">
-            <span class="tag">Multi-Qubit</span><span class="tag">Cost Model</span>
-            <span class="tag">Bootstrap CI</span><span class="tag">Wilcoxon Test</span>
-            <span class="tag">Recalibration</span><span class="tag">Deployment</span>
+            <span class="tag">GRU Lowest Mean MAE</span><span class="tag">LSTM Best Mean F1</span>
+            <span class="tag">Frontier Plot</span><span class="tag">Win Counts</span>
+            <span class="tag">Real Public Datasets</span><span class="tag">Objective-Aware Selection</span>
           </div>
           <div class="notebook-actions">
             <a class="btn btn-secondary btn-sm"
@@ -227,75 +299,75 @@
     <div class="container">
       <h2 class="section-title">Model Architectures</h2>
       <p class="section-desc">
-        All models share the same dual-output interface:
-        <code>forward(x) → (forecast_horizon, drift_logit)</code>,
-        enabling simultaneous regression (MSE) and binary classification (BCE)
-        with a combined loss α·MSE + (1−α)·BCE.
+        The repository compares compact model families under a common evaluation
+        discipline: time-respecting splits, forecast error, incident sensitivity,
+        ranking quality, and visualization of failure modes.
       </p>
       <div class="model-grid">
 
         <div class="model-card card">
           <div class="model-type rnn">RNN</div>
           <h3>VanillaRNN</h3>
-          <p>Single-layer Elman RNN baseline. Captures short-range temporal
-             dependencies. Useful as an ablation-study reference against gated
-             architectures.</p>
+          <p>Minimal recurrent baseline used to test whether adaptive gating is
+             genuinely necessary. In the real failure notebook it is decisively
+             worse than the gated alternatives on both forecast error and ranking.</p>
           <ul class="model-specs">
-            <li>Hidden dim: 64</li>
-            <li>Horizon: 8 steps</li>
-            <li>Parameters: ~18 K</li>
+            <li>Role: weak recurrent baseline</li>
+            <li>Best shown in RNN report</li>
+            <li>Parameters: 5,645</li>
           </ul>
         </div>
 
         <div class="model-card card">
           <div class="model-type lstm">LSTM</div>
           <h3>LSTMForecaster</h3>
-          <p>2-layer stacked LSTM with 0.2 dropout. The gated cell state
-             mitigates vanishing gradients, enabling longer-range drift trend
-             modeling over 48-step histories.</p>
+          <p>High-capacity gated recurrent reference. It is the strongest mean-F1
+             model in the cross-dataset benchmark and also wins MAE on the EC2 CPU
+             dataset by a narrow margin.</p>
           <ul class="model-specs">
-            <li>Hidden dim: 128, 2 layers</li>
-            <li>Dropout: 0.2</li>
-            <li>Parameters: ~133 K</li>
+            <li>Best aggregate mean F1: 0.1057</li>
+            <li>EC2 CPU MAE winner</li>
+            <li>Parameters: 116,845</li>
           </ul>
         </div>
 
         <div class="model-card card">
           <div class="model-type gru">GRU</div>
           <h3>GRUForecaster</h3>
-          <p>2-layer GRU variant of the LSTM. Fewer parameters with comparable
-             performance on short-horizon calibration drift, offering a
-             favorable accuracy/compute tradeoff.</p>
+          <p>Lighter gated recurrent model with the best overall accuracy-efficiency
+             profile in this repository. It achieves the lowest mean MAE in the
+             combined benchmark and the best incident-aware balance in the RNN report.</p>
           <ul class="model-specs">
-            <li>Hidden dim: 128, 2 layers</li>
-            <li>Dropout: 0.2</li>
-            <li>Parameters: ~100 K</li>
+            <li>Lowest mean MAE: 1337.33</li>
+            <li>Best mean ROC-AUC: 0.6603</li>
+            <li>Parameters: 87,949</li>
           </ul>
         </div>
 
         <div class="model-card card">
           <div class="model-type transformer">Transformer</div>
           <h3>TransformerForecaster</h3>
-          <p>Pre-LayerNorm encoder-only Transformer with sinusoidal positional
-             encodings. Multi-head attention (4 heads) captures non-local
-             temporal correlations across the full input window.</p>
+          <p>Attention-based long-context model used where periodic alignment and
+             calibrated ranking matter more than a single binary threshold. It is
+             most convincing in the cloud telemetry notebook, where visual evidence
+             is stronger than the raw test-set F1.</p>
           <ul class="model-specs">
-            <li>d_model=128, 4 heads, 3 layers</li>
-            <li>FFN dim: 256, dropout: 0.1</li>
-            <li>Parameters: ~265 K</li>
+            <li>EC2 CPU ROC-AUC: 0.7987</li>
+            <li>Threshold selected: 0.1</li>
+            <li>Parameters: 226,765</li>
           </ul>
         </div>
 
         <div class="model-card card">
           <div class="model-type anomaly">AE</div>
           <h3>AnomalyDetector</h3>
-          <p>Encoder-decoder (autoencoder) trained exclusively on stable windows.
-             High reconstruction error at inference time flags anomalous or
-             rapidly drifting segments without requiring drift labels.</p>
+          <p>Reconstruction-based detector paired with the Transformer report to
+             test whether anomaly scores concentrate in incident windows rather than
+             simply following variance spikes.</p>
           <ul class="model-specs">
-            <li>Hidden dim: 64, 2 layers</li>
-            <li>Loss: MSE reconstruction</li>
-            <li>Unsupervised (no labels)</li>
+            <li>Used in Transformer report</li>
+            <li>Best shown via score histograms</li>
+            <li>Supports threshold analysis</li>
           </ul>
         </div>
 
@@ -306,43 +378,43 @@
   <!-- ── Research Summary ──────────────────────────────────────────────────── -->
   <section class="section section-alt" id="summary">
     <div class="container">
-      <h2 class="section-title">Research Summary</h2>
+      <h2 class="section-title">Best Visual Evidence</h2>
       <p class="section-desc">
-        The complete four-stage pipeline from raw telemetry to actionable
-        recalibration decisions.
+        The most useful way to present this repository is through the plots that
+        isolate why one model family wins over another.
       </p>
       <div class="summary-cols">
 
         <div class="summary-col card">
           <div class="summary-num">01</div>
-          <h3>Data Acquisition</h3>
-          <p>Synthetic multi-qubit telemetry at 0.5 h resolution (5 qubits × 200
-             steps). Features: T₁, T₂, 1Q/2Q gate fidelity, readout error,
-             cross-resonance phase, gate error per Clifford.</p>
+           <h3>Residual Separation</h3>
+           <p>The recurrent report's residual boxplots show that incident windows are
+             not merely harder forecasts; they form a separable error regime once
+             adaptive memory is introduced.</p>
         </div>
 
         <div class="summary-col card">
           <div class="summary-num">02</div>
-          <h3>Sequence Modeling</h3>
-          <p>Sliding-window datasets (seq_len=24–48, horizon=8). Min-Max
-             normalization per qubit. Temporal 80/20 train-test split to prevent
-             data leakage.</p>
+           <h3>Threshold Sensitivity</h3>
+           <p>The Transformer report makes threshold dependence explicit rather than
+             hiding it. This is the right way to discuss anomaly detection when ROC-AUC
+             is strong but the chosen test threshold does not maximize F1.</p>
         </div>
 
         <div class="summary-col card">
           <div class="summary-num">03</div>
-          <h3>Training &amp; Evaluation</h3>
-          <p>AdamW optimizer + CosineAnnealingLR. Combined loss α=0.7 MSE + 0.3
-             BCE. Metrics: MAE, RMSE, MAPE (regression), Precision/Recall/F1/AUC
-             (classification).</p>
+           <h3>Cross-Dataset Frontier</h3>
+           <p>The capstone frontier plot summarizes the trade-off that matters most:
+             low forecast error, useful event sensitivity, and credible ranking quality
+             do not collapse to a single winner on every dataset.</p>
         </div>
 
         <div class="summary-col card">
           <div class="summary-num">04</div>
-          <h3>Uncertainty &amp; Deployment</h3>
-          <p>MC-Dropout sampling + conformal prediction intervals. Flask REST API
-             for live inference. Recalibration trigger simulation shows
-             ~30% reduction in wasted cycles vs. fixed-interval scheduling.</p>
+           <h3>Leader Margins</h3>
+           <p>The win-count and runner-up margin panels prevent overclaiming. They show
+             where `GRU` wins decisively, where `LSTM` wins narrowly, and where the
+             right model depends on the metric being optimized.</p>
         </div>
 
       </div><!-- /.summary-cols -->
@@ -353,25 +425,29 @@
   <section class="section" id="quickstart">
     <div class="container">
       <h2 class="section-title">Quick Start</h2>
-      <p class="section-desc">Run the full pipeline in five commands.</p>
+      <p class="section-desc">Reproduce the notebook environment and regenerate the executed reports.</p>
       <pre class="code-block"><code># 1. Clone & install
 git clone https://github.com/mohuyn/Quantum-Drift-Forecasting.git
 cd Quantum-Drift-Forecasting
+conda activate qaoa
 pip install -r requirements.txt
 
-# 2. Train (default: LSTM, 60 epochs, seq_len=24, horizon=8)
-python -m src.train --model lstm --epochs 60
+# 2. Re-run the three reports
+jupyter nbconvert --to notebook --execute --inplace notebooks/rnn_drift_forecast.ipynb
+jupyter nbconvert --to notebook --execute --inplace notebooks/transformer_calibration.ipynb
+jupyter nbconvert --to notebook --execute --inplace notebooks/quantum_drift_combined.ipynb
 
-# 3. Train all models
-for MODEL in rnn lstm gru transformer; do
-    python -m src.train --model $MODEL --epochs 60
-done
+# 3. Export presentation-ready HTML
+jupyter nbconvert --to html --output-dir website/notebooks_html \
+  notebooks/rnn_drift_forecast.ipynb \
+  notebooks/transformer_calibration.ipynb \
+  notebooks/quantum_drift_combined.ipynb
 
-# 4. Start the inference API
+# 4. Start the optional inference API
 python -m src.server --port 5000
 
-# 5. Open the demo
-open index.html   # or just drag into a browser</code></pre>
+# 5. Open the landing page
+open index.html</code></pre>
     </div>
   </section>
 
@@ -379,8 +455,8 @@ open index.html   # or just drag into a browser</code></pre>
   <footer class="site-footer">
     <div class="container footer-inner">
       <p>
-        <strong>Quantum Drift Forecasting</strong> — Time-Series and
-        Transformer-Based Modeling of Quantum Hardware Calibration
+        <strong>Quantum Drift Forecasting</strong> — Executed benchmark reports for
+        adaptive forecasting, calibration, and anomaly ranking on real time series
       </p>
       <p class="footer-sub">
         Built with PyTorch · Flask · Jupyter ·

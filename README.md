@@ -2,258 +2,183 @@
 
 ## Overview
 
-This repository presents a research-oriented time-series and Transformer-based modeling framework for **quantum hardware behavior, calibration drift, and noise analysis**. The project integrates:
+This repository is a reproducible benchmark of adaptive sequence models for real operational time series. The core contribution is not a generic deep-learning demo; it is a comparative study of when recurrent gating and long-context self-attention provide technically defensible gains on CPU-runnable public datasets.
 
-- Recurrent Neural Networks (RNN, LSTM, GRU) for sequential calibration modeling
-- Attention-based architectures and Transformers for long-range temporal structure
-- Uncertainty-aware forecasting and anomaly detection on quantum device time series
-- Drift-aware decision support for autonomous recalibration
+The three primary reports are fully executed Jupyter notebooks built on the Numenta Anomaly Benchmark (NAB):
 
-The primary objective is to examine how **adaptive sequential models** can detect, predict, and quantify temporal variation in quantum-system measurement data, distinguishing transient fluctuation from meaningful degradation.
+- `machine_temperature_system_failure` for incident-aware thermal drift forecasting
+- `ec2_cpu_utilization_24ae8d` for long-context cloud telemetry forecasting and anomaly scoring
+- `nyc_taxi` for cross-domain robustness in the capstone comparison
 
-The workflow ingests hardware diagnostic streams—readout signals, gate fidelities, coherence times, and calibration histories—and applies learned temporal representations to support **early-warning detection of calibration failure**, performance degradation classification, and recalibration scheduling.
+Each notebook has been refreshed and exported to HTML for presentation use.
 
-This work highlights how **statistical learning on quantum hardware telemetry** may contribute to high-impact objectives in quantum computing infrastructure, including:
+## Report Suite
 
-- Autonomous hardware calibration management
-- Noise characterization and drift quantification
-- Reliable operation of real quantum devices over extended deployment periods
+- [notebooks/rnn_drift_forecast.ipynb](/Users/mohuyn/Library/CloudStorage/OneDrive-SAS/Documents/GitHub/Quantum-Drift-Forecasting/notebooks/rnn_drift_forecast.ipynb)
+- [notebooks/transformer_calibration.ipynb](/Users/mohuyn/Library/CloudStorage/OneDrive-SAS/Documents/GitHub/Quantum-Drift-Forecasting/notebooks/transformer_calibration.ipynb)
+- [notebooks/quantum_drift_combined.ipynb](/Users/mohuyn/Library/CloudStorage/OneDrive-SAS/Documents/GitHub/Quantum-Drift-Forecasting/notebooks/quantum_drift_combined.ipynb)
+- [website/notebooks_html/rnn_drift_forecast.html](/Users/mohuyn/Library/CloudStorage/OneDrive-SAS/Documents/GitHub/Quantum-Drift-Forecasting/website/notebooks_html/rnn_drift_forecast.html)
+- [website/notebooks_html/transformer_calibration.html](/Users/mohuyn/Library/CloudStorage/OneDrive-SAS/Documents/GitHub/Quantum-Drift-Forecasting/website/notebooks_html/transformer_calibration.html)
+- [website/notebooks_html/quantum_drift_combined.html](/Users/mohuyn/Library/CloudStorage/OneDrive-SAS/Documents/GitHub/Quantum-Drift-Forecasting/website/notebooks_html/quantum_drift_combined.html)
 
----
+## Best Results
 
-## Motivation
+### 1. Adaptive Recurrent Forecasting On Thermal Failure Data
 
-Quantum hardware produces **evolving, noisy, time-dependent signals**. Coherence times drift. Gate fidelities degrade. Readout errors shift with environmental perturbations and device aging. These are fundamentally **statistical problems** as much as physical ones.
+The recurrent notebook tests whether gated recurrence materially improves over a plain Elman RNN on a real failure-bearing telemetry trace.
 
-Classical control systems rely on periodic recalibration schedules that ignore the temporal structure of degradation. This leads to either over-calibration—wasting computational resources—or under-calibration—allowing performance to degrade below acceptable thresholds before intervention.
+Observed results from the executed notebook:
 
-Sequential learning models provide a principled alternative:
+- `GRU` achieved `MAE = 51.7912`, `RMSE = 55.3463`, `F1 = 0.2574`, `ROC-AUC = 0.7182`
+- `LSTM` achieved `MAE = 51.4838`, `RMSE = 54.9950`, but `F1 = 0.0000`, `ROC-AUC = 0.4234`
+- `VanillaRNN` trailed with `MAE = 61.3660`, `RMSE = 64.9298`, `F1 = 0.0000`, `ROC-AUC = 0.4083`
+- Relative to `VanillaRNN`, the `GRU` reduced MAE by `15.60%` while also achieving the only non-zero incident F1 in the comparison
 
-- **Recurrent networks (RNN/LSTM/GRU)** capture short- and medium-range temporal dependencies in calibration histories and device metric streams.
-- **Transformer architectures** model long-range correlations across qubit channels and time, using self-attention to identify cross-qubit drift patterns.
-- **Uncertainty-aware forecasting** methods distinguish confident trend estimates from high-variance transient noise, enabling more precise decision thresholds.
-- **Anomaly detection pipelines** identify early-warning signatures before calibration failure becomes operationally significant.
+Figure map for the report:
 
-By combining these components, this project provides an **experimental testbed for data-driven quantum hardware management**, with direct relevance to U.S. national interests in quantum computing infrastructure reliability.
+- `Figure 1` shows the raw telemetry stream, anomaly windows, and engineered temporal features
+- `Figure 2` shows training behavior and metric comparisons across VanillaRNN, LSTM, and GRU
+- `Figure 3` shows uncertainty-aware forecast behavior and residual structure for the strongest recurrent model
+- `Figure 4` shows the accuracy-efficiency frontier, residual separation, and calibration comparison used for final model selection
 
----
+The most important visual argument is concentrated in `Figure 4`, with `Figure 2` and `Figure 3` supplying the supporting evidence for why adaptive gating is more useful than plain recurrence under incident supervision.
 
-## System Architecture
+### 2. Transformer Calibration And Anomaly Concentration On Real Cloud Telemetry
 
-The pipeline contains four major stages.
+The Transformer notebook asks a narrower question: whether long-context self-attention improves periodic alignment and anomaly concentration on real cloud telemetry.
 
-### 1. Hardware Telemetry Collection and Preprocessing
+Observed results from the executed notebook:
 
-Raw quantum device metrics are ingested as **multivariate time series** across qubit channels. Key signals include:
+- `MAE = 0.043637`
+- `RMSE = 0.133462`
+- `ROC-AUC = 0.798664`
+- `threshold = 0.100000`
+- `parameter_count = 226765`
 
-- **T1 relaxation time** (qubit energy decay, microseconds)
-- **T2 coherence time** (qubit phase coherence, microseconds)
-- **1-qubit gate fidelity** (average randomized benchmarking fidelity)
-- **2-qubit gate fidelity** (cross-resonance and echoed cross-resonance gates)
-- **Readout assignment error** (per-qubit measurement fidelity)
-- **Gate error rates** (error per Clifford gate)
-- **Cross-resonance phase** (tunable coupling parameter drift)
+The test-set `F1` is `0.0000`, so this notebook should not be framed as a universal anomaly-detection win. Its technical value is instead the combination of low forecast error, strong ranking quality by ROC-AUC, and visualization-rich evidence that reconstruction scores concentrate differently in nominal and incident regimes.
 
-Preprocessing includes windowed normalization, missing value imputation, and sequence segmentation for supervised training.
+Figure map for the report:
 
----
+- `Figure 1` introduces the cloud telemetry trace, anomaly interval, and temporal covariates
+- `Figure 2` shows optimization behavior for the Transformer forecaster and reconstruction model
+- `Figure 3` shows forecast alignment, anomaly-score concentration, and representation structure
+- `Figure 4` shows threshold response, regime separation, and hourly error diagnostics
 
-### 2. Recurrent Sequence Models (RNN, LSTM, GRU)
+The most presentation-ready evidence is `Figure 4`, with `Figure 3` providing the supporting anomaly-alignment and ranking-quality context. That is the correct framing for this notebook's strongest contribution.
 
-Recurrent architectures serve as the baseline sequential modeling tier.
+### 3. Cross-Domain Benchmarking Across Three Real Datasets
 
-- **Vanilla RNN** establishes the minimum-complexity autoregressive baseline.
-- **Long Short-Term Memory (LSTM)** networks address the vanishing gradient problem and capture multi-scale temporal dependencies critical for calibration drift modeling.
-- **Gated Recurrent Units (GRU)** provide a computationally efficient alternative with comparable performance on medium-horizon forecasting tasks.
+The capstone notebook compares compact credible model families rather than weak strawman baselines.
 
-All recurrent models are trained on windowed calibration sequences and evaluated on next-step prediction accuracy, multi-step forecasting horizon, and drift-event recall.
+Aggregate results from the executed notebook:
 
----
+- `GRU` achieved the lowest mean forecast error with `mean_mae = 1337.3327` and the best mean ROC-AUC with `0.6603`
+- `LSTM` achieved the best mean F1 with `0.1057`
+- `Transformer` delivered the weakest aggregate cross-dataset performance in this compact comparison with `mean_mae = 1436.2461`, `mean_f1 = 0.0530`, `mean_auc = 0.1955`
 
-### 3. Attention-Based and Transformer Architectures
+Per-dataset winners:
 
-Transformer models capture **long-range temporal structure** that recurrent architectures struggle to represent efficiently.
+- `EC2 CPU Utilization`: `LSTM` won MAE by a margin of `0.002698`
+- `Machine Temperature System Failure`: `GRU` won MAE by `2.834884`
+- `NYC Taxi Demand`: `GRU` won MAE by `293.907471`
+- `LSTM` won F1 on all three datasets, including a margin of `0.034689` on `NYC Taxi Demand`
 
-- **Positional encodings** inject time-step information into the Transformer input layer, enabling the model to reason about calibration periodicity and seasonal hardware behavior.
-- **Multi-head self-attention** identifies cross-channel correlations between qubit pairs, uncovering shared drift dynamics across device topology.
-- **Encoder-only Transformers** are used for anomaly scoring and classification of drift state (stable / slow drift / rapid degradation).
-- **Encoder-Decoder Transformers** support multi-step sequence forecasting for predictive maintenance scheduling.
+Figure map for the report:
 
----
+- `Figure 1` shows the raw benchmark series across the three real datasets
+- `Figure 2` shows per-dataset error and incident-sensitivity heatmaps
+- `Figure 3` shows the aggregate summary by model family
+- `Figure 4` shows mean ranks, cross-dataset frontiers, win counts, and leader margins
 
-### 4. Uncertainty Quantification and Anomaly Detection
+The decisive capstone evidence is `Figure 4`, with `Figure 2` and `Figure 3` supplying the per-dataset and aggregate context needed to defend an objective-aware model-selection claim.
 
-The final modeling tier applies **probabilistic forecasting** and **threshold-based detection** to support operational decision-making.
+## Contribution Claims
 
-- **Monte Carlo Dropout** provides epistemic uncertainty estimates at inference time, distinguishing confident predictions from high-uncertainty regions.
-- **Conformal prediction intervals** offer calibrated coverage guarantees on forecast error bounds.
-- **Reconstruction-based anomaly scoring** uses Transformer encoder residuals to assign per-time-step anomaly scores.
-- **Early-warning classifiers** are trained on labeled drift precursor windows to flag degradation signatures before threshold violations.
+The repository supports three defensible contribution claims.
 
----
+1. Adaptive recurrent gating improves materially over a plain RNN on real incident-bearing telemetry.
+2. Long-context self-attention provides strong calibration and ranking behavior on real cloud metrics, even when a single threshold does not maximize test-set F1.
+3. Cross-dataset model choice should be objective-aware: `GRU` is the most robust low-MAE model in the aggregate benchmark, while `LSTM` delivers the best mean incident F1.
 
-## Example Applications
+## Best Visual Evidence
 
-### Autonomous Recalibration Scheduling
+If the project needs to be presented quickly, these are the highest-value artifacts to show first.
 
-Predict when T1 or T2 coherence times will cross minimum operational thresholds, enabling **proactive recalibration** rather than reactive emergency intervention. Reduces calibration overhead while maintaining target gate fidelities.
+1. The recurrent notebook's `Figure 4`, supported by `Figure 2` and `Figure 3`.
+2. The Transformer notebook's `Figure 4`, supported by `Figure 3`.
+3. The combined notebook's `Figure 4`, supported by `Figure 2` and `Figure 3`.
 
----
-
-### Real-Time Gate Fidelity Monitoring
-
-Deploy streaming inference models on live hardware telemetry to detect **gate fidelity degradation events** with sub-minute latency, supporting in-circuit error monitoring pipelines.
-
----
-
-### Cross-Qubit Drift Correlation Analysis
-
-Identify topological drift patterns across multi-qubit processors using **attention weight visualization**, revealing common-mode environmental disturbances and correlated failure modes across qubit clusters.
-
----
-
-### Readout Error Trend Forecasting
-
-Model the temporal evolution of **readout assignment errors** across calibration cycles to predict when discriminator classifiers require retraining, improving measurement fidelity without full hardware recalibration.
-
----
+Those three `Figure 4` views communicate the full argument quickly, while the paired `Figure 2` and `Figure 3` panels in each report provide the technical evidence needed to survive deeper questioning.
 
 ## Repository Structure
-
-The repository is organized to separate core modeling code, datasets, reproducible notebooks, generated outputs, and demonstration assets.
 
 ```text
 Quantum-Drift-Forecasting/
 ├── README.md
-├── LICENSE
+├── index.html
 ├── requirements.txt
-├── index.html                        ← GitHub Pages entry point (root)
 ├── data/
-│   └── quantum_device_metrics.csv    ← synthetic multi-qubit telemetry dataset
+│   ├── quantum_device_metrics.csv
+│   └── nab/
 ├── notebooks/
-│   ├── rnn_drift_forecast.ipynb      ← RNN / LSTM / GRU drift modeling
-│   ├── transformer_calibration.ipynb ← Transformer calibration & anomaly detection
-│   └── quantum_drift_combined.ipynb  ← unified pipeline and comparative analysis
+│   ├── quantum_drift_combined.ipynb
+│   ├── rnn_drift_forecast.ipynb
+│   └── transformer_calibration.ipynb
 ├── outputs/
-│   ├── drift_predictions.csv
 │   ├── anomaly_scores.csv
-│   └── calibration_forecast.csv
+│   ├── calibration_forecast.csv
+│   └── drift_predictions.csv
 ├── src/
-│   ├── __init__.py
-│   ├── data.py                       ← data generation and preprocessing
-│   ├── models.py                     ← RNN, LSTM, GRU, Transformer definitions
-│   ├── train.py                      ← training loop and CLI
-│   ├── evaluate.py                   ← evaluation metrics and visualization
-│   └── server.py                     ← Flask inference API
+│   ├── data.py
+│   ├── evaluate.py
+│   ├── models.py
+│   ├── real_benchmark.py
+│   ├── server.py
+│   └── train.py
 └── website/
-    ├── README_SITE.md
     ├── demo.js
-    ├── index.html                    ← local dev copy (served from website/)
     ├── style.css
     └── notebooks_html/
-        ├── rnn_drift_forecast.html
-        ├── transformer_calibration.html
-        └── quantum_drift_combined.html
 ```
 
----
+## Environment And Reproduction
 
-## Project Summary
-
-This project serves as a reproducible research artifact for studying **sequential learning and Transformer-based modeling on quantum hardware telemetry**. The current implementation combines multivariate time-series preprocessing, recurrent and attention-based forecasting architectures, uncertainty quantification, and anomaly detection to evaluate how learned temporal representations can support drift-aware decision support in quantum computing systems.
-
-In addition to model code, the repository includes fully executed notebooks, exported HTML reports, and an interactive web demo interface to support transparent communication of methods and outcomes. The overall design targets interdisciplinary audiences in **quantum computing, machine learning, and statistical signal processing**.
-
----
-
-## Key Features
-
-### End-to-End Temporal Modeling Pipeline
-
-The codebase links synthetic hardware data generation, multivariate preprocessing, model training across RNN/LSTM/GRU/Transformer architectures, uncertainty estimation, and anomaly scoring in a unified pipeline. This structure enables controlled experiments on the relative sensitivity of model families to drift timescale, noise magnitude, and calibration signal complexity.
-
-### Multi-Architecture Comparison
-
-Training and evaluation are standardized across all model families, enabling direct performance comparison on identical train/test splits. Metrics include mean absolute error, root mean squared error, drift event recall, anomaly detection F1, and calibration reliability diagrams.
-
-### Uncertainty-Aware Forecasting
-
-Monte Carlo Dropout and conformal prediction intervals are implemented for all model families, providing principled coverage guarantees and epistemic uncertainty estimates that enable more reliable operational thresholds.
-
-### Lightweight and Portable Implementation
-
-The implementation targets standard Python environments with minimal dependencies (NumPy, PyTorch, scikit-learn). PyTorch is the primary deep learning backend; all models are implemented natively without specialized quantum simulation libraries, making the codebase accessible on standard CPU or GPU hardware.
-
-### Interactive Web Demo
-
-A static web demo provides a browser-side drift simulation and forecasting visualization. An optional Flask inference endpoint serves model predictions from locally trained checkpoints, with graceful fallback to browser-side computation when the API is unavailable.
-
----
-
-## Quick Start
-
-The following steps reproduce a baseline workflow, from data generation and model training to API-based inference.
-
-1. Install dependencies.
+The notebooks were executed in the `qaoa` conda environment.
 
 ```bash
+conda activate qaoa
 pip install -r requirements.txt
+jupyter lab
 ```
 
-2. Train the LSTM drift forecasting model.
+To regenerate the HTML reports:
 
 ```bash
-python -m src.train \
-  --model lstm \
-  --sequence-length 32 \
-  --horizon 8 \
-  --epochs 30 \
-  --model-path model_lstm.pt
+conda activate qaoa
+jupyter nbconvert --to notebook --execute --inplace notebooks/rnn_drift_forecast.ipynb
+jupyter nbconvert --to notebook --execute --inplace notebooks/transformer_calibration.ipynb
+jupyter nbconvert --to notebook --execute --inplace notebooks/quantum_drift_combined.ipynb
+jupyter nbconvert --to html --output-dir website/notebooks_html notebooks/rnn_drift_forecast.ipynb notebooks/transformer_calibration.ipynb notebooks/quantum_drift_combined.ipynb
 ```
 
-3. Start the prediction API.
+## Code Components
 
-```bash
-python -m src.server
-```
+- `src/models.py` defines the recurrent, Transformer, and anomaly-detection architectures
+- `src/real_benchmark.py` loads NAB datasets, generates features, and prepares temporal splits
+- `src/evaluate.py` computes forecast and classification metrics and produces the main figures
+- `src/train.py` provides a training entry point for the packaged models
+- `src/server.py` exposes an inference endpoint for the demo
 
-4. Optionally serve the website demo locally in another terminal.
+## Practical Reading Of The Results
 
-```bash
-python -m http.server 8000
-```
+This repository should not be presented as evidence that one architecture dominates every operational time-series task. The executed notebooks support a more precise conclusion:
 
-Then open `http://localhost:8000` and use the interactive demo to visualize drift predictions and anomaly scores.
+- choose `GRU` when the requirement is stable low forecast error across heterogeneous datasets
+- choose `LSTM` when event sensitivity is the main selection criterion in the cross-dataset benchmark
+- choose the Transformer report when the audience wants to inspect calibration behavior, threshold response, and long-context anomaly ranking on real cloud telemetry
 
-> **GitHub Pages**: the live demo is published at
-> `https://mohuyn.github.io/Quantum-Drift-Forecasting/`
-> The root `index.html` is the GitHub Pages entry point; it loads assets from `website/`.
-
----
-
-## Roadmap
-
-### Near-Term
-
-Expand benchmark coverage to additional qubit metric channels, with structured experiment tracking for model convergence, forecasting horizon sensitivity, and drift event recall across noise regimes.
-
-### Mid-Term
-
-Incorporate real hardware telemetry from open quantum device datasets (IBM Quantum, Rigetti) alongside synthetic benchmarks. Develop richer calibration graph representations that capture coupling map topology and cross-qubit drift dependencies.
-
-### Longer-Term
-
-Integrate hardware-aware inference pipelines that run directly within quantum control systems, and extend to online learning settings where model parameters adapt continuously as new calibration data arrives.
-
----
-
-## Contributing
-
-Contributions are welcome in the form of additional model architectures, improved uncertainty quantification methods, expanded benchmark datasets, ablation studies, and reproducibility upgrades. Pull requests with concise technical rationale, experimental assumptions, and validation evidence are especially valuable for maintaining a rigorous and extensible research codebase.
-
----
+That narrower claim is more rigorous, and it is also the stronger interview presentation because it survives technical scrutiny.
 
 ## License
 
-This project is released under the terms of the LICENSE file in this repository.
-
+This project is released under the terms of the repository license.
