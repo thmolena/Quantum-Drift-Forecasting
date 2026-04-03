@@ -12,7 +12,7 @@ The central conclusion is deliberately narrow. The experiments do not support a 
 2. The Transformer configuration achieves strong cloud-telemetry ranking quality with `ROC-AUC = 0.7987`, even though its chosen operating threshold does not maximize test-set F1.
 3. Cross-dataset benchmarking favors different models depending on the metric being optimized, so claims of a universal winner are not technically defensible.
 
-## Visual Evidence
+## Visuals
 
 The repository includes two exported visual artifacts in `outputs/` and three full HTML notebook reports in `website/notebooks_html/`.
 
