@@ -121,15 +121,58 @@
     h3 { font-size: 1.2rem; }
     p { margin: 0 0 14px; color: var(--ink); }
     p strong { color: #000000; }
-    .hero-title-line {
-      margin: 0 0 22px;
-      font-size: clamp(0.9rem, 1.15vw, 1.08rem);
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
       font-weight: 600;
-      letter-spacing: 0.045em;
-      text-transform: uppercase;
-      color: var(--accent);
-      line-height: 1.25;
+      color: var(--muted);
+      margin-bottom: 20px;
+      letter-spacing: 0.02em;
     }
+    .hero-dot { color: var(--accent); }
+    .hero-title-line {
+      margin: 0 0 20px;
+      font-size: clamp(1rem, 1.3vw, 1.15rem);
+      font-weight: 400;
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    .hero-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 26px;
+    }
+    .hero-tag {
+      padding: 5px 13px;
+      border-radius: 999px;
+      background: rgba(29, 78, 216, 0.08);
+      color: var(--accent);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border: 1px solid rgba(29, 78, 216, 0.18);
+    }
+    .finding-callout {
+      background: rgba(29, 78, 216, 0.05);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 14px 14px 0;
+      padding: 16px 20px;
+      margin: 6px 0 26px;
+    }
+    .finding-callout .callout-label {
+      display: block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .finding-callout p { margin: 0; font-size: 0.97rem; line-height: 1.65; }
     .hero-actions {
       display: flex;
       gap: 14px;
@@ -545,24 +588,13 @@
     <!-- ════════════════ HERO ════════════════ -->
     <section class="hero">
       <div class="hero-copy">
-        <div class="eyebrow">Reproducible Benchmark Report</div>
         <h1>When Does Architecture Matter?</h1>
-        <div class="hero-title-line">Benchmarking Adaptive Sequence Models for Operational Drift Detection and Anomaly Localization</div>
-        <p>
-          We present a reproducible benchmark studying how architectural inductive bias shapes the
-          forecast–detection trade-off on real operational time series. Three self-contained experiments
-          systematically evaluate vanilla recurrence, gated recurrent units (GRU), long short-term memory
-          networks (LSTM), and Transformer-based self-attention across three distinct real-world temporal
-          regimes drawn from the Numenta Anomaly Benchmark (NAB): equipment thermal failure, cloud CPU
-          utilization, and urban demand.
-        </p>
-        <p>
-          The benchmark's central finding is a negative but operationally important result:
-          <strong>no single architecture dominates all three objectives across all three regimes</strong>.
-          <strong>GRU</strong> leads on low-error aggregation, <strong>LSTM</strong> leads on mean
-          incident-F1, and the <strong>Transformer</strong> is most convincing as a calibration and
-          ranking result.
-        </p>
+        <div class="hero-title-line">Benchmarking Sequence Models for Operational Drift Detection</div>
+        <p>A reproducible benchmark studying how architectural inductive bias shapes the forecast–detection trade-off across three real-world temporal regimes from the Numenta Anomaly Benchmark — equipment thermal failure, cloud CPU utilization, and urban demand. Each experiment pairs multi-step forecasting with incident localization so that accuracy and detection sensitivity are evaluated simultaneously.</p>
+        <div class="finding-callout">
+          <span class="callout-label">Central Finding</span>
+          <p>No single architecture dominates all three objectives across all three regimes. <strong>GRU</strong> leads on low-error aggregation, <strong>LSTM</strong> leads on mean incident-F1, and the <strong>Transformer</strong> is strongest for calibration and ranking.</p>
+        </div>
         <div class="hero-actions">
           <a class="button primary" href="#figures">View Figures</a>
           <a class="button" href="#notebooks">Open Executed Notebooks</a>
