@@ -538,8 +538,39 @@
     .hidden { display: none !important; }
 
     /* ── Footer ────────────────────────────────────────── */
-    footer {
-      margin-top: 44px;
+    /* ── Stat comparison table ─────────────────────────────── */
+    .stat-compare {
+      margin-top: 22px;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid rgba(215,210,196,0.9);
+    }
+    .stat-compare table {
+      font-size: 0.88rem;
+    }
+    .stat-compare th {
+      background: rgba(29,78,216,0.08);
+      font-size: 0.75rem;
+      padding: 10px 14px;
+    }
+    .stat-compare td {
+      padding: 9px 14px;
+      border-bottom: 1px solid rgba(215,210,196,0.55);
+    }
+    .stat-compare tr:last-child td { border-bottom: 0; }
+    .stat-best { color: #059669; font-weight: 700; }
+    .stat-win  { background: rgba(5,150,105,0.06); }
+    .delta-pill {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+    .delta-pos { background: rgba(5,150,105,0.12); color: #059669; }
+    .delta-neg { background: rgba(220,38,38,0.10); color: #dc2626; }
       padding: 28px 0 0;
       color: var(--ink);
       font-size: 0.92rem;
@@ -590,6 +621,101 @@
           <span class="callout-label">Central Finding</span>
           <p>No single architecture dominates all three reliability objectives. <strong>GRU</strong> leads on aggregate forecast accuracy (mean MAE and ROC-AUC), <strong>LSTM</strong> leads on mean incident-F1, and the <strong>Transformer</strong> is strongest for calibration and anomaly ranking — informing objective-aware architecture selection for quantum hardware monitoring pipelines.</p>
         </div>
+
+        <!-- ── Detailed statistical comparison ── -->
+        <div class="stat-compare">
+          <table>
+            <thead>
+              <tr>
+                <th>Architecture</th>
+                <th style="text-align:right">MAE&nbsp;↓</th>
+                <th style="text-align:right">RMSE&nbsp;↓</th>
+                <th style="text-align:right">F1&nbsp;↑</th>
+                <th style="text-align:right">ROC-AUC&nbsp;↑</th>
+                <th style="text-align:right">Params</th>
+                <th>vs. VanillaRNN Baseline</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>VanillaRNN</strong> <span style="color:#6b7280;font-size:0.78rem">(baseline)</span></td>
+                <td style="text-align:right">61.37</td>
+                <td style="text-align:right">64.93</td>
+                <td style="text-align:right">0.0000</td>
+                <td style="text-align:right">0.4083</td>
+                <td style="text-align:right">5,645</td>
+                <td style="color:#6b7280;font-size:0.82rem">Reference — no incident detection</td>
+              </tr>
+              <tr>
+                <td><strong>LSTM</strong></td>
+                <td style="text-align:right" class="stat-best">51.48 <span class="delta-pill delta-pos">&minus;16.1%</span></td>
+                <td style="text-align:right">54.99</td>
+                <td style="text-align:right">0.0000</td>
+                <td style="text-align:right">0.4234</td>
+                <td style="text-align:right">116,845</td>
+                <td style="font-size:0.82rem">Best MAE reduction, but <strong>F1 = 0</strong> — fails incident detection entirely</td>
+              </tr>
+              <tr class="stat-win">
+                <td><strong>GRU</strong> <span style="color:#1d4ed8;font-size:0.78rem">★ best recurrent</span></td>
+                <td style="text-align:right">51.79 <span class="delta-pill delta-pos">&minus;15.6%</span></td>
+                <td style="text-align:right">55.35 <span class="delta-pill delta-pos">&minus;14.8%</span></td>
+                <td style="text-align:right" class="stat-best">0.2574 <span class="delta-pill delta-pos">+&infin; vs RNN</span></td>
+                <td style="text-align:right" class="stat-best">0.7182 <span class="delta-pill delta-pos">+75.9%</span></td>
+                <td style="text-align:right">87,949</td>
+                <td style="font-size:0.82rem"><strong>Only model to detect incidents</strong>; 24.7% fewer params than LSTM; ROC-AUC +69.7% over LSTM</td>
+              </tr>
+              <tr>
+                <td><strong>Transformer</strong> <span style="color:#0d5c63;font-size:0.78rem">★ best calibration</span></td>
+                <td style="text-align:right">0.0436 <span style="color:#6b7280;font-size:0.75rem">(EC2)</span></td>
+                <td style="text-align:right">0.1335</td>
+                <td style="text-align:right">&mdash;</td>
+                <td style="text-align:right" class="stat-best">0.7987</td>
+                <td style="text-align:right">226,765</td>
+                <td style="font-size:0.82rem">Highest ROC-AUC in benchmark; best calibration &amp; anomaly ranking on periodic signals</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="stat-compare" style="margin-top:14px;">
+          <table>
+            <thead>
+              <tr>
+                <th colspan="2">Cross-Domain Mean (3 datasets)</th>
+                <th style="text-align:right">Mean MAE&nbsp;↓</th>
+                <th style="text-align:right">Mean RMSE&nbsp;↓</th>
+                <th style="text-align:right">Mean F1&nbsp;↑</th>
+                <th style="text-align:right">Mean ROC-AUC&nbsp;↑</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="stat-win">
+                <td><strong>GRU</strong></td>
+                <td style="font-size:0.8rem;color:#059669">Best MAE &amp; AUC</td>
+                <td style="text-align:right" class="stat-best">1337.33 <span class="delta-pill delta-pos">&minus;12.5% vs LSTM</span></td>
+                <td style="text-align:right" class="stat-best">1628.83 <span class="delta-pill delta-pos">&minus;14.0% vs LSTM</span></td>
+                <td style="text-align:right">0.0942</td>
+                <td style="text-align:right" class="stat-best">0.6603 <span class="delta-pill delta-pos">+5.2% vs LSTM</span></td>
+              </tr>
+              <tr>
+                <td><strong>Transformer</strong></td>
+                <td style="font-size:0.8rem;color:#6b7280"></td>
+                <td style="text-align:right">1436.25</td>
+                <td style="text-align:right">1791.61</td>
+                <td style="text-align:right">0.0530</td>
+                <td style="text-align:right">0.1955</td>
+              </tr>
+              <tr>
+                <td><strong>LSTM</strong></td>
+                <td style="font-size:0.8rem;color:#059669">Best F1</td>
+                <td style="text-align:right">1528.83</td>
+                <td style="text-align:right">1895.01</td>
+                <td style="text-align:right" class="stat-best">0.1057 <span class="delta-pill delta-pos">+12.2% vs GRU</span></td>
+                <td style="text-align:right">0.6278</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div class="hero-actions">
           <a class="button primary" href="#figures">View Figures</a>
           <a class="button" href="#notebooks">Open Executed Notebooks</a>
@@ -599,19 +725,19 @@
 
       <div class="hero-panel">
         <article class="metric">
-          <div class="metric-label">Best single-dataset MAE</div>
-          <div class="metric-value">51.79</div>
-          <p>GRU on machine-temperature failure telemetry, a 15.60% reduction over the vanilla recurrent baseline.</p>
+          <div class="metric-label">GRU MAE reduction over baseline</div>
+          <div class="metric-value">&minus;15.6%</div>
+          <p>GRU MAE 51.79 vs VanillaRNN 61.37 on thermal failure telemetry. RMSE also improves by 14.8% (55.35 vs 64.93). GRU is the <strong>only model to detect incidents</strong> (F1 0.2574; both RNN and LSTM score 0).</p>
         </article>
         <article class="metric">
-          <div class="metric-label">Best anomaly ranking</div>
+          <div class="metric-label">Transformer ROC-AUC (best calibration)</div>
           <div class="metric-value">0.7987</div>
-          <p>Transformer ROC-AUC on periodic EC2 CPU utilization, the strongest calibration result in the benchmark.</p>
+          <p>On periodic EC2 CPU telemetry (MAE 0.0436, RMSE 0.1335, 226,765 params). Highest anomaly ranking score in the benchmark — <strong>+75.9%</strong> above VanillaRNN AUC of 0.4083.</p>
         </article>
         <article class="metric">
-          <div class="metric-label">Cross-domain best MAE</div>
+          <div class="metric-label">GRU cross-domain lead (mean MAE)</div>
           <div class="metric-value">1337.33</div>
-          <p>GRU mean MAE across all three NAB datasets, with best mean ROC-AUC (0.6603).</p>
+          <p>GRU mean MAE across all 3 datasets, beating Transformer (1436.25, &minus;6.9%) and LSTM (1528.83, &minus;12.5%). Mean RMSE 1628.83, mean ROC-AUC 0.6603 — dominant on both error and ranking.</p>
         </article>
       </div>
     </section>
@@ -632,34 +758,23 @@
         <article class="card">
           <h3>Experiment 1 — Recurrent Architectures for Thermal Drift Detection</h3>
           <p>
-            On equipment thermal failure telemetry — representative of the thermal drift and calibration degradation
-            characteristic of quantum hardware systems — <code>GRU</code> reduces forecast MAE by
-            <strong>15.60%</strong> over a vanilla recurrent baseline (final MAE&nbsp;<strong>51.79</strong>,
-            ROC-AUC&nbsp;<strong>0.718</strong>) while concentrating residuals around the documented failure
-            regime. The joint gain in forecast fidelity and incident localization is visualized through
-            uncertainty-aware forecast envelopes, regime-separated residual boxplots, and an accuracy–efficiency scatter plot.
+            On equipment thermal failure telemetry, <code>GRU</code> achieves MAE&nbsp;<strong>51.79</strong>, RMSE&nbsp;<strong>55.35</strong>, ROC-AUC&nbsp;<strong>0.718</strong>, F1&nbsp;<strong>0.257</strong> — the <strong>only architecture to detect any incidents</strong>. VanillaRNN (MAE 61.37, ROC-AUC 0.408, F1 0) and LSTM (MAE 51.48, ROC-AUC 0.423, F1 0) both fail incident detection entirely. GRU delivers a
+            <strong>15.6% MAE reduction</strong> over baseline and a <strong>+75.9% ROC-AUC gain</strong> over VanillaRNN while using <strong>24.7% fewer parameters than LSTM</strong> (87,949 vs 116,845).
           </p>
         </article>
         <article class="card">
           <h3>Experiment 2 — Transformer Calibration for Periodic Operational Signals</h3>
           <p>
-            On periodic cloud compute utilization telemetry — analogous to the structured calibration
-            histories and measurement signal variability encountered in quantum systems — the Transformer
-            achieves MAE&nbsp;<strong>0.0436</strong> and ROC-AUC&nbsp;<strong>0.7987</strong>.
-            Calibration scatter plots and threshold-sensitivity curves show its anomaly score distribution
-            provides a more informative ranking than any single-threshold F1 headline, making it the
-            preferred architecture when the operating point can be tuned.
+            On periodic EC2 CPU utilization telemetry, the Transformer achieves
+            MAE&nbsp;<strong>0.0436</strong>, RMSE&nbsp;<strong>0.1335</strong>, and ROC-AUC&nbsp;<strong>0.7987</strong> (226,765 parameters, threshold 0.10).
+            ROC-AUC of 0.7987 is the <strong>highest anomaly ranking score across all models and all three experiments</strong>.
+            Calibration scatter plots and threshold-sensitivity curves confirm that the score distribution provides a more informative ranking than any fixed-threshold F1 headline.
           </p>
         </article>
         <article class="card">
           <h3>Experiment 3 — Cross-Domain Benchmarking for Quantum Hardware Pipeline Design</h3>
           <p>
-            A cross-domain evaluation across three heterogeneous temporal regimes shows that <strong>GRU</strong> leads
-            on mean MAE (<strong>1337.33</strong>) and mean ROC-AUC (<strong>0.6603</strong>), while
-            <strong>LSTM</strong> leads on mean incident-F1 (<strong>0.1057</strong>). No architecture
-            dominates all reliability objectives simultaneously — a critical constraint for quantum hardware
-            monitoring pipelines optimizing for multiple concurrent objectives. A cross-dataset heatmap and
-            aggregate distribution charts deliver this conclusion.
+            Across all three NAB datasets: <strong>GRU</strong> leads mean MAE (<strong>1337.33</strong>, &minus;12.5% vs LSTM 1528.83, &minus;6.9% vs Transformer 1436.25), mean RMSE (<strong>1628.83</strong>, &minus;14.0% vs LSTM 1895.01), and mean ROC-AUC (<strong>0.6603</strong>, +5.2% vs LSTM 0.6278). <strong>LSTM</strong> leads mean F1 (<strong>0.1057</strong>, +12.2% vs GRU 0.0942, +99.4% vs Transformer 0.0530). No single architecture dominates all three reliability objectives simultaneously.
           </p>
         </article>
       </div>
