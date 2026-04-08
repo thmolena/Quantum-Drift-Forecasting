@@ -10,8 +10,8 @@
       --bg: #f6f7f4;
       --paper: #fffefb;
       --paper-2: #f1efe8;
-      --ink: #17222f;
-      --muted: #5b6572;
+      --ink: #111827;
+      --muted: #374151;
       --line: #d7d2c4;
       --accent: #1d4ed8;
       --accent-2: #a84a2a;
@@ -119,8 +119,8 @@
     }
     h2 { font-size: clamp(1.8rem, 3vw, 2.5rem); }
     h3 { font-size: 1.2rem; }
-    p { margin: 0 0 14px; color: var(--muted); }
-    p strong { color: var(--ink); }
+    p { margin: 0 0 14px; color: var(--ink); }
+    p strong { color: #000000; }
     .hero-title-line {
       margin: 0 0 22px;
       font-size: clamp(0.9rem, 1.15vw, 1.08rem);
@@ -184,13 +184,14 @@
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.14em;
-      color: var(--accent-2);
+      color: var(--accent);
+      font-weight: 600;
       margin-bottom: 8px;
     }
     .metric-value {
       font-size: 2rem;
       font-weight: 700;
-      color: var(--ink);
+      color: #000000;
       margin-bottom: 8px;
       font-family: var(--font-serif);
     }
@@ -206,7 +207,8 @@
       font-size: 0.76rem;
       text-transform: uppercase;
       letter-spacing: 0.16em;
-      color: var(--accent-2);
+      color: var(--accent);
+      font-weight: 700;
       margin-bottom: 10px;
     }
 
@@ -289,7 +291,7 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
-      color: var(--muted);
+      color: var(--ink);
       font-size: 0.9rem;
       margin: 12px 0 16px;
     }
@@ -363,7 +365,7 @@
       justify-content: space-between;
       font-size: 0.82rem;
       font-weight: 600;
-      color: var(--muted);
+      color: var(--ink);
       text-transform: uppercase;
       letter-spacing: 0.06em;
       margin-bottom: 8px;
@@ -394,7 +396,7 @@
       display: flex;
       justify-content: space-between;
       font-size: 0.72rem;
-      color: var(--muted);
+      color: #6b7280;
       margin-top: 4px;
     }
     .button-row {
@@ -404,7 +406,7 @@
     }
     .hint-text {
       font-size: 0.82rem;
-      color: var(--muted);
+      color: #6b7280;
       margin-top: 10px;
     }
     .drift-status {
@@ -458,7 +460,7 @@
       gap: 0.5rem;
       font-size: 0.82rem;
     }
-    .result-label { color: var(--muted); flex-shrink: 0; }
+    .result-label { color: var(--ink); flex-shrink: 0; }
     .result-value {
       font-family: var(--font-mono);
       font-size: 0.82rem;
@@ -500,7 +502,7 @@
     footer {
       margin-top: 44px;
       padding: 28px 0 0;
-      color: var(--muted);
+      color: var(--ink);
       font-size: 0.92rem;
       border-top: 1px solid rgba(215, 210, 196, 0.8);
     }
@@ -533,7 +535,7 @@
         <a href="#notebooks">Notebooks</a>
         <a href="#reproduce">Reproducibility</a>
         <a href="README.md">README</a>
-        <a href="https://github.com/mohuyn/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">GitHub</a>
       </nav>
     </div>
   </header>
@@ -1055,7 +1057,7 @@ python -m http.server 8000
     <!-- ════════════════ FOOTER ════════════════ -->
     <footer>
       <p><strong>When Does Architecture Matter?</strong> — A reproducible three-experiment benchmark studying adaptive sequence models for operational drift detection and anomaly localization on real NAB time series.</p>
-      <p><a href="README.md">README</a> · <a href="website/index.html">Local API demo</a> · Built with PyTorch, Flask, and Jupyter · <a href="https://github.com/mohuyn/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">View on GitHub</a></p>
+      <p><a href="README.md">README</a> · <a href="website/index.html">Local API demo</a> · Built with PyTorch, Flask, and Jupyter · <a href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">View on GitHub</a></p>
     </footer>
   </div>
 
