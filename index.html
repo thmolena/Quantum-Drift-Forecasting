@@ -163,10 +163,54 @@
       background: rgba(16, 185, 129, 0.12);
     }
 
+    /* Left-align hero and all content */
+    body.light-theme .hero {
+      text-align: left;
+    }
+
+    body.light-theme .hero-inner {
+      max-width: 1060px;
+    }
+
+    body.light-theme .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: flex-start;
+    }
+
+    body.light-theme .hero-cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: flex-start;
+    }
+
+    /* Uniform card grids — equal-width cards, left-aligned rows */
+    body.light-theme .key-grid,
+    body.light-theme .report-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    body.light-theme .model-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    body.light-theme .visual-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
     @media (max-width: 720px) {
       body.light-theme .nav-inner {
         align-items: flex-start;
         flex-direction: column;
+      }
+
+      body.light-theme .key-grid,
+      body.light-theme .report-grid,
+      body.light-theme .model-grid,
+      body.light-theme .visual-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -191,7 +235,7 @@
   <section class="hero" id="top">
     <div class="hero-inner">
       <div class="badge-row">
-        <span class="badge badge-primary">NeurIPS-Style Benchmark Report</span>
+        <span class="badge badge-primary">Reproducible Benchmark Report</span>
         <span class="badge badge-secondary">3 Experiments · 3 Datasets · 12+ Figures</span>
         <span class="badge badge-tag">Forecasting · Anomaly Detection · Calibration</span>
       </div>
@@ -318,7 +362,7 @@
         </article>
       </div>
 
-      <div class="figure-description-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+      <div class="figure-description-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:1rem;">
         <article class="card visual-card">
           <div class="visual-copy" style="padding:1.25rem;">
             <h3>Fig 1.3 — Raw Telemetry and Incident-Annotated Feature View</h3>
@@ -371,7 +415,7 @@
       </div>
 
       <h3 class="section-subtitle" style="margin-top:2.5rem;margin-bottom:0.5rem;font-size:1.1rem;font-weight:600;">Experiment 2 — Transformer Calibration on Cloud Telemetry</h3>
-      <div class="figure-description-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:0.5rem;">
+      <div class="figure-description-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:0.5rem;">
         <article class="card visual-card">
           <div class="visual-copy" style="padding:1.25rem;">
             <h3>Fig 2.1 — EC2 Signal Structure and Anomaly Context</h3>
@@ -424,7 +468,7 @@
       </div>
 
       <h3 class="section-subtitle" style="margin-top:2.5rem;margin-bottom:0.5rem;font-size:1.1rem;font-weight:600;">Experiment 3 — Cross-Domain Benchmark Comparison</h3>
-      <div class="figure-description-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:0.5rem;">
+      <div class="figure-description-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:0.5rem;">
         <article class="card visual-card">
           <div class="visual-copy" style="padding:1.25rem;">
             <h3>Fig 3.1 — Multi-Dataset Signal Comparison</h3>
