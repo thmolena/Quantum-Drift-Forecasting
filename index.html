@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>When Does Architecture Matter? Benchmarking Adaptive Sequence Models for Operational Drift Detection</title>
+  <title>Sequence Models for Quantum Hardware Drift, Calibration, and Noise Analysis</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231d4ed8'/%3E%3Cpath d='M20 70 Q35 25 50 50 Q65 75 80 30' fill='none' stroke='%23ffffff' stroke-width='7' stroke-linecap='round'/%3E%3Ccircle cx='30' cy='48' r='5' fill='%23ffffff'/%3E%3Ccircle cx='70' cy='38' r='5' fill='%23ffffff'/%3E%3C/svg%3E" />
   <style>
     :root {
@@ -566,14 +566,13 @@
 <body class="light-theme">
   <header>
     <div class="nav">
-      <div class="brand">Adaptive Sequence <span>Benchmarks</span></div>
+      <div class="brand">Quantum Drift <span>Forecasting</span></div>
       <nav>
         <a href="#results">Results</a>
-        <a href="#figures">Figures</a>
         <a href="#demo">Demo</a>
+        <a href="#figures">Figures</a>
         <a href="#notebooks">Notebooks</a>
         <a href="#reproduce">Reproducibility</a>
-        <a href="README.md">README</a>
         <a href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">GitHub</a>
       </nav>
     </div>
@@ -584,12 +583,12 @@
     <!-- ════════════════ HERO ════════════════ -->
     <section class="hero">
       <div class="hero-copy">
-        <h1>When Does Architecture Matter?</h1>
-        <div class="hero-title-line">Benchmarking Sequence Models for Operational Drift Detection</div>
-        <p>A reproducible benchmark studying how architectural inductive bias shapes the forecast–detection trade-off across three real-world temporal regimes from the Numenta Anomaly Benchmark — equipment thermal failure, cloud CPU utilization, and urban demand. Each experiment pairs multi-step forecasting with incident localization so that accuracy and detection sensitivity are evaluated simultaneously.</p>
+        <h1>Sequence Models for Quantum Hardware Drift, Calibration, and Noise</h1>
+        <div class="hero-title-line">Benchmarking RNN, GRU, LSTM, and Transformer architectures for forecasting drift, detecting anomalies, and quantifying uncertainty in operational quantum systems</div>
+        <p>Quantum systems are highly sensitive to noise, time-dependent drift, and environmental variability. This benchmark develops GPU-accelerated time-series pipelines and evaluates RNN, GRU, LSTM, and Transformer architectures for forecasting drift, detecting anomalies, and quantifying uncertainty in operational hardware signals — assessed across three real temporal regimes from the Numenta Anomaly Benchmark spanning equipment thermal failure, cloud compute utilization, and high-volume demand data.</p>
         <div class="finding-callout">
           <span class="callout-label">Central Finding</span>
-          <p>No single architecture dominates all three objectives across all three regimes. <strong>GRU</strong> leads on low-error aggregation, <strong>LSTM</strong> leads on mean incident-F1, and the <strong>Transformer</strong> is strongest for calibration and ranking.</p>
+          <p>No single architecture dominates all three reliability objectives. <strong>GRU</strong> leads on aggregate forecast accuracy (mean MAE and ROC-AUC), <strong>LSTM</strong> leads on mean incident-F1, and the <strong>Transformer</strong> is strongest for calibration and anomaly ranking — informing objective-aware architecture selection for quantum hardware monitoring pipelines.</p>
         </div>
         <div class="hero-actions">
           <a class="button primary" href="#figures">View Figures</a>
@@ -623,42 +622,44 @@
         <div class="section-kicker">Empirical Summary</div>
         <h2>Primary Experimental Results</h2>
         <p>
-          Three experimental contributions, each tied to a specific notebook, model family, and objective.
-          The three-experiment structure is designed so that each notebook contributes a distinct piece of
-          evidence to a single overarching argument about when architecture matters.
+          Three experimental contributions, each evaluating a distinct architecture family against a specific quantum hardware reliability objective.
+          The structure ensures that each notebook delivers independent empirical evidence toward a single conclusion:
+          model selection for quantum hardware monitoring must be grounded in the deployment objective, not in a universal architectural prior.
         </p>
       </div>
 
       <div class="grid-3">
         <article class="card">
-          <h3>Experiment 1 — Adaptive Gating Improves Incident-Aware Forecasting</h3>
+          <h3>Experiment 1 — Recurrent Architectures for Thermal Drift Detection</h3>
           <p>
-            On real machine-temperature failure telemetry, <code>GRU</code> reduces forecast MAE by
-            <strong>15.60%</strong> relative to a vanilla recurrent baseline (final MAE&nbsp;<strong>51.79</strong>,
-            ROC-AUC&nbsp;<strong>0.718</strong>) while simultaneously concentrating residuals around the
-            documented failure regime — a joint forecasting and detection gain visualized through
-            uncertainty-aware forecast envelopes, regime-separated residual boxplots, and an
-            accuracy–efficiency scatter plot.
+            On equipment thermal failure telemetry — representative of the thermal drift and calibration degradation
+            characteristic of quantum hardware systems — <code>GRU</code> reduces forecast MAE by
+            <strong>15.60%</strong> over a vanilla recurrent baseline (final MAE&nbsp;<strong>51.79</strong>,
+            ROC-AUC&nbsp;<strong>0.718</strong>) while concentrating residuals around the documented failure
+            regime. The joint gain in forecast fidelity and incident localization is visualized through
+            uncertainty-aware forecast envelopes, regime-separated residual boxplots, and an accuracy–efficiency scatter plot.
           </p>
         </article>
         <article class="card">
-          <h3>Experiment 2 — Transformer Is Strongest as a Calibration Result</h3>
+          <h3>Experiment 2 — Transformer Calibration for Periodic Operational Signals</h3>
           <p>
-            On periodic EC2 CPU utilization telemetry, the Transformer achieves
-            MAE&nbsp;<strong>0.0436</strong> and ROC-AUC&nbsp;<strong>0.7987</strong>.
-            Calibration scatter plots and threshold-sensitivity curves show that its anomaly score
-            distribution provides a more informative ranking than any fixed-threshold F1 headline,
-            making it the strongest detection model when the operating point can be tuned.
+            On periodic cloud compute utilization telemetry — analogous to the structured calibration
+            histories and measurement signal variability encountered in quantum systems — the Transformer
+            achieves MAE&nbsp;<strong>0.0436</strong> and ROC-AUC&nbsp;<strong>0.7987</strong>.
+            Calibration scatter plots and threshold-sensitivity curves show its anomaly score distribution
+            provides a more informative ranking than any single-threshold F1 headline, making it the
+            preferred architecture when the operating point can be tuned.
           </p>
         </article>
         <article class="card">
-          <h3>Experiment 3 — Model Selection Is Metric-Dependent</h3>
+          <h3>Experiment 3 — Cross-Domain Benchmarking for Quantum Hardware Pipeline Design</h3>
           <p>
-            A cross-domain evaluation across all three NAB datasets shows that <strong>GRU</strong> leads
+            A cross-domain evaluation across three heterogeneous temporal regimes shows that <strong>GRU</strong> leads
             on mean MAE (<strong>1337.33</strong>) and mean ROC-AUC (<strong>0.6603</strong>), while
             <strong>LSTM</strong> leads on mean incident-F1 (<strong>0.1057</strong>). No architecture
-            dominates all objectives simultaneously. A cross-dataset performance heatmap and aggregate
-            distribution charts deliver this conclusion visually.
+            dominates all reliability objectives simultaneously — a critical constraint for quantum hardware
+            monitoring pipelines optimizing for multiple concurrent objectives. A cross-dataset heatmap and
+            aggregate distribution charts deliver this conclusion.
           </p>
         </article>
       </div>
@@ -1084,7 +1085,7 @@ python -m http.server 8000
 
     <!-- ════════════════ FOOTER ════════════════ -->
     <footer>
-      <p><strong>When Does Architecture Matter?</strong> — A reproducible three-experiment benchmark studying adaptive sequence models for operational drift detection and anomaly localization on real NAB time series.</p>
+      <p><strong>Sequence Models for Quantum Hardware Drift, Calibration, and Noise</strong> — A reproducible three-experiment benchmark comparing RNN, GRU, LSTM, and Transformer architectures for forecasting drift, detecting anomalies, and quantifying uncertainty in operational quantum systems.</p>
       <p><a href="README.md">README</a> · <a href="website/index.html">Local API demo</a> · Built with PyTorch, Flask, and Jupyter · <a href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">View on GitHub</a></p>
     </footer>
   </div>
