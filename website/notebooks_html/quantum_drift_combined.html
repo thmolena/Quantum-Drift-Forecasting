@@ -7802,7 +7802,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Cross-Domain-Benchmarking-for-Objective-Aware-Architecture-Selection-in-Quantum-Hardware-Monitoring">Cross-Domain Benchmarking for Objective-Aware Architecture Selection in Quantum Hardware Monitoring<a class="anchor-link" href="#Cross-Domain-Benchmarking-for-Objective-Aware-Architecture-Selection-in-Quantum-Hardware-Monitoring">¶</a></h1><p><em>Part of the research program on Time-Series and Transformer-Based Modeling for Quantum Hardware Calibration, Drift, and Noise Analysis.</em></p>
+<h1 id="Cross-Domain-Benchmarking-for-Objective-Aware-Architecture-Selection-in-Quantum-Hardware-Monitoring">Cross-Domain Benchmarking for Objective-Aware Architecture Selection in Quantum Hardware Monitoring<a class="anchor-link" href="#Cross-Domain-Benchmarking-for-Objective-Aware-Architecture-Selection-in-Quantum-Hardware-Monitoring">¶</a></h1><p><em>Part of the</em> Sequence Models for Quantum Hardware Drift, Calibration, and Noise <em>benchmark.</em></p>
 <hr/>
 <p><strong>Abstract.</strong> Robust quantum hardware monitoring requires architectures that remain reliable across diverse signal regimes — thermal drift, calibration variability, and demand-driven noise — without privileging any single metric or dataset. This notebook is the third and final study in the benchmark, conducting a cross-domain model selection study across three public operational benchmarks: <code>machine_temperature_system_failure</code>, <code>ec2_cpu_utilization_24ae8d</code>, and <code>nyc_taxi</code>, each representing a distinct temporal regime relevant to the heterogeneous signal types encountered in quantum hardware characterization. All four architectures (VanillaRNN, LSTM, GRU, Transformer) are evaluated under a shared CPU-feasible, fully reproducible protocol. The central finding: <strong>no single architecture dominates all three reliability objectives simultaneously</strong>. GRU leads on mean MAE (1337.33) and mean ROC-AUC (0.6603); LSTM leads on mean incident-F1 (0.1057). Architecture selection for quantum hardware monitoring pipelines must therefore be grounded in the specific deployment objective rather than in a universal structural claim.</p>
 <p>Figures in this notebook: (1) multi-dataset signal comparison with anomaly annotations across all three regimes; (2) cross-dataset performance heatmap (model × metric × dataset); (3) aggregate performance distributions across model families; (4) metric-dependent model preference chart delivering the benchmark's main conclusion.</p>
@@ -8112,6 +8112,69 @@ a.anchor-link {
 </tbody>
 </table>
 <p><strong>Conclusion:</strong> No model wins all three datasets on any metric. GRU wins MAE on 2 of 3 datasets; LSTM wins or ties F1 on all 3 datasets. This heterogeneity is the benchmark's central empirical finding — and the reason objective-aware model selection is the only defensible recommendation for quantum hardware monitoring pipeline design.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=eaa15dbb">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="Metric-Guide-%E2%80%94-How-to-Read-Every-Comparison-Number">Metric Guide — How to Read Every Comparison Number<a class="anchor-link" href="#Metric-Guide-%E2%80%94-How-to-Read-Every-Comparison-Number">¶</a></h2><p>Every number in this notebook's comparison table answers a specific operational question. The <strong>direction annotation</strong> (↓ or ↑) tells you which direction of change means the model is improving. The <strong>"Quantum Hardware Meaning"</strong> column explains what a numerical improvement actually buys you in a deployed quantum system.</p>
+<p><strong>How to interpret percentage improvements used throughout this benchmark:</strong></p>
+<ul>
+<li><strong>"−15.6% MAE"</strong> = the new model's MAE is 15.6% <em>smaller</em> than the baseline. Formula: (baseline − new) / baseline. Smaller MAE → forecasts closer to ground truth on average.</li>
+<li><strong>"+75.9% ROC-AUC"</strong> = the new model's AUC is 75.9% <em>relatively higher</em> than baseline. Formula: (new − baseline) / baseline × 100. E.g. (0.7182 − 0.4083) / 0.4083 = 75.9%. Higher AUC → better anomaly ranking at every possible detection threshold.</li>
+<li><strong>"F1: 0.0000 → 0.2574"</strong> = a qualitative capability step-change. No percentage is meaningful because the baseline is zero — the gain is from <em>no detection capability</em> to <em>functional incident detection</em>. This is a binary operational distinction, not a marginal improvement.</li>
+<li><strong>"24.7% fewer parameters"</strong> = (116,845 − 87,949) / 116,845. Fewer parameters with <em>superior</em> detection = strictly better efficiency frontier.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>↓ or ↑</th>
+<th>What It Measures</th>
+<th>What a Cross-Domain Lead Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Mean MAE</strong></td>
+<td><strong>↓ lower = better</strong></td>
+<td>Average MAE across all three datasets — aggregate forecast accuracy</td>
+<td>A model with the lowest Mean MAE is the most accurate forecaster on average across the heterogeneous signal regimes encountered in quantum hardware monitoring</td>
+</tr>
+<tr>
+<td><strong>Mean RMSE</strong></td>
+<td><strong>↓ lower = better</strong></td>
+<td>Average RMSE across all three datasets</td>
+<td>Lower mean RMSE = fewer large prediction misses on average. A model that leads on both Mean MAE and Mean RMSE is dominant on the forecasting objective</td>
+</tr>
+<tr>
+<td><strong>Mean F1</strong></td>
+<td><strong>↑ higher = better</strong></td>
+<td>Average incident-detection F1 across all three datasets</td>
+<td>The model with the highest Mean F1 is the most effective at detecting incidents <em>in aggregate</em> — even if it does not lead on every individual dataset</td>
+</tr>
+<tr>
+<td><strong>Mean ROC-AUC</strong></td>
+<td><strong>↑ higher = better</strong></td>
+<td>Average anomaly-ranking quality across all three datasets</td>
+<td>The model with the highest Mean ROC-AUC provides the most reliable anomaly priority queue on average across all deployment regimes</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Why no single architecture leads on all four metrics:</strong> Each metric rewards a different inductive bias. MAE/RMSE reward accurate point forecasts (GRU gating wins); F1 rewards incident sensitivity at a specific threshold (LSTM's higher-capacity cell state wins on the NYC taxi regime); ROC-AUC rewards global score separation (GRU's gating wins on thermal/mixed signals, Transformer wins on periodic calibration). A quantum hardware stack that monitors thermal, calibration, and demand signals simultaneously must select architecture by <em>objective</em> — not by a single aggregate number.</p>
+<h3 id="How-improvements-are-computed-in-this-notebook">How improvements are computed in this notebook<a class="anchor-link" href="#How-improvements-are-computed-in-this-notebook">¶</a></h3><p>All percentage improvements are <strong>relative gains</strong> from the specified baseline (not percentage-point differences):</p>
+</blockquote>
+<ul>
+<li>Relative improvement = (new − baseline) / |baseline| × 100</li>
+<li>A −12.5% mean MAE means: (1528.83 − 1337.33) / 1528.83 × 100 = 12.5% smaller</li>
+<li>A +237.8% mean ROC-AUC means: (0.6603 − 0.1955) / 0.1955 × 100 = 237.8% relatively higher</li>
+</ul>
 </div>
 </div>
 </div>
@@ -9167,6 +9230,81 @@ a.anchor-link {
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p><strong>Figure 4. Rank, frontier, win-count, and leader-margin analysis — the benchmark's central conclusion.</strong> This four-panel figure is the primary evidence for the paper's main argument. The mean-rank bar chart (upper left) summarizes whether any architecture consistently ranks first across all metric types. The joint MAE × F1 scatter colored by ROC-AUC (upper right) provides the most information-dense view of the accuracy–detection trade-off across all model–dataset pairs simultaneously. The cross-dataset win-count bar (lower left) shows which model most often reaches the top position across both MAE and F1 objectives. The leader-margin chart (lower right) quantifies how large the gap is between winner and runner-up on each dataset, testing whether the benefits are robust or marginal.</p>
 <p><em>Alt-style description.</em> A 2×2 composite figure: mean rank grouped bars by model and metric, a scatter of MAE versus F1 colored by ROC-AUC with per-point labels, a win-count bar chart by model, and a grouped bar chart of leader margins by dataset. This panel group is the structural core of the benchmark's model-selection argument.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=04d538d6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># ── Additional Figure: Per-Dataset, Per-Metric Model Comparison ─────────────</span>
+<span class="c1"># Shows exactly which model wins on which metric on which dataset,</span>
+<span class="c1"># and by how much. This is the evidence behind the "no single winner" claim.</span>
+<span class="n">metrics_to_show</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"MAE"</span><span class="p">,</span> <span class="s2">"RMSE"</span><span class="p">,</span> <span class="s2">"F1"</span><span class="p">,</span> <span class="s2">"ROC-AUC"</span><span class="p">]</span>
+<span class="n">directions</span>       <span class="o">=</span> <span class="p">[</span><span class="s2">"↓ lower"</span><span class="p">,</span> <span class="s2">"↓ lower"</span><span class="p">,</span> <span class="s2">"↑ higher"</span><span class="p">,</span> <span class="s2">"↑ higher"</span><span class="p">]</span>
+<span class="n">datasets</span>  <span class="o">=</span> <span class="n">benchmark_results_df</span><span class="p">[</span><span class="s2">"dataset"</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+<span class="n">models_list</span> <span class="o">=</span> <span class="n">benchmark_results_df</span><span class="p">[</span><span class="s2">"model"</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+<span class="n">colors_map</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"GRU"</span><span class="p">:</span> <span class="s2">"#10b981"</span><span class="p">,</span> <span class="s2">"LSTM"</span><span class="p">:</span> <span class="s2">"#f59e0b"</span><span class="p">,</span> <span class="s2">"VanillaRNN"</span><span class="p">:</span> <span class="s2">"#94a3b8"</span><span class="p">,</span> <span class="s2">"Transformer"</span><span class="p">:</span> <span class="s2">"#6366f1"</span><span class="p">}</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">metrics_to_show</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">datasets</span><span class="p">),</span>
+                         <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">4</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics_to_show</span><span class="p">)),</span> <span class="n">sharey</span><span class="o">=</span><span class="s2">"row"</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">row_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">direction</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">metrics_to_show</span><span class="p">,</span> <span class="n">directions</span><span class="p">)):</span>
+    <span class="k">for</span> <span class="n">col_idx</span><span class="p">,</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">datasets</span><span class="p">):</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="n">row_idx</span><span class="p">,</span> <span class="n">col_idx</span><span class="p">]</span>
+        <span class="n">subset</span> <span class="o">=</span> <span class="n">benchmark_results_df</span><span class="p">[</span><span class="n">benchmark_results_df</span><span class="p">[</span><span class="s2">"dataset"</span><span class="p">]</span> <span class="o">==</span> <span class="n">ds</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">labs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">models_list</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">subset</span><span class="p">[</span><span class="n">subset</span><span class="p">[</span><span class="s2">"model"</span><span class="p">]</span> <span class="o">==</span> <span class="n">m</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">row</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="n">vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="n">labs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+                <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">colors_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">"#666"</span><span class="p">))</span>
+        <span class="n">bars</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">labs</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cols</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.65</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">bar</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">bars</span><span class="p">,</span> <span class="n">vals</span><span class="p">):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">bar</span><span class="o">.</span><span class="n">get_x</span><span class="p">()</span> <span class="o">+</span> <span class="n">bar</span><span class="o">.</span><span class="n">get_width</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">bar</span><span class="o">.</span><span class="n">get_height</span><span class="p">()</span> <span class="o">*</span> <span class="mf">1.01</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">val</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s2">"bottom"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ds</span><span class="p">[:</span><span class="mi">20</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s2"> = better)"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">9</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">"x"</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">col_idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span>
+    <span class="s2">"Figure 5. Per-Dataset, Per-Metric Model Comparison</span><span class="se">\n</span><span class="s2">"</span>
+    <span class="s2">"Shows exactly which model leads on which metric for each of the three temporal regimes — "</span>
+    <span class="s2">"the visual evidence that model preference depends on both dataset and objective"</span><span class="p">,</span>
+    <span class="n">fontweight</span><span class="o">=</span><span class="s2">"bold"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e2a48e79">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p><strong>Figure 5. Per-dataset, per-metric model comparison across all three temporal regimes.</strong></p>
+<p>This figure displays the exact metric value for every model on every dataset for all four evaluation criteria. It is the visual evidence supporting the benchmark's central claim: no single architecture leads across all metrics and datasets simultaneously.</p>
+<p><strong>How to read this figure:</strong> Each column is one dataset. Each row is one metric. Within each panel, taller bars are better for ↑ metrics (F1, ROC-AUC); shorter bars are better for ↓ metrics (MAE, RMSE). The numeric label on each bar is the exact value.</p>
+<p><strong>What to look for:</strong></p>
+<ul>
+<li>On <strong>MAE and RMSE</strong> rows: check whether the same model has the shortest bar across all three datasets. GRU should lead on the thermal dataset; rankings shift on the other two.</li>
+<li>On <strong>F1</strong> row: check whether any model achieves non-zero F1 on the thermal dataset (only GRU does in the single-dataset notebook), and which leads on the NYC taxi demand series.</li>
+<li>On <strong>ROC-AUC</strong> row: check whether the Transformer's advantage on the EC2 CPU (periodic) dataset disappears on the other two — this is the most striking evidence of regime-specific model preference.</li>
+</ul>
+<p><strong>For quantum hardware pipeline design:</strong> This figure is the empirical argument for objective-aware architecture selection. A practitioner responsible for thermal monitoring should read the MAE/ROC-AUC row for the thermal dataset. A practitioner responsible for calibration signal monitoring should read the ROC-AUC row for the periodic-regime dataset. These are different optimal models.</p>
 </div>
 </div>
 </div>

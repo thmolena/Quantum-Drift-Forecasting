@@ -1,4 +1,4 @@
-# Time-Series and Transformer-Based Modeling for Quantum Hardware Calibration, Drift, and Noise Analysis
+# Sequence Models for Quantum Hardware Drift, Calibration, and Noise
 
 ## Abstract
 
