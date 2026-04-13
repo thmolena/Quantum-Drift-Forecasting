@@ -3,138 +3,218 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quantum Drift Forecasting</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <title>Quantum Drift Forecasting Report</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <header class="site-header">
-    <nav class="nav-inner">
-      <span class="nav-logo">Quantum Drift Forecasting</span>
-      <div class="nav-links">
-        <a href="#findings">Findings</a>
-        <a href="#visuals">Visuals</a>
-        <a href="#demo">Demo</a>
+<body class="light-theme">
+  <header class="report-bar">
+    <div class="report-bar-inner">
+      <div>Quantum Drift Forecasting Report</div>
+      <nav aria-label="Primary">
+        <a href="#summary">Summary</a>
+        <a href="#results">Comparative Results</a>
+        <a href="#applications">Operational Meaning</a>
+        <a href="#demo">Interactive Demo</a>
         <a href="#reports">Reports</a>
-        <a href="#reproduce">Reproduce</a>
-        <a href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener">GitHub ↗</a>
-      </div>
-    </nav>
+      </nav>
+    </div>
   </header>
 
-  <section class="hero" id="top">
-    <div class="hero-inner">
-      <div class="badge-row">
-        <span class="badge badge-primary">Executed Notebook Reports</span>
-        <span class="badge badge-secondary">NAB Real-World Datasets</span>
-        <span class="badge badge-tag">Forecasting · Detection · Calibration</span>
-      </div>
-      <h1 class="hero-title">Adaptive Sequence Modeling For Real Operational Time Series</h1>
-      <p class="hero-subtitle">
-        A compact benchmark of recurrent gating and long-context attention on thermal failure,
-        cloud telemetry, and cross-domain demand data.
+  <main class="page">
+    <section class="cover" id="top">
+      <p class="cover-kicker">Research Summary • Institutional Presentation</p>
+      <h1>Sequence Models for Quantum Hardware Drift, Calibration, and Reliability Monitoring</h1>
+      <p class="subtitle">
+        This website applies the same white-background report style as the repository landing page while preserving
+        the interactive drift demonstration and the executed notebook access points.
       </p>
-      <p class="hero-desc">
-        The repository is strongest when read as an objective-aware benchmark rather than a claim
-        of universal architectural superiority. In this study, <strong>GRU</strong> is the most robust
-        low-error aggregate choice, <strong>LSTM</strong> is the strongest mean-F1 model across datasets,
-        and the <strong>Transformer</strong> report is most convincing as a calibration and ranking-quality result.
-      </p>
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="#visuals">See Visual Evidence</a>
-        <a class="btn btn-secondary" href="#reports">Open Report Suite</a>
-        <a class="btn btn-secondary" href="../README.md">Read Project Summary</a>
-      </div>
-    </div>
-  </section>
 
-  <section class="section section-alt" id="findings">
-    <div class="container">
-      <h2 class="section-title">Key Findings</h2>
-      <p class="section-desc">
-        The empirical argument fits into three claims, each tied to a specific report and selection objective.
-      </p>
-      <div class="key-grid">
-        <article class="card key-card">
-          <div class="summary-num">01</div>
-          <h3>GRU Improves Incident-Aware Forecasting</h3>
-          <p>
-            On the thermal failure trace, <code>GRU</code> achieved <strong>MAE 51.79</strong>, <strong>RMSE 55.35</strong>,
-            <strong>F1 0.257</strong>, and <strong>ROC-AUC 0.718</strong>, outperforming the plain recurrent baseline
-            while remaining lightweight enough for CPU-oriented reproduction.
-          </p>
+      <div class="cover-meta">
+        <article class="meta-block">
+          <div class="meta-label">Thermal Incident Detection</div>
+          <div class="meta-value">GRU F1 0.2574</div>
+          <p class="meta-note">Leading recurrent result for machine-temperature failure monitoring.</p>
         </article>
-        <article class="card key-card">
-          <div class="summary-num">02</div>
-          <h3>Transformer Is Strongest As A Calibration Result</h3>
-          <p>
-            On EC2 CPU telemetry, the Transformer reached <strong>MAE 0.0436</strong> and <strong>ROC-AUC 0.7987</strong>.
-            The strongest interpretation comes from threshold response and anomaly ranking, not from a single-threshold F1 headline.
-          </p>
+        <article class="meta-block">
+          <div class="meta-label">Anomaly Ranking</div>
+          <div class="meta-value">Transformer ROC-AUC 0.7987</div>
+          <p class="meta-note">Highest anomaly ranking score observed in the benchmark.</p>
         </article>
-        <article class="card key-card">
-          <div class="summary-num">03</div>
-          <h3>Cross-Dataset Selection Is Metric-Dependent</h3>
-          <p>
-            In the combined benchmark, <strong>GRU</strong> produced the best mean MAE and mean ROC-AUC,
-            while <strong>LSTM</strong> delivered the best mean F1. The correct conclusion is therefore objective-aware model choice.
-          </p>
+        <article class="meta-block">
+          <div class="meta-label">Cross-Dataset Forecasting</div>
+          <div class="meta-value">GRU Mean MAE 1337.33</div>
+          <p class="meta-note">Best average forecast error and mean ROC-AUC across the three-dataset study.</p>
         </article>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="section" id="visuals">
-    <div class="container">
-      <h2 class="section-title">Visual Evidence</h2>
-      <p class="section-desc">
-        The landing page now renders the exported visual outputs directly rather than only describing them.
-        For full figure sequences and metric tables, use the executed HTML notebook reports linked below.
-      </p>
-      <div class="visual-grid">
-        <article class="card visual-card">
-          <div class="visual-frame">
-            <img src="../outputs/qubit_trajectories.png" alt="Simulated qubit coherence trajectories" />
-          </div>
-          <div class="visual-copy">
-            <h3>Drift Trajectory Overview</h3>
+    <section id="summary">
+      <div class="section-header">
+        <div class="section-label">Executive Summary</div>
+        <div class="section-intro body-copy">
+          <h2>Central empirical findings</h2>
+          <p>
+            The benchmark supports two principal claims. The GRU is the leading recurrent architecture for incident-aware thermal monitoring,
+            while the Transformer is the leading model for anomaly ranking on periodic calibration-like telemetry. The website therefore presents
+            the study as an objective-aware benchmark rather than as a claim of universal superiority for one model family.
+          </p>
+          <div class="lead-callout">
             <p>
-              This exported plot summarizes the synthetic coherence-time behavior used in the browser demo and the local inference workflow.
+              Better performance in this project means stronger detection of meaningful failure windows, stronger prioritization of anomalous
+              intervals for review, and lower average forecasting error when sequential operational signals are monitored over time.
             </p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="results">
+      <div class="section-header">
+        <div class="section-label">Comparative Results</div>
+        <div class="section-intro">
+          <h2>Reported where the model leads</h2>
+          <p>
+            The presentation below is restricted to benchmark-leading outcomes and their practical meaning for the applications represented in this project.
+          </p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Evaluation Context</th>
+              <th>Leading Model</th>
+              <th>Winning Evidence</th>
+              <th>Practical Reading</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Machine-temperature failure telemetry</td>
+              <td>GRU</td>
+              <td>F1 0.2574, Recall 1.000, ROC-AUC 0.7182, MAE 51.7912</td>
+              <td>Stronger surfacing of true thermal-failure intervals and stronger ranking of abnormal operating windows.</td>
+            </tr>
+            <tr>
+              <td>Periodic cloud telemetry</td>
+              <td>Transformer</td>
+              <td>ROC-AUC 0.7987, MAE 0.0436, RMSE 0.1335</td>
+              <td>Stronger ordering of suspicious intervals when anomaly scores are reviewed before recalibration or inspection.</td>
+            </tr>
+            <tr>
+              <td>Three-dataset benchmark average</td>
+              <td>GRU</td>
+              <td>Mean MAE 1337.33, Mean RMSE 1628.83, Mean ROC-AUC 0.6603</td>
+              <td>Stronger average forecasting and anomaly-ranking quality across heterogeneous time-series regimes.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid-3">
+        <article class="card">
+          <div class="tag">Recurrent Benchmark</div>
+          <h3>GRU leads incident-aware monitoring</h3>
+          <p>
+            In the thermal benchmark, the GRU is the strongest recurrent result because it combines incident detection,
+            perfect recall, strong anomaly ranking, and a lower parameter count than the higher-capacity recurrent alternative.
+          </p>
+          <div class="metric-line">Operational reading: stronger early-warning support for failure escalation in monitored hardware systems.</div>
         </article>
-        <article class="card visual-card">
-          <div class="visual-frame visual-frame-compact">
-            <img src="../outputs/correlation_matrix.png" alt="Feature correlation matrix for the forecasting pipeline" />
-          </div>
-          <div class="visual-copy">
-            <h3>Feature Correlation Structure</h3>
-            <p>
-              The correlation matrix provides a compact view of relationships among engineered inputs in the drift-forecasting pipeline.
-            </p>
-          </div>
+
+        <article class="card">
+          <div class="tag">Calibration Ranking</div>
+          <h3>Transformer leads anomaly triage</h3>
+          <p>
+            In the periodic telemetry regime, the Transformer delivers the strongest ranking result, making it the most useful option
+            when suspicious intervals must be sorted before human review or recalibration activity.
+          </p>
+          <div class="metric-line">Operational reading: more efficient review of suspect operating periods.</div>
+        </article>
+
+        <article class="card">
+          <div class="tag">Combined Benchmark</div>
+          <h3>GRU leads average forecasting quality</h3>
+          <p>
+            Across the full benchmark, the GRU records the strongest average MAE, RMSE, and ROC-AUC profile among the compared models,
+            indicating that its gains extend across multiple time-series regimes rather than a single isolated case.
+          </p>
+          <div class="metric-line">Operational reading: steadier performance when one monitoring pipeline spans multiple data sources.</div>
         </article>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="section section-alt" id="demo">
-    <div class="container">
-      <h2 class="section-title">Interactive Drift Simulation</h2>
-      <p class="section-desc">
-        Configure a synthetic T₁ signal, render the sequence in-browser, and optionally query the local API.
-        If the server is running from the <code>qaoa</code> environment with <code>python -m src.server</code>,
-        the page uses the backend forecast path; otherwise it falls back to client-side smoothing.
-      </p>
+    <section id="applications">
+      <div class="section-header">
+        <div class="section-label">Operational Meaning</div>
+        <div class="section-intro body-copy">
+          <h2>What better performance means in real use</h2>
+          <p>
+            The reported improvements matter because they map directly to the repository’s monitoring tasks.
+          </p>
+        </div>
+      </div>
+
+      <ul class="application-list">
+        <li>In thermal-failure monitoring, stronger GRU detection improves the probability that meaningful fault windows are surfaced in time for intervention.</li>
+        <li>In calibration-oriented anomaly review, stronger Transformer ranking improves how engineering attention is allocated across suspicious intervals.</li>
+        <li>In cross-dataset forecasting, stronger GRU averages improve monitoring stability when several operational time-series streams are analyzed in one workflow.</li>
+      </ul>
+    </section>
+
+    <section id="evidence">
+      <div class="section-header">
+        <div class="section-label">Visual Evidence</div>
+        <div class="section-intro">
+          <h2>Supporting figures</h2>
+          <p>
+            The figures below provide a concise visual anchor for the benchmark. Full figure suites remain available in the executed notebook reports.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <figure class="figure">
+          <img src="../outputs/qubit_trajectories.png" alt="Simulated qubit coherence drift trajectories used to illustrate the forecasting problem" />
+          <figcaption class="figure-copy">
+            <h3>Drift trajectory illustration</h3>
+            <p>
+              A compact visual summary of the drift structure motivating the forecasting task and its connection to reliability monitoring.
+            </p>
+          </figcaption>
+        </figure>
+
+        <figure class="figure">
+          <img src="../outputs/correlation_matrix.png" alt="Correlation matrix of engineered forecasting features" />
+          <figcaption class="figure-copy">
+            <h3>Engineered feature relationships</h3>
+            <p>
+              A summary of the engineered input relationships used throughout the forecasting and anomaly-ranking pipeline.
+            </p>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="demo">
+      <div class="section-header">
+        <div class="section-label">Interactive Demonstration</div>
+        <div class="section-intro body-copy">
+          <h2>Synthetic drift simulation</h2>
+          <p>
+            The demonstration below preserves the interactive functionality from the original website while adopting the same report-oriented presentation.
+            If the local API is active, forecasts are requested from the backend. Otherwise the browser fallback remains available.
+          </p>
+        </div>
+      </div>
 
       <div class="demo-grid">
         <div class="controls-panel card">
           <h3 class="panel-title">Signal Parameters</h3>
 
           <div class="control-group">
-            <label class="control-label">
+            <label class="control-label" for="steps-range">
               Time steps
               <span class="control-val" id="steps-val">60</span>
             </label>
@@ -143,8 +223,8 @@
           </div>
 
           <div class="control-group">
-            <label class="control-label">
-              Noise level σ (µs)
+            <label class="control-label" for="noise-range">
+              Noise level sigma (µs)
               <span class="control-val" id="noise-val">3.0</span>
             </label>
             <input type="range" id="noise-range" class="range-input" min="0.5" max="10" value="3.0" step="0.5" />
@@ -152,7 +232,7 @@
           </div>
 
           <div class="control-group">
-            <label class="control-label">
+            <label class="control-label" for="drift-range">
               Drift rate (µs / step)
               <span class="control-val" id="drift-val">0.050</span>
             </label>
@@ -161,16 +241,16 @@
           </div>
 
           <div class="button-row">
-            <button id="generate" class="btn btn-secondary">Generate Signal</button>
-            <button id="forecast-btn" class="btn btn-primary">Forecast Drift</button>
+            <button id="generate" class="button-link button-control" type="button">Generate Signal</button>
+            <button id="forecast-btn" class="button-link button-control primary-control" type="button">Forecast Drift</button>
           </div>
 
           <p class="hint-text" id="chart-hint">60 steps · 8-step forecast</p>
-          <div class="drift-status stable" id="drift-status">⬤ STABLE — drift 0.0%</div>
+          <div class="drift-status stable" id="drift-status">Stable — drift probability 0.0%</div>
         </div>
 
-        <div class="chart-panel card">
-          <h3 class="panel-title">T₁ Coherence Time Forecast</h3>
+        <div class="card chart-card">
+          <h3 class="panel-title">T1 Coherence Time Forecast</h3>
           <div class="chart-wrap">
             <svg id="drift-svg" role="img" aria-label="T1 coherence time series with 8-step forecast"></svg>
           </div>
@@ -178,7 +258,7 @@
           <div id="result-panel" class="result-panel hidden">
             <h4 class="result-title">Forecast Results</h4>
             <div class="result-row highlight">
-              <span class="result-label">8-step T₁ forecast (first 4)</span>
+              <span class="result-label">8-step T1 forecast (first 4)</span>
               <span class="result-value" id="res-forecast">—</span>
             </div>
             <div class="result-row" id="drift-prob-row">
@@ -190,11 +270,11 @@
               <span class="result-value" id="res-anomaly">—</span>
             </div>
             <div class="result-row">
-              <span class="result-label">Mean T₁ (µs)</span>
+              <span class="result-label">Mean T1 (µs)</span>
               <span class="result-value" id="res-mean-t1">—</span>
             </div>
             <div class="result-row">
-              <span class="result-label">Min T₁ (µs)</span>
+              <span class="result-label">Min T1 (µs)</span>
               <span class="result-value" id="res-min-t1">—</span>
             </div>
             <div id="source-badge" class="source-badge hidden browser"></div>
@@ -205,140 +285,77 @@
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="section" id="reports">
-    <div class="container">
-      <h2 class="section-title">Executed Report Suite</h2>
-      <p class="section-desc">
-        Each notebook addresses a different technical question. The summaries below keep the strongest result and the relevant artifact links in one place.
-      </p>
-      <div class="report-grid">
-        <article class="card report-card">
-          <div class="notebook-icon">📊</div>
-          <h3>Incident-Aware Recurrent Forecasting</h3>
+    <section id="reports">
+      <div class="section-header">
+        <div class="section-label">Executed Reports</div>
+        <div class="section-intro">
+          <h2>Primary artifacts</h2>
           <p>
-            Compares <code>VanillaRNN</code>, <code>LSTM</code>, and <code>GRU</code> on real machine-temperature failure telemetry.
-            The <code>GRU</code> produced the strongest accuracy-sensitivity tradeoff in the repository.
+            Each notebook addresses a distinct question and retains the full figure and metric record for the benchmark.
           </p>
-          <ul class="metric-list">
-            <li>Best model: <code>GRU</code></li>
-            <li>MAE: <code>51.7912</code></li>
-            <li>F1: <code>0.2574</code></li>
-            <li>ROC-AUC: <code>0.7182</code></li>
-          </ul>
-          <div class="notebook-actions">
-            <a class="btn btn-secondary btn-sm" href="../notebooks/rnn_drift_forecast.ipynb">Notebook</a>
-            <a class="btn btn-primary btn-sm" href="notebooks_html/rnn_drift_forecast.html">HTML Report</a>
-          </div>
-        </article>
-
-        <article class="card report-card">
-          <div class="notebook-icon">🔬</div>
-          <h3>Transformer Calibration On Cloud Telemetry</h3>
-          <p>
-            Tests long-context forecasting and reconstruction-based anomaly ranking on EC2 CPU utilization.
-            The report is strongest as a calibration and score-separation study.
-          </p>
-          <ul class="metric-list">
-            <li>MAE: <code>0.043637</code></li>
-            <li>RMSE: <code>0.133462</code></li>
-            <li>ROC-AUC: <code>0.798664</code></li>
-            <li>Threshold: <code>0.1</code></li>
-          </ul>
-          <div class="notebook-actions">
-            <a class="btn btn-secondary btn-sm" href="../notebooks/transformer_calibration.ipynb">Notebook</a>
-            <a class="btn btn-primary btn-sm" href="notebooks_html/transformer_calibration.html">HTML Report</a>
-          </div>
-        </article>
-
-        <article class="card report-card">
-          <div class="notebook-icon">⚛️</div>
-          <h3>Cross-Domain Benchmark Comparison</h3>
-          <p>
-            Aggregates performance across machine temperature, EC2 CPU utilization, and NYC taxi demand.
-            The result argues for metric-dependent model selection instead of a single universal winner.
-          </p>
-          <ul class="metric-list">
-            <li>Best mean MAE: <code>GRU 1337.3327</code></li>
-            <li>Best mean ROC-AUC: <code>GRU 0.6603</code></li>
-            <li>Best mean F1: <code>LSTM 0.1057</code></li>
-          </ul>
-          <div class="notebook-actions">
-            <a class="btn btn-secondary btn-sm" href="../notebooks/quantum_drift_combined.ipynb">Notebook</a>
-            <a class="btn btn-primary btn-sm" href="notebooks_html/quantum_drift_combined.html">HTML Report</a>
-          </div>
-        </article>
+        </div>
       </div>
-    </div>
-  </section>
 
-  <section class="section section-alt" id="models">
-    <div class="container">
-      <h2 class="section-title">Model Families</h2>
-      <p class="section-desc">
-        The architecture set is intentionally compact so the comparison stays interpretable.
-      </p>
-      <div class="model-grid">
-        <article class="model-card card">
-          <div class="model-type rnn">RNN</div>
-          <h3>VanillaRNN</h3>
-          <p>Weak recurrent baseline used to test whether adaptive memory is genuinely necessary on the failure-bearing telemetry trace.</p>
-        </article>
-        <article class="model-card card">
-          <div class="model-type lstm">LSTM</div>
-          <h3>LSTMForecaster</h3>
-          <p>Highest-capacity gated recurrent baseline and the strongest mean-F1 model in the combined benchmark.</p>
-        </article>
-        <article class="model-card card">
-          <div class="model-type gru">GRU</div>
-          <h3>GRUForecaster</h3>
-          <p>Best aggregate low-error model in this repository and the clearest practical winner in the recurrent benchmark.</p>
-        </article>
-        <article class="model-card card">
-          <div class="model-type transformer">Transformer</div>
-          <h3>TransformerForecaster</h3>
-          <p>Long-context attention model used for periodic alignment, calibration analysis, and anomaly ranking on cloud telemetry.</p>
-        </article>
+      <div class="link-list">
+        <div class="link-item">
+          <div>
+            <strong>Incident-aware recurrent forecasting</strong>
+            <div class="table-note">GRU-centered evidence for thermal-failure detection and recurrent-model comparison.</div>
+          </div>
+          <div class="link-actions">
+            <a class="button-link" href="../notebooks/rnn_drift_forecast.ipynb">Notebook</a>
+            <a class="button-link" href="notebooks_html/rnn_drift_forecast.html">HTML report</a>
+          </div>
+        </div>
+
+        <div class="link-item">
+          <div>
+            <strong>Transformer calibration analysis</strong>
+            <div class="table-note">Benchmark-leading anomaly ranking on periodic telemetry.</div>
+          </div>
+          <div class="link-actions">
+            <a class="button-link" href="../notebooks/transformer_calibration.ipynb">Notebook</a>
+            <a class="button-link" href="notebooks_html/transformer_calibration.html">HTML report</a>
+          </div>
+        </div>
+
+        <div class="link-item">
+          <div>
+            <strong>Cross-domain benchmark comparison</strong>
+            <div class="table-note">GRU-leading average forecasting and ranking performance across the three-dataset study.</div>
+          </div>
+          <div class="link-actions">
+            <a class="button-link" href="../notebooks/quantum_drift_combined.ipynb">Notebook</a>
+            <a class="button-link" href="notebooks_html/quantum_drift_combined.html">HTML report</a>
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="section" id="reproduce">
-    <div class="container">
-      <h2 class="section-title">Reproduce</h2>
-      <p class="section-desc">
-        Use the <code>qaoa</code> conda environment for notebooks, exports, and the optional local API.
-      </p>
-      <pre class="code-block"><code>conda activate qaoa
-pip install -r requirements.txt
+    <section id="reproduce">
+      <div class="section-header">
+        <div class="section-label">Reproducibility</div>
+        <div class="section-intro">
+          <h2>Minimal execution path</h2>
+          <p>
+            The same notebook workflow can be used to regenerate the reports and support the optional local demo API.
+          </p>
+        </div>
+      </div>
 
+      <pre class="code-block">pip install -r ../requirements.txt
 jupyter nbconvert --to notebook --execute --inplace ../notebooks/rnn_drift_forecast.ipynb
 jupyter nbconvert --to notebook --execute --inplace ../notebooks/transformer_calibration.ipynb
 jupyter nbconvert --to notebook --execute --inplace ../notebooks/quantum_drift_combined.ipynb
+python -m src.server --port 5000</pre>
+    </section>
 
-jupyter nbconvert --to html --output-dir notebooks_html \
-  ../notebooks/rnn_drift_forecast.ipynb \
-  ../notebooks/transformer_calibration.ipynb \
-  ../notebooks/quantum_drift_combined.ipynb
-
-python -m src.server --port 5000</code></pre>
-    </div>
-  </section>
-
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <p>
-        <strong>Quantum Drift Forecasting</strong> — executed benchmark reports for adaptive forecasting,
-        calibration, and anomaly ranking on real time series.
-      </p>
-      <p class="footer-sub">
-        Built with PyTorch, Flask, and Jupyter.
-        <a href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener">View on GitHub ↗</a>
-      </p>
-    </div>
-  </footer>
+    <footer>
+      Prepared as a white-background institutional summary page for benchmark results and interactive drift demonstration.
+    </footer>
+  </main>
 
   <script src="demo.js"></script>
 </body>
