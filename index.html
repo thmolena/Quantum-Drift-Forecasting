@@ -218,7 +218,8 @@
     }
 
     .grid-2,
-    .grid-3 {
+    .grid-3,
+    .demo-grid {
       display: grid;
       gap: 18px;
       margin-top: 22px;
@@ -232,9 +233,15 @@
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
+    .demo-grid {
+      grid-template-columns: 320px 1fr;
+      align-items: start;
+    }
+
     .card,
     .figure,
-    .table-wrap {
+    .table-wrap,
+    .chart-card {
       border: 1px solid var(--border);
       background: #ffffff;
       box-shadow: var(--shadow);
@@ -375,6 +382,236 @@
       text-decoration: none;
     }
 
+    .button-control {
+      min-width: 140px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+    }
+
+    .primary-control {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    .primary-control:hover,
+    .primary-control:focus {
+      background: #16345c;
+    }
+
+    .controls-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .control-val,
+    .result-value,
+    .code-block {
+      font-family: var(--font-mono);
+    }
+
+    .control-val {
+      color: var(--accent);
+      font-size: 0.85rem;
+    }
+
+    .range-input {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 999px;
+      background: #d8e1eb;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(29, 63, 110, 0.12);
+    }
+
+    .range-input::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(29, 63, 110, 0.12);
+    }
+
+    .range-bounds,
+    .hint-text {
+      color: var(--muted);
+    }
+
+    .range-bounds {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .hint-text {
+      margin: 0;
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+    }
+
+    .drift-status {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid transparent;
+      font-family: var(--font-sans);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .drift-status.stable {
+      background: rgba(31, 92, 71, 0.08);
+      border-color: rgba(31, 92, 71, 0.18);
+      color: #1f5c47;
+    }
+
+    .drift-status.warning {
+      background: rgba(138, 103, 0, 0.08);
+      border-color: rgba(138, 103, 0, 0.18);
+      color: #8a6700;
+    }
+
+    .drift-status.alert {
+      background: rgba(140, 47, 57, 0.08);
+      border-color: rgba(140, 47, 57, 0.18);
+      color: #8c2f39;
+    }
+
+    .chart-card {
+      padding: 22px;
+    }
+
+    .panel-title {
+      margin-bottom: 10px;
+      font-size: 1.12rem;
+    }
+
+    .chart-wrap {
+      border: 1px solid var(--border);
+      background: #ffffff;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+    }
+
+    .result-panel {
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .result-title {
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .result-label {
+      color: var(--muted);
+    }
+
+    .result-value {
+      color: var(--accent);
+      font-size: 0.86rem;
+      text-align: right;
+    }
+
+    .result-row.highlight .result-value {
+      color: #1f5c47;
+    }
+
+    .source-badge {
+      width: fit-content;
+      font-family: var(--font-sans);
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border: 1px solid var(--border);
+    }
+
+    .source-badge.browser {
+      color: #8a6700;
+      background: rgba(138, 103, 0, 0.08);
+    }
+
+    .source-badge.api {
+      color: #1f5c47;
+      background: rgba(31, 92, 71, 0.08);
+    }
+
+    .error-panel {
+      margin-top: 16px;
+      border: 1px solid rgba(140, 47, 57, 0.25);
+      background: rgba(140, 47, 57, 0.06);
+      color: #8c2f39;
+      padding: 14px 16px;
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
     .code-block {
       margin-top: 20px;
       padding: 18px 20px;
@@ -400,6 +637,7 @@
       .cover-meta,
       .grid-2,
       .grid-3,
+      .demo-grid,
       .section-header {
         grid-template-columns: 1fr;
       }
@@ -420,7 +658,7 @@
     }
   </style>
 </head>
-<body>
+<body class="light-theme">
   <header class="report-bar">
     <div class="report-bar-inner">
       <div>Quantum Drift Forecasting Report</div>
@@ -429,6 +667,7 @@
         <a href="#results">Comparative Results</a>
         <a href="#applications">Operational Meaning</a>
         <a href="#evidence">Evidence</a>
+        <a href="#demo">Interactive Demo</a>
         <a href="#reports">Reports</a>
       </nav>
     </div>
@@ -436,11 +675,11 @@
 
   <main class="page">
     <section class="cover">
-      <p class="cover-kicker">Research Summary • Institutional Presentation</p>
+      <p class="cover-kicker">Research Summary • Comparative Findings</p>
       <h1>Sequence Models for Quantum Hardware Drift, Calibration, and Reliability Monitoring</h1>
       <p class="subtitle">
-        This landing page presents the benchmark in the visual language of an academic report: restrained styling,
-        comparative tables, and concise claims limited to results where the selected models outperform existing baselines.
+        This document summarizes the benchmark with comparative tables and concise claims limited to results where the
+        selected models outperform existing baselines.
       </p>
 
       <div class="cover-meta">
@@ -630,6 +869,96 @@
       </div>
     </section>
 
+    <section id="demo">
+      <div class="section-header">
+        <div class="section-label">Interactive Demonstration</div>
+        <div class="section-intro body-copy">
+          <h2>Synthetic drift simulation</h2>
+          <p>
+            The demonstration below retains the interactive drift example in the root document. If the local API is active,
+            forecasts are requested from the backend. Otherwise the browser fallback remains available.
+          </p>
+        </div>
+      </div>
+
+      <div class="demo-grid">
+        <div class="controls-panel card">
+          <h3 class="panel-title">Signal Parameters</h3>
+
+          <div class="control-group">
+            <label class="control-label" for="steps-range">
+              Time steps
+              <span class="control-val" id="steps-val">60</span>
+            </label>
+            <input type="range" id="steps-range" class="range-input" min="30" max="120" value="60" step="5" />
+            <div class="range-bounds"><span>30</span><span>120</span></div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="noise-range">
+              Noise level sigma (µs)
+              <span class="control-val" id="noise-val">3.0</span>
+            </label>
+            <input type="range" id="noise-range" class="range-input" min="0.5" max="10" value="3.0" step="0.5" />
+            <div class="range-bounds"><span>0.5</span><span>10.0</span></div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="drift-range">
+              Drift rate (µs / step)
+              <span class="control-val" id="drift-val">0.050</span>
+            </label>
+            <input type="range" id="drift-range" class="range-input" min="0" max="0.25" value="0.05" step="0.005" />
+            <div class="range-bounds"><span>0.000</span><span>0.250</span></div>
+          </div>
+
+          <div class="button-row">
+            <button id="generate" class="button-link button-control" type="button">Generate Signal</button>
+            <button id="forecast-btn" class="button-link button-control primary-control" type="button">Forecast Drift</button>
+          </div>
+
+          <p class="hint-text" id="chart-hint">60 steps · 8-step forecast</p>
+          <div class="drift-status stable" id="drift-status">Stable — drift probability 0.0%</div>
+        </div>
+
+        <div class="chart-card">
+          <h3 class="panel-title">T1 Coherence Time Forecast</h3>
+          <div class="chart-wrap">
+            <svg id="drift-svg" role="img" aria-label="T1 coherence time series with 8-step forecast"></svg>
+          </div>
+
+          <div id="result-panel" class="result-panel hidden">
+            <h4 class="result-title">Forecast Results</h4>
+            <div class="result-row highlight">
+              <span class="result-label">8-step T1 forecast (first 4)</span>
+              <span class="result-value" id="res-forecast">—</span>
+            </div>
+            <div class="result-row" id="drift-prob-row">
+              <span class="result-label">Drift probability</span>
+              <span class="result-value" id="res-drift-prob">—</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Anomaly score</span>
+              <span class="result-value" id="res-anomaly">—</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Mean T1 (µs)</span>
+              <span class="result-value" id="res-mean-t1">—</span>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Min T1 (µs)</span>
+              <span class="result-value" id="res-min-t1">—</span>
+            </div>
+            <div id="source-badge" class="source-badge hidden browser"></div>
+          </div>
+
+          <div id="error-panel" class="error-panel hidden">
+            <strong>Error:</strong> <span id="error-msg"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="reports">
       <div class="section-header">
         <div class="section-label">Executed Reports</div>
@@ -695,8 +1024,9 @@ jupyter nbconvert --to notebook --execute --inplace notebooks/quantum_drift_comb
     </section>
 
     <footer>
-      Prepared as a white-background institutional summary page for benchmark results in quantum drift forecasting and operational anomaly analysis.
+      Prepared as a research summary of benchmark results in quantum drift forecasting and operational anomaly analysis.
     </footer>
   </main>
+  <script src="website/demo.js"></script>
 </body>
 </html>

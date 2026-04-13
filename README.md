@@ -90,7 +90,7 @@ jupyter nbconvert --to html --output-dir website/notebooks_html \
   notebooks/quantum_drift_combined.ipynb
 ```
 
-To run the optional local inference API used by the website demo:
+To run the optional local inference API used by the interactive demo:
 
 ```bash
 python -m src.server --port 5000
