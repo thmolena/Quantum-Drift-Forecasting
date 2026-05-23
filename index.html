@@ -36,6 +36,10 @@
       line-height: 1.72;
     }
 
+    section {
+      scroll-margin-top: 96px;
+    }
+
     a {
       color: var(--accent);
       text-decoration: none;
@@ -59,8 +63,13 @@
     }
 
     .report-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
       border-bottom: 1px solid var(--border);
-      background: #fbfcfe;
+      background: rgba(251, 252, 254, 0.96);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 20px rgba(22, 38, 58, 0.05);
     }
 
     .report-bar-inner {
@@ -78,6 +87,12 @@
       text-transform: uppercase;
     }
 
+    .report-title {
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
     .report-bar nav {
       display: flex;
       flex-wrap: wrap;
@@ -92,6 +107,11 @@
     .report-bar a:focus {
       color: var(--accent);
       text-decoration: none;
+    }
+
+    .nav-repo {
+      font-weight: 700;
+      color: var(--accent) !important;
     }
 
     .cover {
@@ -190,6 +210,24 @@
     .section-intro h2 {
       font-size: clamp(1.55rem, 2.4vw, 2.1rem);
       margin-bottom: 10px;
+    }
+
+    .section-reference {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-left: 3px solid var(--accent);
+      background: var(--accent-soft);
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      color: var(--ink);
+    }
+
+    .section-reference strong {
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      margin-right: 8px;
+      color: var(--accent);
     }
 
     .section-intro p,
@@ -661,7 +699,7 @@
 <body class="light-theme">
   <header class="report-bar">
     <div class="report-bar-inner">
-      <div>Quantum Drift Forecasting Report</div>
+      <div class="report-title">Quantum Drift Forecasting Report</div>
       <nav aria-label="Primary">
         <a href="#summary">Summary</a>
         <a href="#results">Comparative Results</a>
@@ -669,6 +707,7 @@
         <a href="#evidence">Evidence</a>
         <a href="#demo">Interactive Demo</a>
         <a href="#reports">Reports</a>
+        <a class="nav-repo" href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
       </nav>
     </div>
   </header>
@@ -678,8 +717,8 @@
       <p class="cover-kicker">Research Summary • Comparative Findings</p>
       <h1>Sequence Models for Quantum Hardware Drift, Calibration, and Reliability Monitoring</h1>
       <p class="subtitle">
-        This document summarizes the benchmark with comparative tables and concise claims limited to results where the
-        selected models outperform existing baselines.
+        This document presents a reproducible sequence-model benchmark for drift forecasting, anomaly ranking, and incident-aware
+        monitoring on real temporal regimes, with emphasis on the results that define the strongest deployment choices.
       </p>
 
       <div class="cover-meta">
@@ -707,11 +746,12 @@
         <div class="section-intro body-copy">
           <h2>Central empirical findings</h2>
           <p>
-            The benchmark supports two clear performance claims. First, the GRU is the strongest recurrent architecture for
-            incident-aware thermal monitoring: it combines non-zero incident detection, perfect recall, strong anomaly ranking,
-            and a lower parameter count than the LSTM. Second, the Transformer is the strongest model for anomaly ranking on
-            periodic calibration-like telemetry, where long-range structure matters most.
+            The benchmark establishes two principal findings. First, the GRU is the strongest recurrent architecture for
+            incident-aware thermal monitoring: it combines incident detection, perfect recall, strong anomaly ranking, and a more
+            compact parameter profile than the higher-capacity recurrent alternative. Second, the Transformer is the strongest model
+            for anomaly ranking on periodic calibration-like telemetry, where long-range structure is most consequential.
           </p>
+          <div class="section-reference"><strong>Repository</strong><a href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">github.com/thmolena/Quantum-Drift-Forecasting</a></div>
           <div class="lead-callout">
             <p>
               Better performance in this project means three practical advantages: more reliable detection of drift or failure windows,
@@ -729,9 +769,10 @@
         <div class="section-intro">
           <h2>Reported only where the selected model leads</h2>
           <p>
-            The table below keeps the emphasis strictly on the benchmark wins: the GRU where it leads recurrent forecasting and incident
-            detection, and the Transformer where it leads anomaly ranking on periodic operational signals.
+            The comparative record below concentrates on the results that most clearly differentiate model capability: the GRU where it
+            leads recurrent forecasting and incident detection, and the Transformer where it leads anomaly ranking on periodic operational signals.
           </p>
+          <div class="section-reference"><strong>Repository</strong><a href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">github.com/thmolena/Quantum-Drift-Forecasting</a></div>
         </div>
       </div>
 
@@ -814,6 +855,7 @@
             and sequential drift forecasting. In those applications, a better model is not just numerically stronger; it changes what an operator
             can do with the signal.
           </p>
+          <div class="section-reference"><strong>Repository</strong><a href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">github.com/thmolena/Quantum-Drift-Forecasting</a></div>
         </div>
       </div>
 
@@ -839,8 +881,9 @@
         <div class="section-intro">
           <h2>Supporting figures</h2>
           <p>
-            The figures below are retained as concise supporting material. The full evidentiary record remains in the executed notebooks.
+            The figures below provide compact supporting evidence for the benchmark. The full evidentiary record remains available in the executed notebooks and repository materials.
           </p>
+          <div class="section-reference"><strong>Repository</strong><a href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">github.com/thmolena/Quantum-Drift-Forecasting</a></div>
         </div>
       </div>
 
@@ -875,9 +918,10 @@
         <div class="section-intro body-copy">
           <h2>Synthetic drift simulation</h2>
           <p>
-            The demonstration below retains the interactive drift example in the root document. If the local API is active,
-            forecasts are requested from the backend. Otherwise the browser fallback remains available.
+            The interactive simulation below exposes the forecasting workflow directly. If the local API is active, forecasts are requested
+            from the backend. Otherwise the browser fallback remains available for rapid inspection of drift behavior.
           </p>
+          <div class="section-reference"><strong>Repository</strong><a href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">github.com/thmolena/Quantum-Drift-Forecasting</a></div>
         </div>
       </div>
 
@@ -965,8 +1009,9 @@
         <div class="section-intro">
           <h2>Primary artifacts</h2>
           <p>
-            Each notebook report addresses a distinct question and contains the full metric tables, figures, and execution outputs for the study.
+            Each notebook report addresses a distinct technical question and preserves the metric tables, figures, and execution outputs required for close review.
           </p>
+          <div class="section-reference"><strong>Repository</strong><a href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">github.com/thmolena/Quantum-Drift-Forecasting</a></div>
         </div>
       </div>
 
