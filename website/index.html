@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quantum Drift Forecasting Report</title>
+  <title>Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="light-theme">
@@ -22,11 +22,12 @@
 
   <main class="page">
     <section class="cover" id="top">
-      <p class="cover-kicker">Research Summary • Comparative Findings</p>
-      <h1>Sequence Models for Quantum Hardware Drift, Calibration, and Reliability Monitoring</h1>
+      <p class="cover-kicker">Applied Mathematics • Machine Learning for Quantum Hardware • Manuscript prepared for Nature Machine Intelligence</p>
+      <h1>Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware</h1>
       <p class="subtitle">
-        This document summarizes the benchmark results while preserving the interactive drift demonstration and the
-        executed notebook access points.
+        A reproducible, GPU-accelerated study that frames qubit decoherence and calibration drift as a multivariate
+        stochastic-dynamical forecasting problem, alongside the interactive drift demonstration and executed notebook reports.
+        The full <a href="../submission/main.pdf">manuscript</a> is prepared for submission to <em>Nature Machine Intelligence</em>.
       </p>
 
       <div class="cover-meta">
@@ -54,9 +55,14 @@
         <div class="section-intro body-copy">
           <h2>Central empirical findings</h2>
           <p>
-            The benchmark supports two principal claims. The GRU is the leading recurrent architecture for incident-aware thermal monitoring,
-            while the Transformer is the leading model for anomaly ranking on periodic calibration-like telemetry. The study is therefore framed
-            as an objective-aware benchmark rather than as a claim of universal superiority for one model family.
+            The project sits at the intersection of applied mathematics, machine learning, and quantum-hardware reliability: qubit
+            telemetry is modeled as a mean-reverting stochastic process, and forecasting it is posed as an estimation problem solved with
+            accelerated, hardware-agnostic training that runs unchanged on CPU or GPU.
+          </p>
+          <p>
+            On that foundation, the benchmark supports two principal claims. The GRU is the leading recurrent architecture for incident-aware
+            thermal monitoring, while the Transformer is the leading model for anomaly ranking on periodic calibration-like telemetry. The study
+            is therefore framed as an objective-aware benchmark rather than as a claim of universal superiority for one model family.
           </p>
           <div class="lead-callout">
             <p>
@@ -353,7 +359,8 @@ python -m src.server --port 5000</pre>
     </section>
 
     <footer>
-      Prepared as a research summary of benchmark results and interactive drift demonstration.
+      Prepared as a research summary at the intersection of applied mathematics, machine learning, and quantum-hardware reliability —
+      framing decoherence and calibration drift as a stochastic forecasting problem solved with accelerated, reproducible sequence models.
     </footer>
   </main>
 

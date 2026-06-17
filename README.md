@@ -1,4 +1,20 @@
-# Sequence Models for Quantum Hardware Drift, Calibration, and Reliability Monitoring
+# Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware
+
+> A reproducible benchmark and manuscript framing quantum-hardware reliability as a multivariate
+> stochastic forecasting and anomaly-detection problem. The accompanying paper is prepared for
+> submission to *Nature Machine Intelligence* (see [`submission/`](submission/)).
+
+## Overview
+
+Useful, scalable quantum computing depends on hardware that stays well-characterized over time. Qubit coherence times, gate fidelities, and calibration parameters all drift, and that drift is one of the practical barriers between today's noisy devices and fault-tolerant operation. This repository treats drift as an applied-mathematics problem — a multivariate, mean-reverting stochastic process — and studies how modern sequence models forecast it, rank anomalous operating intervals, and surface failure windows early enough to act on.
+
+The work is built as a reproducible, GPU-accelerated benchmark. All models are implemented in PyTorch and run unchanged on either CPU or GPU, so the same pipeline scales from a single laptop to a large device fleet. The emphasis throughout is research-grade rigor: chronological train/validation/test splits with no leakage, objective-aware model selection, and metrics reported against the operational decision each model is meant to support.
+
+## Research Context
+
+- **Applied mathematics.** Qubit telemetry is modeled as a mean-reverting stochastic process combining slow periodic drift, linear degradation, and Gaussian fluctuation. Forecasting, reconstruction-based anomaly scoring, and uncertainty-aware classification are posed as estimation and optimization problems over this dynamical system.
+- **Quantum hardware reliability.** The feature set — T1, T2, single- and two-qubit gate fidelity, readout error, error-per-Clifford, and cross-resonance phase — mirrors the calibration quantities that determine whether a device is fit to run circuits, and that must remain stable for quantum error correction to hold.
+- **Scalable, accelerated ML.** Recurrent (RNN/LSTM/GRU) and attention-based (Transformer) architectures share one forecasting/anomaly interface and a hardware-agnostic training loop, making the benchmark a clean testbed for accelerated, large-scale time-series modeling of quantum systems.
 
 ## Executive Summary
 
@@ -35,11 +51,21 @@ Each experiment is available as both an executable notebook and an HTML report.
 | `transformer_calibration` | Transformer-centered anomaly ranking on periodic telemetry | [Notebook](notebooks/transformer_calibration.ipynb) · [HTML](website/notebooks_html/transformer_calibration.html) |
 | `quantum_drift_combined` | GRU-leading cross-domain forecasting and ranking summary | [Notebook](notebooks/quantum_drift_combined.ipynb) · [HTML](website/notebooks_html/quantum_drift_combined.html) |
 
+## Manuscript
+
+A full research manuscript — *Objective-aware sequence modelling for drift forecasting and anomaly detection in quantum hardware* — is prepared for submission to *Nature Machine Intelligence* and lives in [`submission/`](submission/) as a self-contained article:
+
+- [`main.pdf`](submission/main.pdf) — the compiled, publication-format article (single-spaced, journal-style headings): four figures (all bar or line charts), three results tables, Methods, an inlined bibliography, and the required data/code-availability, author-contributions and competing-interests statements.
+- [`main.tex`](submission/main.tex) — the self-contained LaTeX source (standard `article` class, bibliography inlined; no external `.cls` or `.bib` needed).
+
+The figures embedded in `main.pdf` were generated from the project's own data — Figures 1, 2 and 4 (coherence dynamics and autocorrelation, the forecasting benchmark, and the reconstruction detector) computed on CPU from the telemetry generator in [src/data.py](src/data.py), and Figure 3 and the sequence-model tables from the metrics recorded by the executed notebooks. Reported uncertainties are mean ± s.d. across seeds or randomised splits. `main.pdf` is the canonical, self-contained artifact with all figures embedded.
+
 ## Repository Structure
 
 ```text
 Quantum-Drift-Forecasting/
 ├── README.md
+├── LICENSE
 ├── index.html
 ├── requirements.txt
 ├── data/
@@ -67,6 +93,9 @@ Quantum-Drift-Forecasting/
 │   ├── real_benchmark.py
 │   ├── server.py
 │   └── train.py
+├── submission/
+│   ├── main.tex
+│   └── main.pdf
 └── website/
     ├── index.html
     ├── style.css

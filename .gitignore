@@ -37,3 +37,12 @@ Thumbs.db
 # Distribution / packaging
 *.so
 *.dylib
+
+# LaTeX build artifacts (keep .tex, .bib, .bbl and compiled .pdf)
+*.aux
+*.log
+*.out
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz

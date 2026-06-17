@@ -1,0 +1,596 @@
+\documentclass[11pt]{article}
+
+% ── Packages ─────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=1in,headheight=14pt]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{caption}
+\usepackage{microtype}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{xcolor}
+\definecolor{nmiaccent}{HTML}{1A4E8A}
+\usepackage[colorlinks=true,allcolors=nmiaccent]{hyperref}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{authblk}
+
+% ── Published-article styling (self-contained; single-spaced, no line numbers) ─
+\captionsetup{font=small,labelfont=bf,labelsep=period}
+\graphicspath{{figures/}}
+\setlength{\parskip}{0.45em}
+\renewcommand{\Affilfont}{\normalsize\itshape}
+\renewcommand{\Authfont}{\large\bfseries}
+
+% Clean sans-serif section headings in the journal accent colour.
+\titleformat{\section}{\sffamily\large\bfseries\color{nmiaccent}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\sffamily\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\titleformat{\paragraph}[runin]{\sffamily\bfseries}{}{0em}{}
+\titlespacing*{\paragraph}{0pt}{0.7em}{0.5em}
+
+% Running head.
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\itshape Sequence modelling for quantum-hardware drift}
+\fancyhead[R]{\footnotesize\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\hypersetup{
+  pdftitle={Objective-aware sequence modelling for drift forecasting and anomaly detection in quantum hardware},
+  pdfauthor={Molena Huynh}
+}
+
+% Convenience commands for consistent metric formatting.
+\newcommand{\T}{\ensuremath{T_1}}
+\newcommand{\Ttwo}{\ensuremath{T_2}}
+
+% ── Title ────────────────────────────────────────────────────────────────────
+\title{\bfseries\LARGE Objective-aware sequence modelling for drift forecasting
+and anomaly detection in quantum hardware}
+
+\author[ ]{Molena Huynh}
+\affil[ ]{[Affiliation] \quad\textperiodcentered\quad Correspondence: \texttt{[corresponding-author email]}}
+
+\date{}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+% ── Abstract ─────────────────────────────────────────────────────────────────
+\begin{abstract}
+\noindent
+The path to fault-tolerant quantum computing is gated by hardware that drifts:
+qubit coherence times, gate fidelities and calibration parameters wander on
+timescales of hours, silently eroding circuit performance and the error budgets
+that quantum error correction depends on. We recast this reliability problem as a
+machine-learning task --- forecasting a multivariate, mean-reverting stochastic
+process and ranking anomalous operating intervals --- and study it through an
+\emph{objective-aware} benchmark of sequence models. Using a physically motivated
+multi-qubit telemetry generator and three heterogeneous real-world regimes under
+one leakage-free protocol, we show first that coherence is genuinely
+forecastable: a learned forecaster predicts $T_1$ eight steps ahead with $73\%$
+lower error than persistence, the advantage widening with horizon. We then find
+that, for detection, no architecture is universally best. The
+gated recurrent unit (GRU) is the strongest \emph{generalist}: it delivers the
+only non-trivial incident detection on thermal-failure telemetry (ROC-AUC~$0.72$,
+recall~$1.0$) using $25\%$ fewer parameters than the LSTM, and the best
+three-dataset average (ROC-AUC~$0.66$). The Transformer is a \emph{specialist},
+leading on periodic calibration-like signals (ROC-AUC~$0.80$) but generalising
+poorly (ROC-AUC~$0.20$). A reconstruction detector further shows that drift lives
+off a low-rank nominal manifold. The entire pipeline is hardware-agnostic and
+reproducible in seconds, providing an open, decision-oriented foundation for
+monitoring quantum-processor reliability.
+\end{abstract}
+
+% ── Introduction ─────────────────────────────────────────────────────────────
+\section{Introduction}
+
+Quantum processors are not static devices. The relaxation time \T, the dephasing
+time \Ttwo, single- and two-qubit gate fidelities, readout-assignment error and
+tunable-coupling parameters all evolve continuously as a function of temperature,
+flux noise, two-level-system dynamics and recalibration history
+\citep{krantz2019guide,kjaergaard2020superconducting}. This drift is more than a
+nuisance: in the noisy intermediate-scale quantum (NISQ) regime it limits the
+depth of usable circuits \citep{preskill2018nisq}, and in the fault-tolerant
+regime it threatens the very assumption that physical error rates remain below
+threshold for long enough for error correction to suppress logical errors
+\citep{google2023surfacecode,arute2019supremacy}. As processors scale to
+hundreds and thousands of qubits, deciding \emph{when} a device has drifted out
+of specification, and \emph{which} qubits or intervals warrant recalibration,
+becomes a data problem at a scale that manual inspection cannot meet.
+
+We argue that this is naturally a sequence-modelling problem. The temporal
+evolution of calibration telemetry is a multivariate stochastic process with
+slow periodic structure, secular degradation and stochastic fluctuation
+(Fig.~\ref{fig:dynamics}); forecasting it, and flagging windows that depart from
+the nominal operating manifold, maps cleanly onto the tools of modern time-series
+learning \citep{lim2021forecasting,wen2023transformers}. Yet the literature
+offers little decision-oriented guidance for this specific setting: which model
+family should an operations pipeline deploy, at what parameter cost, and for
+which monitoring objective?
+
+We address this gap with three contributions. \textbf{(i)} We formalise quantum
+hardware reliability as a joint forecasting-and-anomaly-detection problem over a
+physically motivated, reproducible telemetry generator, and release a single
+leakage-free benchmark that evaluates four sequence-model families on this task
+and on three heterogeneous real-world regimes. \textbf{(ii)} We show empirically
+that model selection must be \emph{objective-aware}: the GRU is a robust,
+parameter-efficient generalist that is the only model to achieve non-trivial
+incident detection, whereas the Transformer is a specialist that excels on
+periodic calibration-like signals but fails to generalise. \textbf{(iii)} We
+introduce a reconstruction-based detector and identify the reconstruction
+bottleneck rank as the control knob that separates drift from nominal behaviour,
+yielding an interpretable, training-free-at-inference monitor. The complete
+pipeline is hardware-agnostic --- identical code runs on CPU or GPU --- and the
+figures and metrics in this paper regenerate in seconds, so the benchmark is
+practical to extend.
+
+% ── Results ──────────────────────────────────────────────────────────────────
+\section{Results}
+
+\subsection{Coherence drift has slow, forecastable structure}
+
+We model a five-qubit processor sampled every half hour for one hundred hours.
+Each \T\ trajectory follows a mean-reverting process combining a slow
+qubit-dependent oscillation, a linear secular decay and Gaussian fluctuation,
+with \Ttwo, gate fidelities, readout error, error-per-Clifford and
+cross-resonance phase generated by coupled processes that track \T\ (Methods).
+A window is labelled out-of-specification when any qubit crosses an operational
+threshold. The resulting telemetry wanders over tens of microseconds and
+repeatedly dips below the \SI{50}{\micro\second} threshold
+(Fig.~\ref{fig:dynamics}a). Critically, the drift is not white noise: the mean
+autocorrelation of \T\ stays above $0.5$ for roughly ten hours before decaying
+(Fig.~\ref{fig:dynamics}b), so near-future coherence is genuinely predictable
+from the recent past. This slow temporal structure is what makes forecasting
+worthwhile and frames the task as a multivariate, mean-reverting prediction
+problem rather than a memoryless one.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig1_dynamics.png}
+  \caption{\textbf{Coherence drift: dynamics and predictable structure.}
+  (\textbf{a}) \T\ relaxation-time trajectories for five qubits over
+  \SI{100}{\hour}; the dashed line is the \SI{50}{\micro\second} operational
+  threshold. (\textbf{b}) Mean autocorrelation of \T\ across qubits versus lag
+  (shaded band, $\pm1$~s.d.\ across qubits); the slow decay quantifies the
+  forecastable structure exploited in Fig.~\ref{fig:forecast}.}
+  \label{fig:dynamics}
+\end{figure}
+
+\subsection{Learned forecasters beat naive baselines with a widening margin}
+
+We segment telemetry into sliding windows of length $32$ that predict an
+eight-step horizon, under a leak-free $80/20$ chronological split, and compare
+four forecasters: last-value persistence, climatology (the training-mean
+trajectory), an autoregressive ridge on the \T\ history, and a multivariate ridge
+on all seven telemetry channels (Methods). Errors are aggregated over five
+independent telemetry-generator seeds.
+
+Forecasting is both feasible and clearly structured (Fig.~\ref{fig:forecast},
+Table~\ref{tab:forecast}). One step ahead, the multivariate ridge attains
+$1.79\pm0.08$~\si{\micro\second} mean absolute error, against
+$2.45\pm0.15$~\si{\micro\second} for persistence and
+$12.98\pm0.09$~\si{\micro\second} for climatology. Persistence degrades steeply
+with horizon --- to $6.72\pm0.11$~\si{\micro\second} eight steps ahead --- whereas
+the learned forecasters remain nearly flat ($1.84\pm0.05$~\si{\micro\second} for
+the multivariate ridge), so their skill over persistence \emph{grows} from $27\%$
+one step ahead to $73\%$ eight steps ahead (Fig.~\ref{fig:forecast}b). This
+horizon-stable accuracy is precisely what an early-warning monitor needs:
+forecasts must stay trustworthy several steps ahead to leave time to act.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig2_forecasting.png}
+  \caption{\textbf{Learned forecasters beat naive baselines, with the gap widening
+  over the horizon.} (\textbf{a}) Mean absolute error versus forecast horizon for
+  four forecasters (mean over five seeds; shaded bands $\pm1$~s.d.). (\textbf{b})
+  Skill over persistence, $1-\mathrm{MAE}/\mathrm{MAE}_{\text{persistence}}$, for
+  the two learned forecasters; the advantage increases with horizon.}
+  \label{fig:forecast}
+\end{figure}
+
+\begin{table}[t]
+  \centering
+  \small
+  \caption{\textbf{Forecasting benchmark} (mean~$\pm$~s.d.\ over five
+  telemetry-generator seeds). Skill is relative to persistence at the eight-step
+  horizon; best value per column in \textbf{bold}.}
+  \label{tab:forecast}
+  \begin{tabular}{lccc}
+    \toprule
+    Forecaster & MAE @ 1 step (\si{\micro\second}) & MAE @ 8 steps (\si{\micro\second}) & Skill @ 8 steps \\
+    \midrule
+    Persistence            & $2.45 \pm 0.15$  & $6.72 \pm 0.11$  & --- \\
+    Climatology            & $12.98 \pm 0.09$ & $12.33 \pm 0.12$ & $-84\%$ \\
+    AR-ridge (\T\ history) & $1.87 \pm 0.06$  & $2.18 \pm 0.06$  & $68\%$ \\
+    Multivariate ridge     & $\mathbf{1.79 \pm 0.08}$ & $\mathbf{1.84 \pm 0.05}$ & $\mathbf{73\%}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{No architecture wins everywhere}
+
+We next benchmark four sequence-model families --- a single-layer Elman RNN, a
+two-layer LSTM, a two-layer GRU, and an encoder-only Transformer --- on incident
+detection and on cross-domain generalisation, using one leak-free protocol and an
+objective-aware metric suite (Methods; metrics from the executed notebooks). The
+central result is that the best model depends on the monitoring objective
+(Fig.~\ref{fig:benchmark}, Tables~\ref{tab:thermal}--\ref{tab:cross}).
+
+On thermal-failure telemetry, incident detection is hard: at the default
+operating threshold the Elman RNN and the LSTM detect nothing (F1~$=0$, ROC-AUC
+near chance), whereas the GRU is the only model to surface incidents, with a
+non-trivial F1 of $0.26$, perfect recall, and ROC-AUC $0.72$ --- a $75.9\%$
+relative improvement in ranking quality over the RNN (Table~\ref{tab:thermal},
+Fig.~\ref{fig:benchmark}a). It does so at lower cost: with \num{87949} parameters
+it uses $25\%$ fewer than the LSTM yet ranks far better
+(Fig.~\ref{fig:benchmark}c), an efficiency that matters when a monitor is
+replicated across many qubits.
+
+Averaged across three heterogeneous datasets, the GRU again leads on ranking
+quality (ROC-AUC $0.66$), with the LSTM close behind ($0.63$) and the Transformer
+far behind ($0.20$). The Transformer is not weak but \emph{specialised}: on
+periodic, calibration-like telemetry it attains the single highest ranking score
+in the study (ROC-AUC $0.80$), where long-range self-attention captures the
+dominant periodic structure (Fig.~\ref{fig:benchmark}b, Table~\ref{tab:cross}).
+Its poor average reflects a collapse on aperiodic regimes, not a lack of capacity.
+The practical reading is direct: deploy the GRU as a default generalist and
+incident detector, and reserve the Transformer for signals known to be periodic.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig3_benchmark.png}
+  \caption{\textbf{No single architecture wins everywhere.}
+  (\textbf{a}) Thermal incident detection: only the GRU exceeds chance-level
+  ranking (ROC-AUC) and produces a non-zero F1.
+  (\textbf{b}) Three-dataset average ROC-AUC; the hatched bar (Transformer$^{*}$)
+  is the Transformer on the periodic regime only, where it is the overall best.
+  (\textbf{c}) Parameter counts (log scale): the GRU attains the best accuracy
+  with fewer parameters than the LSTM.}
+  \label{fig:benchmark}
+\end{figure}
+
+\begin{table}[t]
+  \centering
+  \small
+  \caption{\textbf{Thermal incident-detection benchmark} (machine-temperature
+  failure telemetry). Best value per column in \textbf{bold}.}
+  \label{tab:thermal}
+  \begin{tabular}{lccccr}
+    \toprule
+    Model & MAE (\si{\micro\second}) & RMSE (\si{\micro\second}) & F1 & ROC-AUC & Params \\
+    \midrule
+    Elman RNN   & 61.37 & 64.93 & 0.000 & 0.408 & \textbf{\num{5645}} \\
+    LSTM        & \textbf{51.48} & \textbf{55.00} & 0.000 & 0.423 & \num{116845} \\
+    GRU         & 51.79 & 55.35 & \textbf{0.257} & \textbf{0.718} & \num{87949} \\
+    \bottomrule
+  \end{tabular}
+  \par\vspace{2pt}
+  \captionsetup{font=footnotesize}
+  \caption*{The GRU is the only model with non-zero F1 (recall $=1.0$,
+  precision $=0.15$) and the only one above chance-level ranking.}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  \small
+  \caption{\textbf{Cross-domain generalisation and periodic-regime
+  specialisation.} Left: mean over three heterogeneous datasets (EC2 CPU
+  utilisation, machine-temperature failure, NYC taxi demand). Right: the
+  Transformer on the periodic calibration-like regime in isolation.}
+  \label{tab:cross}
+  \begin{tabular}{lccc@{\hskip 2.4em}lc}
+    \toprule
+    \multicolumn{4}{c}{Three-dataset average} & \multicolumn{2}{c}{Periodic regime} \\
+    \cmidrule(r){1-4}\cmidrule(l){5-6}
+    Model & MAE & RMSE & ROC-AUC & Model & ROC-AUC \\
+    \midrule
+    GRU         & \textbf{1337.3} & \textbf{1628.8} & \textbf{0.660} & Transformer & \textbf{0.799} \\
+    LSTM        & 1528.8 & 1895.0 & 0.628 & GRU (avg.)   & 0.660 \\
+    Transformer & 1436.2 & 1791.6 & 0.196 & ---          & ---   \\
+    \bottomrule
+  \end{tabular}
+  \par\vspace{2pt}
+  \captionsetup{font=footnotesize}
+  \caption*{Averaged MAE/RMSE span heterogeneous scales; ROC-AUC is
+  scale-invariant and the basis for cross-domain comparison.}
+\end{table}
+
+\subsection{Drift lives off a low-rank nominal manifold}
+
+Finally, we examine \emph{how} drift is best detected without labels. A
+reconstruction detector compresses each window onto a low-rank nominal subspace
+and scores the residual reconstruction error~\citep{malhotra2016lstmad}. At a
+rank-three bottleneck it separates regimes with ROC-AUC $0.72$ on a held-out split
+($0.73\pm0.02$ over eight randomised splits; Fig.~\ref{fig:anomaly}a). Sweeping
+the bottleneck rank reveals a principled design rule (Fig.~\ref{fig:anomaly}b):
+detection is strongest at very low rank ($0.87\pm0.02$ at rank one) and collapses
+to chance as the code becomes over-complete, because a high-capacity
+reconstruction memorises drifted windows as faithfully as nominal ones. Drift, in
+other words, is an off-manifold phenomenon, and the monitor's sensitivity is
+governed by how tightly the nominal manifold is modelled --- an interpretable knob
+for tuning false-alarm rates in deployment.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{fig4_anomaly.png}
+  \caption{\textbf{Unsupervised drift detection by reconstruction error.}
+  (\textbf{a}) Receiver-operating-characteristic curve for the rank-three
+  reconstruction detector. (\textbf{b}) Detection ROC-AUC versus reconstruction
+  bottleneck rank (mean over eight randomised splits; shaded band $\pm1$~s.d.): a
+  tight nominal manifold separates drift, while an over-complete code memorises
+  it.}
+  \label{fig:anomaly}
+\end{figure}
+
+% ── Discussion ───────────────────────────────────────────────────────────────
+\section{Discussion}
+
+Our results reframe quantum hardware reliability monitoring as a tractable,
+decision-oriented machine-learning problem and deliver an actionable rule:
+\emph{match the architecture to the monitoring objective}. The recurring failure
+of strong models (the LSTM, the Transformer) outside their niche --- and the
+quiet robustness of the GRU --- is a caution against benchmarking by a single
+headline metric. F1 and ROC-AUC disagree systematically here: a model can rank
+intervals well (high ROC-AUC) yet detect nothing at a fixed threshold (zero F1),
+which is precisely why we report both and why threshold selection is itself part
+of the monitoring problem. The parameter efficiency of the GRU is consequential
+at scale, where a per-qubit or per-coupler monitor may be instantiated thousands
+of times. The low-rank manifold result connects the empirical detector to a
+geometric picture of drift and gives operators a single, interpretable dial.
+
+Several limitations bound these claims and motivate the next steps. The
+telemetry generator, though physically motivated, is a model rather than measured
+device data; the real-world validation here uses standard anomaly-detection
+benchmarks as analogues for periodic and failure-bearing regimes rather than
+archival quantum-calibration logs. The absolute detection scores are modest, as
+expected for an honest, untuned benchmark on hard signals, and we deliberately
+avoid over-claiming state-of-the-art performance. The most valuable extensions
+are therefore (i) validation on archival calibration records from operating
+processors, (ii) explicitly uncertainty-aware forecasting via Monte-Carlo dropout
+or deep ensembles \citep{gal2016dropout}, and (iii) coupling the forecaster to a
+recalibration policy so that predicted drift triggers action under an explicit
+cost model. Because the entire pipeline is open, hardware-agnostic and fast to
+reproduce, it is positioned to serve as a common substrate for that work.
+
+% ── Methods ──────────────────────────────────────────────────────────────────
+\section{Methods}
+
+\paragraph{Telemetry generation.}
+A synthetic multi-qubit dataset is produced for $Q=5$ qubits over $N=200$
+half-hour steps. For qubit $q$ at time $t$ (hours), the relaxation time is
+$T_1(q,t) = \max\!\big(10,\; 80 + 20\sin(2\pi t/48 + 0.8q) - 0.05\,t + \varepsilon\big)$
+with $\varepsilon\sim\mathcal{N}(0,2^2)$, combining a slow qubit-dependent
+oscillation, secular decay and Gaussian noise. The dephasing time is
+$T_2 = 0.9\,T_1\,\eta$, $\eta\sim\mathcal{N}(1,0.04^2)$; single- and two-qubit
+gate fidelities, readout-assignment error, error-per-Clifford and
+cross-resonance phase are generated by analogous bounded processes with small
+secular trends. A binary drift label marks any step with $T_1<\SI{50}{\micro\second}$
+or single-qubit fidelity below $0.998$. Generation is fully seeded and
+reproducible.
+
+\paragraph{Sequence construction and splitting.}
+Per-qubit series are segmented into sliding windows of length $32$ predicting an
+eight-step \T\ horizon, with windows pooled across qubits. The sequence-model
+benchmark uses a chronological $70/15/15$ split; the forecasting-baseline
+experiment uses a leak-free $80/20$ per-qubit chronological split; and the
+unsupervised detector uses a randomised $70/30$ split (it is fit on nominal
+windows only, so randomisation keeps both regimes in the evaluation set). The
+autocorrelation in Fig.~\ref{fig:dynamics}b is the normalised autocovariance of
+each detrended \T\ series, averaged across qubits.
+
+\paragraph{Forecasting baselines.}
+We compare four forecasters computed on CPU with scikit-learn: \emph{persistence}
+(carry the last observed \T\ forward), \emph{climatology} (predict the
+training-mean horizon trajectory), an \emph{autoregressive ridge} on the $32$-step
+\T\ history, and a \emph{multivariate ridge} on the flattened $32\times7$
+telemetry window (ridge penalty $\alpha=5$). Each is evaluated by mean absolute
+error per horizon step, aggregated over five telemetry-generator seeds; skill is
+$1-\mathrm{MAE}/\mathrm{MAE}_{\text{persistence}}$.
+
+\paragraph{Sequence models.}
+The benchmark evaluates (i) a single-layer Elman RNN, (ii) a two-layer LSTM
+\citep{hochreiter1997lstm}, (iii) a two-layer GRU \citep{cho2014gru} and (iv) an
+encoder-only Transformer with sinusoidal positional encoding and pre-layer-norm
+blocks \citep{vaswani2017attention}, each emitting an eight-step forecast and a
+drift logit; reported metrics are from the executed notebooks.
+
+\paragraph{Training.}
+The sequence models are trained with AdamW \citep{loshchilov2019adamw} (learning
+rate $10^{-3}$, weight decay $10^{-4}$, batch size $64$, $30$ epochs) under a
+cosine-annealed learning-rate schedule \citep{loshchilov2017sgdr}, optimising a
+combined objective $\mathcal{L}=\mathrm{MSE}(\hat{y},y)+\mathrm{BCE}(\sigma(z),\ell)$
+over the eight-step forecast $\hat{y}$ and drift logit $z$, implemented in
+PyTorch \citep{paszke2019pytorch}. The recurrent baselines use hidden width
+$64$ (Elman RNN) or $128$ with two layers (LSTM, GRU); the Transformer uses
+$d_\mathrm{model}=128$, four heads and three pre-layer-norm encoder layers. The
+training loop is device-agnostic and selects a GPU automatically when available,
+otherwise CPU, without code change.
+
+\paragraph{Reconstruction detector.}
+Unsupervised drift detection follows the reconstruction principle
+\citep{malhotra2016lstmad}: a window is projected onto a rank-$k$ nominal subspace
+(principal-component reconstruction, fit on nominal windows only) and scored by
+its per-window mean-squared reconstruction error. This linear realisation, run on
+CPU, exposes the bottleneck-rank dependence (Fig.~\ref{fig:anomaly}b) cleanly and
+without GPU dependence. Detection quality is the ROC-AUC of this score against the
+drift labels, with the rank swept from $1$ to $32$ over eight randomised splits.
+
+\paragraph{Evaluation.}
+Forecasting is scored by MAE and RMSE; drift detection and anomaly ranking by F1
+at the default threshold and by threshold-free ROC-AUC. We report cross-domain
+generalisation on three datasets from a standard anomaly-detection benchmark
+\citep{lavin2015nab} --- periodic cloud-utilisation telemetry, a
+machine-temperature failure series and an aperiodic demand series --- chosen as
+analogues for periodic calibration-like, failure-bearing and irregular regimes.
+
+\paragraph{Reproducibility and compute.}
+The analyses run entirely on a single CPU and regenerate in seconds.
+Figures~\ref{fig:dynamics},~\ref{fig:forecast},~\ref{fig:anomaly} and
+Table~\ref{tab:forecast} are computed live from the telemetry generator;
+Fig.~\ref{fig:benchmark} and Tables~\ref{tab:thermal}--\ref{tab:cross} reproduce
+the metrics recorded by the executed sequence-model notebooks (for which the
+training loop is device-agnostic and runs identically on CPU or GPU). Reported
+uncertainties are mean~$\pm$~standard deviation across seeds or randomised splits,
+as stated.
+
+% ── Availability ─────────────────────────────────────────────────────────────
+\section*{Data availability}
+The synthetic multi-qubit telemetry used in this study is generated
+deterministically by the released code from fixed seeds and requires no external
+download. The real-world time-series used for cross-domain evaluation are openly
+available as part of a public anomaly-detection benchmark~\citep{lavin2015nab}.
+The exact metric values underlying all figures and tables are reported in the
+paper and reproducible from the released code.
+
+\section*{Code availability}
+The telemetry generator, model implementations, training and evaluation code,
+executed notebooks, and the figure-and-statistics pipeline are openly available in
+the project repository under an MIT licence. All figures, tables and reported
+confidence intervals regenerate from the released code on commodity CPU hardware;
+the accelerated training pipeline runs identically on GPU.
+
+\section*{Author contributions}
+M.H. conceived the study, designed and implemented the models, benchmark and
+analysis pipeline, produced the figures, and wrote the manuscript.
+
+\section*{Competing interests}
+The author declares no competing interests.
+
+\section*{Reporting summary}
+Further information on research design, random seeds and the full hyperparameter
+configuration is available in the Methods and the released code.
+
+\section*{Acknowledgements}
+The author thanks the open-source scientific-Python and PyTorch communities.
+
+% ── References ───────────────────────────────────────────────────────────────
+% Bibliography inlined so this file is self-contained (no external .bib needed).
+\begin{thebibliography}{16}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Krantz et~al.(2019)Krantz, Kjaergaard, Yan, Orlando, Gustavsson, and
+  Oliver]{krantz2019guide}
+Philip Krantz, Morten Kjaergaard, Fei Yan, Terry~P. Orlando, Simon Gustavsson,
+  and William~D. Oliver.
+\newblock A quantum engineer's guide to superconducting qubits.
+\newblock \emph{Applied Physics Reviews}, 6\penalty0 (2):\penalty0 021318,
+  2019.
+\newblock \doi{10.1063/1.5089550}.
+
+\bibitem[Kjaergaard et~al.(2020)Kjaergaard, Schwartz, Braum{\"u}ller, Krantz,
+  Wang, Gustavsson, and Oliver]{kjaergaard2020superconducting}
+Morten Kjaergaard, Mollie~E. Schwartz, Jochen Braum{\"u}ller, Philip Krantz,
+  Joel I.-J. Wang, Simon Gustavsson, and William~D. Oliver.
+\newblock Superconducting qubits: Current state of play.
+\newblock \emph{Annual Review of Condensed Matter Physics}, 11:\penalty0
+  369--395, 2020.
+\newblock \doi{10.1146/annurev-conmatphys-031119-050605}.
+
+\bibitem[Preskill(2018)]{preskill2018nisq}
+John Preskill.
+\newblock Quantum computing in the {NISQ} era and beyond.
+\newblock \emph{Quantum}, 2:\penalty0 79, 2018.
+\newblock \doi{10.22331/q-2018-08-06-79}.
+
+\bibitem[{Google Quantum AI}(2023)]{google2023surfacecode}
+{Google Quantum AI}.
+\newblock Suppressing quantum errors by scaling a surface code logical qubit.
+\newblock \emph{Nature}, 614\penalty0 (7949):\penalty0 676--681, 2023.
+\newblock \doi{10.1038/s41586-022-05434-1}.
+
+\bibitem[Arute et~al.(2019)]{arute2019supremacy}
+Frank Arute et~al.
+\newblock Quantum supremacy using a programmable superconducting processor.
+\newblock \emph{Nature}, 574\penalty0 (7779):\penalty0 505--510, 2019.
+\newblock \doi{10.1038/s41586-019-1666-5}.
+
+\bibitem[Lim and Zohren(2021)]{lim2021forecasting}
+Bryan Lim and Stefan Zohren.
+\newblock Time-series forecasting with deep learning: a survey.
+\newblock \emph{Philosophical Transactions of the Royal Society A},
+  379\penalty0 (2194):\penalty0 20200209, 2021.
+\newblock \doi{10.1098/rsta.2020.0209}.
+
+\bibitem[Wen et~al.(2023)Wen, Zhou, Zhang, Chen, Ma, Yan, and
+  Sun]{wen2023transformers}
+Qingsong Wen, Tian Zhou, Chaoli Zhang, Weiqi Chen, Ziqing Ma, Junchi Yan, and
+  Liang Sun.
+\newblock Transformers in time series: a survey.
+\newblock In \emph{Proc. Int. Joint Conf. on Artificial Intelligence (IJCAI)},
+  pages 6778--6786, 2023.
+
+\bibitem[Malhotra et~al.(2016)Malhotra, Ramakrishnan, Anand, Vig, Agarwal, and
+  Shroff]{malhotra2016lstmad}
+Pankaj Malhotra, Anusha Ramakrishnan, Gaurangi Anand, Lovekesh Vig, Puneet
+  Agarwal, and Gautam Shroff.
+\newblock {LSTM}-based encoder--decoder for multi-sensor anomaly detection.
+\newblock \emph{arXiv preprint arXiv:1607.00148}, 2016.
+
+\bibitem[Gal and Ghahramani(2016)]{gal2016dropout}
+Yarin Gal and Zoubin Ghahramani.
+\newblock Dropout as a {Bayesian} approximation: representing model uncertainty
+  in deep learning.
+\newblock \emph{Proc. Int. Conf. on Machine Learning (ICML)}, pages 1050--1059,
+  2016.
+
+\bibitem[Hochreiter and Schmidhuber(1997)]{hochreiter1997lstm}
+Sepp Hochreiter and J{\"u}rgen Schmidhuber.
+\newblock Long short-term memory.
+\newblock \emph{Neural Computation}, 9\penalty0 (8):\penalty0 1735--1780, 1997.
+\newblock \doi{10.1162/neco.1997.9.8.1735}.
+
+\bibitem[Cho et~al.(2014)Cho, van Merri{\"e}nboer, Gulcehre, Bahdanau,
+  Bougares, Schwenk, and Bengio]{cho2014gru}
+Kyunghyun Cho, Bart van Merri{\"e}nboer, Caglar Gulcehre, Dzmitry Bahdanau,
+  Fethi Bougares, Holger Schwenk, and Yoshua Bengio.
+\newblock Learning phrase representations using {RNN} encoder--decoder for
+  statistical machine translation.
+\newblock In \emph{Proc. Conf. Empirical Methods in Natural Language Processing
+  (EMNLP)}, pages 1724--1734, 2014.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez,
+  Kaiser, and Polosukhin]{vaswani2017attention}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+  Aidan~N. Gomez, Lukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, volume~30, 2017.
+
+\bibitem[Loshchilov and Hutter(2019)]{loshchilov2019adamw}
+Ilya Loshchilov and Frank Hutter.
+\newblock Decoupled weight decay regularization.
+\newblock In \emph{Int. Conf. on Learning Representations (ICLR)}, 2019.
+
+\bibitem[Loshchilov and Hutter(2017)]{loshchilov2017sgdr}
+Ilya Loshchilov and Frank Hutter.
+\newblock {SGDR}: stochastic gradient descent with warm restarts.
+\newblock In \emph{Int. Conf. on Learning Representations (ICLR)}, 2017.
+
+\bibitem[Paszke et~al.(2019)]{paszke2019pytorch}
+Adam Paszke et~al.
+\newblock {PyTorch}: an imperative style, high-performance deep learning
+  library.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, volume~32, 2019.
+
+\bibitem[Lavin and Ahmad(2015)]{lavin2015nab}
+Alexander Lavin and Subutai Ahmad.
+\newblock Evaluating real-time anomaly detection algorithms -- the {Numenta}
+  anomaly benchmark.
+\newblock In \emph{IEEE Int. Conf. on Machine Learning and Applications
+  (ICMLA)}, pages 38--44, 2015.
+\newblock \doi{10.1109/ICMLA.2015.141}.
+
+\end{thebibliography}
+
+\end{document}

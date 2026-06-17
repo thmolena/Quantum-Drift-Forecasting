@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quantum Drift Forecasting Report</title>
+  <title>Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware</title>
   <style>
     :root {
       --background: #ffffff;
@@ -712,7 +712,7 @@
 <body class="light-theme">
   <header class="report-bar">
     <div class="report-bar-inner">
-      <div class="report-title">Quantum Drift Forecasting Report</div>
+      <div class="report-title">Quantum Hardware Drift Forecasting</div>
       <nav aria-label="Primary">
         <a href="#summary">Summary</a>
         <a href="#results">Comparative Results</a>
@@ -720,6 +720,7 @@
         <a href="#evidence">Evidence</a>
         <a href="#demo">Interactive Demo</a>
         <a href="#reports">Reports</a>
+        <a href="submission/main.pdf">Manuscript</a>
         <a class="nav-repo" href="https://github.com/thmolena/Quantum-Drift-Forecasting" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
       </nav>
     </div>
@@ -727,11 +728,13 @@
 
   <main class="page">
     <section class="cover">
-      <p class="cover-kicker">Research Summary • Comparative Findings</p>
-      <h1>Sequence Models for Quantum Hardware Drift, Calibration, and Reliability Monitoring</h1>
+      <p class="cover-kicker">Applied Mathematics • Machine Learning for Quantum Hardware • Manuscript prepared for Nature Machine Intelligence</p>
+      <h1>Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware</h1>
       <p class="subtitle">
-        This document presents a reproducible sequence-model benchmark for drift forecasting, anomaly ranking, and incident-aware
-        monitoring on real temporal regimes, with emphasis on the results that define the strongest deployment choices.
+        A reproducible, GPU-accelerated study that frames qubit decoherence and calibration drift as a multivariate
+        stochastic-dynamical forecasting problem — applying sequence models and uncertainty-aware anomaly detection to the
+        hardware-reliability questions that gate the path toward fault-tolerant quantum computing. The full
+        <a href="submission/main.pdf">manuscript</a> is prepared for submission to <em>Nature Machine Intelligence</em>.
       </p>
 
       <div class="cover-meta">
@@ -759,7 +762,13 @@
         <div class="section-intro body-copy">
           <h2>Central empirical findings</h2>
           <p>
-            The benchmark establishes two principal findings. First, the GRU is the strongest recurrent architecture for
+            The project is positioned at the intersection of applied mathematics, machine learning, and quantum-hardware reliability.
+            Qubit telemetry — coherence times, gate fidelities, readout error, and cross-resonance phase — is modeled as a mean-reverting
+            stochastic process, and forecasting that process is posed as an estimation and optimization problem solved with accelerated,
+            hardware-agnostic training that runs unchanged on CPU or GPU.
+          </p>
+          <p>
+            On that foundation, the benchmark establishes two principal findings. First, the GRU is the strongest recurrent architecture for
             incident-aware thermal monitoring: it combines incident detection, perfect recall, strong anomaly ranking, and a more
             compact parameter profile than the higher-capacity recurrent alternative. Second, the Transformer is the strongest model
             for anomaly ranking on periodic calibration-like telemetry, where long-range structure is most consequential.
@@ -1030,6 +1039,17 @@
       <div class="link-list">
         <div class="link-item">
           <div>
+            <strong>Research manuscript — prepared for <em>Nature Machine Intelligence</em></strong>
+            <div class="table-note">Objective-aware sequence modelling for drift forecasting and anomaly detection in quantum hardware. The compiled article and its LaTeX source live in <code>submission/</code>.</div>
+          </div>
+          <div class="link-actions">
+            <a class="button-link" href="submission/main.pdf">Manuscript (PDF)</a>
+            <a class="button-link" href="submission/main.tex">LaTeX source</a>
+          </div>
+        </div>
+
+        <div class="link-item">
+          <div>
             <strong>Incident-aware recurrent forecasting</strong>
             <div class="table-note">GRU-centered evidence for thermal-failure detection and recurrent-model comparison.</div>
           </div>
@@ -1081,7 +1101,8 @@ jupyter nbconvert --to notebook --execute --inplace notebooks/quantum_drift_comb
     </section>
 
     <footer>
-      Prepared as a research summary of benchmark results in quantum drift forecasting and operational anomaly analysis.
+      Prepared as a research summary at the intersection of applied mathematics, machine learning, and quantum-hardware reliability —
+      framing decoherence and calibration drift as a stochastic forecasting problem and solving it with accelerated, reproducible sequence models.
     </footer>
   </main>
   <script src="website/demo.js"></script>
