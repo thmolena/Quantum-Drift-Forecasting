@@ -714,6 +714,7 @@
     <div class="report-bar-inner">
       <div class="report-title">Quantum Hardware Drift Forecasting</div>
       <nav aria-label="Primary">
+        <a href="#highlights">Highlights</a>
         <a href="#summary">Summary</a>
         <a href="#results">Comparative Results</a>
         <a href="#applications">Operational Meaning</a>
@@ -752,6 +753,65 @@
           <div class="meta-label">Cross-Dataset Forecasting</div>
           <div class="meta-value">GRU Mean MAE 1337.33</div>
           <p class="meta-note">Best average forecast error and best mean ROC-AUC across the three-dataset comparison.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="highlights">
+      <div class="section-header">
+        <div class="section-label">Key Contributions</div>
+        <div class="section-intro body-copy">
+          <h2>What this project demonstrates</h2>
+          <p>
+            A research portfolio at the intersection of applied mathematics, machine learning, and quantum-hardware
+            reliability — rigorous, reproducible (leak-free protocol, multi-seed confidence intervals, regenerates on CPU
+            in seconds), and oriented toward the operational decisions a quantum-processor monitor must make.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <article class="card">
+          <div class="tag">Problem Framing</div>
+          <h3>Quantum drift as a learning problem</h3>
+          <p>
+            Qubit decoherence and calibration drift recast as a multivariate, mean-reverting stochastic-dynamical
+            forecasting and anomaly-detection task — the hardware-reliability question that gates the path to
+            fault-tolerant quantum computing.
+          </p>
+        </article>
+
+        <article class="card">
+          <div class="tag">Forecasting</div>
+          <h3>Coherence is genuinely forecastable</h3>
+          <p>
+            A learned forecaster predicts T1 coherence eight steps ahead with markedly lower error than naive baselines,
+            and the advantage <em>widens</em> with horizon — established under a leak-free protocol with multi-seed
+            confidence intervals.
+          </p>
+          <div class="metric-line">73% lower 8-step error vs persistence</div>
+        </article>
+
+        <article class="card">
+          <div class="tag">Objective-Aware Benchmark</div>
+          <h3>No architecture wins everywhere</h3>
+          <p>
+            The GRU is the parameter-efficient generalist — the only model with non-trivial incident detection
+            (ROC-AUC 0.72, recall 1.0) at 25% fewer parameters than the LSTM — while the Transformer specialises in
+            periodic signals (ROC-AUC 0.80). A concrete caution against single-metric benchmarking.
+          </p>
+          <div class="metric-line">GRU ROC-AUC 0.72 · 25% fewer parameters than LSTM</div>
+        </article>
+
+        <article class="card">
+          <div class="tag">Mechanistic Insight</div>
+          <h3>Drift lives off a low-rank manifold</h3>
+          <p>
+            An unsupervised reconstruction detector surfaces drift best at a tight bottleneck and collapses to chance when
+            over-complete — identifying drift as an off-manifold phenomenon and giving an interpretable dial for tuning
+            false-alarm rates.
+          </p>
+          <div class="metric-line">Detection ROC-AUC 0.87 at bottleneck rank 1</div>
         </article>
       </div>
     </section>
