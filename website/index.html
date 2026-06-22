@@ -5,213 +5,332 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware</title>
   <link rel="stylesheet" href="style.css" />
+
+  <!-- KaTeX for rendered mathematics -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\[', right: '\\]', display: true}, {left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+  <!-- Supplemental styling for sections not present in style.css (chips, contrib list, numeric tables, KaTeX-friendly cards) -->
+  <style>
+    .stat-chips { margin-top: 28px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .chip { padding: 16px 18px; border: 1px solid var(--border, #c9d2dd); background: var(--surface, #f7f9fc); box-shadow: 0 12px 28px rgba(22,38,58,0.06); }
+    .chip-label { margin-bottom: 8px; font-family: var(--font-sans, "Segoe UI", sans-serif); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent, #1d3f6e); }
+    .chip-value { font-size: 1.5rem; line-height: 1.1; color: var(--ink, #16263a); }
+    .chip-value small { font-size: 0.9rem; color: var(--muted, #4f5f73); }
+    .chip-note { margin: 8px 0 0; font-size: 0.88rem; color: var(--muted, #4f5f73); }
+
+    .contrib-list { margin: 20px 0 0; padding: 0; list-style: none; counter-reset: contrib; }
+    .contrib-list li { position: relative; padding: 16px 18px 16px 56px; border: 1px solid var(--border, #c9d2dd); background: #fff; box-shadow: 0 12px 28px rgba(22,38,58,0.06); color: var(--ink, #16263a); font-size: 1rem; }
+    .contrib-list li + li { margin-top: 12px; }
+    .contrib-list li::before { counter-increment: contrib; content: counter(contrib); position: absolute; left: 16px; top: 16px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: var(--accent, #1d3f6e); color: #fff; font-family: var(--font-sans, sans-serif); font-weight: 700; font-size: 0.85rem; border-radius: 50%; }
+    .contrib-list strong { color: var(--accent, #1d3f6e); }
+
+    .math-card { padding: 20px 22px; margin-top: 18px; border: 1px solid var(--border, #c9d2dd); background: #fff; box-shadow: 0 12px 28px rgba(22,38,58,0.06); }
+    .math-card h3 { font-size: 1.08rem; margin-bottom: 8px; color: var(--ink, #16263a); }
+    .math-card p { color: var(--muted, #4f5f73); font-size: 0.98rem; }
+    .katex-display { margin: 0.7em 0; overflow-x: auto; overflow-y: hidden; }
+
+    td.num, th.num { text-align: right; font-family: var(--font-mono, Menlo, monospace); font-size: 0.9rem; }
+    th.num { font-family: var(--font-sans, sans-serif); }
+    td.best { color: #1f5c47; font-weight: 700; }
+    .table-caption { padding: 14px 16px; font-family: var(--font-sans, sans-serif); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent, #1d3f6e); border-bottom: 1px solid var(--border, #c9d2dd); background: var(--surface, #f7f9fc); }
+    .table-wrap + .table-wrap { margin-top: 20px; }
+    .limitations { margin: 18px 0 0; padding-left: 20px; }
+    .limitations li + li { margin-top: 10px; }
+
+    @media (max-width: 900px) {
+      .stat-chips { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body class="light-theme">
   <header class="report-bar">
     <div class="report-bar-inner">
-      <div>Quantum Drift Forecasting Report</div>
+      <div>Quantum Drift Forecasting</div>
       <nav aria-label="Primary">
-        <a href="#summary">Summary</a>
-        <a href="#results">Comparative Results</a>
-        <a href="#applications">Operational Meaning</a>
-        <a href="#demo">Interactive Demo</a>
-        <a href="#reports">Reports</a>
+        <a href="#background">Background</a>
+        <a href="#contributions">Contributions</a>
+        <a href="#method">Method &amp; Math</a>
+        <a href="#design">Design</a>
+        <a href="#results">Results</a>
+        <a href="#demo">Demo</a>
+        <a href="#conclusion">Conclusion</a>
+        <a href="#paper">Paper &amp; Code</a>
       </nav>
     </div>
   </header>
 
   <main class="page">
+    <!-- 1. HERO -->
     <section class="cover" id="top">
-      <p class="cover-kicker">Applied Mathematics • Machine Learning for Quantum Hardware • Manuscript prepared for Nature Machine Intelligence</p>
+      <p class="cover-kicker">Quantum-hardware reliability • Time-series ML • Objective-aware benchmarking</p>
       <h1>Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware</h1>
       <p class="subtitle">
-        A reproducible, GPU-accelerated study that frames qubit decoherence and calibration drift as a multivariate
-        stochastic-dynamical forecasting problem, alongside the interactive drift demonstration and executed notebook reports.
-        The full <a href="../submission/main.pdf">manuscript</a> is prepared for submission to <em>Nature Machine Intelligence</em>.
+        We recast superconducting-qubit reliability as a multivariate, mean-reverting forecasting-and-anomaly-detection
+        problem and benchmark four sequence-model families under one leakage-free protocol: coherence is genuinely
+        forecastable, and the best detector is objective-dependent — there is no universal winner. The full
+        <a href="../submission/main.pdf">manuscript</a> is below.
       </p>
 
-      <div class="cover-meta">
-        <article class="meta-block">
-          <div class="meta-label">Thermal Incident Detection</div>
-          <div class="meta-value">GRU F1 0.2574</div>
-          <p class="meta-note">Leading recurrent result for machine-temperature failure monitoring.</p>
+      <div class="stat-chips">
+        <article class="chip">
+          <div class="chip-label">Forecast skill @ 8 steps</div>
+          <div class="chip-value">72%<small> vs persistence</small></div>
+          <p class="chip-note">Multivariate ridge; mean over n=5 seeds. Grows from 26% at 1 step.</p>
         </article>
-        <article class="meta-block">
-          <div class="meta-label">Anomaly Ranking</div>
-          <div class="meta-value">Transformer ROC-AUC 0.7987</div>
-          <p class="meta-note">Highest anomaly ranking score observed in the benchmark.</p>
+        <article class="chip">
+          <div class="chip-label">Multivariate-ridge MAE @ 1</div>
+          <div class="chip-value">1.80<small> ± 0.09 µs</small></div>
+          <p class="chip-note">vs 2.44 ± 0.16 µs (persistence). Mean ± s.d., 5 seeds.</p>
         </article>
-        <article class="meta-block">
-          <div class="meta-label">Cross-Dataset Forecasting</div>
-          <div class="meta-value">GRU Mean MAE 1337.33</div>
-          <p class="meta-note">Best average forecast error and mean ROC-AUC across the three-dataset study.</p>
+        <article class="chip">
+          <div class="chip-label">Thermal incident detection</div>
+          <div class="chip-value">0.72<small> ROC-AUC (GRU)</small></div>
+          <p class="chip-note">Recall 1.0, F1 0.26, 87,949 params. Single seeded run (point estimate).</p>
+        </article>
+        <article class="chip">
+          <div class="chip-label">Off-manifold detector</div>
+          <div class="chip-value">0.87<small> ± 0.02 AUC</small></div>
+          <p class="chip-note">Rank-1 PCA reconstruction; mean ± s.d. over n=8 splits.</p>
         </article>
       </div>
     </section>
 
-    <section id="summary">
+    <!-- 2. BACKGROUND & MOTIVATION -->
+    <section id="background">
       <div class="section-header">
-        <div class="section-label">Executive Summary</div>
+        <div class="section-label">Background &amp; Motivation</div>
         <div class="section-intro body-copy">
-          <h2>Central empirical findings</h2>
+          <h2>Why qubit-parameter drift is a sequence-modelling problem</h2>
           <p>
-            The project sits at the intersection of applied mathematics, machine learning, and quantum-hardware reliability: qubit
-            telemetry is modeled as a mean-reverting stochastic process, and forecasting it is posed as an estimation problem solved with
-            accelerated, hardware-agnostic training that runs unchanged on CPU or GPU.
+            Superconducting processors are not static. Relaxation time $T_1$, dephasing time $T_2$, gate fidelities,
+            readout-assignment error, error-per-Clifford and tunable-coupling parameters all evolve under temperature,
+            flux noise, two-level-system dynamics and recalibration history. In the NISQ regime this caps usable circuit
+            depth; in the fault-tolerant regime it threatens the assumption that physical error rates stay below threshold
+            long enough for error correction to suppress logical errors.
           </p>
           <p>
-            On that foundation, the benchmark supports two principal claims. The GRU is the leading recurrent architecture for incident-aware
-            thermal monitoring, while the Transformer is the leading model for anomaly ranking on periodic calibration-like telemetry. The study
-            is therefore framed as an objective-aware benchmark rather than as a claim of universal superiority for one model family.
+            At hundred- to thousand-qubit scale, deciding <em>when</em> a device has drifted out of specification and
+            <em>which</em> intervals warrant recalibration is a data problem beyond manual inspection. The calibration
+            stream is a multivariate stochastic process with slow periodic structure, secular degradation and stochastic
+            fluctuation — forecasting it and flagging off-manifold windows maps onto modern time-series learning. The gap:
+            little decision-oriented guidance on which model family to deploy, at what parameter cost, for which objective.
           </p>
-          <div class="lead-callout">
-            <p>
-              Better performance in this project means stronger detection of meaningful failure windows, stronger prioritization of anomalous
-              intervals for review, and lower average forecasting error when sequential operational signals are monitored over time.
-            </p>
-          </div>
+          <div class="section-reference"><strong>Source</strong> Manuscript §Introduction; physics generator in Methods &amp; Supplementary §S3.</div>
         </div>
       </div>
     </section>
 
-    <section id="results">
+    <!-- 3. CONTRIBUTIONS & NOVELTY -->
+    <section id="contributions">
       <div class="section-header">
-        <div class="section-label">Comparative Results</div>
-        <div class="section-intro">
-          <h2>Reported where the model leads</h2>
-          <p>
-            The summary below is restricted to benchmark-leading outcomes and their practical meaning for the applications represented in this project.
-          </p>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Evaluation Context</th>
-              <th>Leading Model</th>
-              <th>Winning Evidence</th>
-              <th>Practical Reading</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Machine-temperature failure telemetry</td>
-              <td>GRU</td>
-              <td>F1 0.2574, Recall 1.000, ROC-AUC 0.7182, MAE 51.7912</td>
-              <td>Stronger surfacing of true thermal-failure intervals and stronger ranking of abnormal operating windows.</td>
-            </tr>
-            <tr>
-              <td>Periodic cloud telemetry</td>
-              <td>Transformer</td>
-              <td>ROC-AUC 0.7987, MAE 0.0436, RMSE 0.1335</td>
-              <td>Stronger ordering of suspicious intervals when anomaly scores are reviewed before recalibration or inspection.</td>
-            </tr>
-            <tr>
-              <td>Three-dataset benchmark average</td>
-              <td>GRU</td>
-              <td>Mean MAE 1337.33, Mean RMSE 1628.83, Mean ROC-AUC 0.6603</td>
-              <td>Stronger average forecasting and anomaly-ranking quality across heterogeneous time-series regimes.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="grid-3">
-        <article class="card">
-          <div class="tag">Recurrent Benchmark</div>
-          <h3>GRU leads incident-aware monitoring</h3>
-          <p>
-            In the thermal benchmark, the GRU is the strongest recurrent result because it combines incident detection,
-            perfect recall, strong anomaly ranking, and a lower parameter count than the higher-capacity recurrent alternative.
-          </p>
-          <div class="metric-line">Operational reading: stronger early-warning support for failure escalation in monitored hardware systems.</div>
-        </article>
-
-        <article class="card">
-          <div class="tag">Calibration Ranking</div>
-          <h3>Transformer leads anomaly triage</h3>
-          <p>
-            In the periodic telemetry regime, the Transformer delivers the strongest ranking result, making it the most useful option
-            when suspicious intervals must be sorted before human review or recalibration activity.
-          </p>
-          <div class="metric-line">Operational reading: more efficient review of suspect operating periods.</div>
-        </article>
-
-        <article class="card">
-          <div class="tag">Combined Benchmark</div>
-          <h3>GRU leads average forecasting quality</h3>
-          <p>
-            Across the full benchmark, the GRU records the strongest average MAE, RMSE, and ROC-AUC profile among the compared models,
-            indicating that its gains extend across multiple time-series regimes rather than a single isolated case.
-          </p>
-          <div class="metric-line">Operational reading: steadier performance when one monitoring pipeline spans multiple data sources.</div>
-        </article>
-      </div>
-    </section>
-
-    <section id="applications">
-      <div class="section-header">
-        <div class="section-label">Operational Meaning</div>
+        <div class="section-label">Contributions &amp; Novelty</div>
         <div class="section-intro body-copy">
-          <h2>What better performance means in real use</h2>
-          <p>
-            The reported improvements matter because they map directly to the repository’s monitoring tasks.
-          </p>
+          <h2>Exactly what is new</h2>
+          <p>The manuscript states three contributions; each is reproducible end-to-end on commodity CPU hardware.</p>
         </div>
       </div>
 
-      <ul class="application-list">
-        <li>In thermal-failure monitoring, stronger GRU detection improves the probability that meaningful fault windows are surfaced in time for intervention.</li>
-        <li>In calibration-oriented anomaly review, stronger Transformer ranking improves how engineering attention is allocated across suspicious intervals.</li>
-        <li>In cross-dataset forecasting, stronger GRU averages improve monitoring stability when several operational time-series streams are analyzed in one workflow.</li>
-      </ul>
+      <ol class="contrib-list">
+        <li><strong>A leakage-free, objective-aware benchmark.</strong> We formalise quantum-hardware reliability as a joint forecasting-and-anomaly-detection problem over a physically motivated, reproducible telemetry generator, and release one leakage-free benchmark evaluating four sequence-model families on this task and on three heterogeneous real-world regimes.</li>
+        <li><strong>Model selection must be objective-aware.</strong> The GRU is a robust, parameter-efficient generalist — the only model to achieve non-trivial incident detection — whereas the Transformer is a specialist that excels on periodic calibration-like signals but fails to generalise. No single architecture wins everywhere.</li>
+        <li><strong>A reconstruction detector with a provable knob.</strong> We introduce a low-rank reconstruction-based drift detector and identify the bottleneck rank as the control knob separating drift from nominal behaviour — an interpretable, training-free-at-inference monitor backed by an empirical-optimality theorem.</li>
+      </ol>
     </section>
 
-    <section id="evidence">
+    <!-- 4. MATHEMATICS & METHOD -->
+    <section id="method">
       <div class="section-header">
-        <div class="section-label">Visual Evidence</div>
-        <div class="section-intro">
-          <h2>Supporting figures</h2>
-          <p>
-            The figures below provide a concise visual anchor for the benchmark. Full figure suites remain available in the executed notebook reports.
-          </p>
+        <div class="section-label">Mathematics &amp; Method</div>
+        <div class="section-intro body-copy">
+          <h2>The model, the estimators, and why they work</h2>
+          <p>Two theorems explain the two headline empirics: why forecast skill grows with horizon, and why detection is strongest at low reconstruction rank.</p>
+        </div>
+      </div>
+
+      <div class="math-card">
+        <div class="tag">Drift generator (physics)</div>
+        <h3>A mean-reverting multivariate telemetry process</h3>
+        <p>For qubit $q$ at time $t$ (hours) the relaxation time superposes a 48-hour recalibration-like oscillation, secular ageing, and Gaussian fluctuation:</p>
+        $$ T_1(q,t) = \max\!\Big(10,\; 80 + 20\sin\!\big(\tfrac{2\pi t}{48} + 0.8q\big) - 0.05\,t + \varepsilon\Big), \qquad \varepsilon \sim \mathcal{N}(0, 2^2). $$
+        <p>$T_2 = 0.9\,T_1\,\eta$ tracks $T_1$; the other channels are analogous bounded processes. A window is out-of-spec when $T_1 < 50~\mu\text{s}$ or single-qubit fidelity $< 0.998$. $Q=5$ qubits, $N=200$ half-hour steps (100 h), seven channels.</p>
+      </div>
+
+      <div class="math-card">
+        <div class="tag">Leak-free windowing</div>
+        <h3>Sliding windows, chronological splits</h3>
+        <p>Series are segmented into windows of length $L=32$ predicting an $H=8$-step $T_1$ horizon, pooled across qubits. Leakage is prevented by chronological splitting: $70/15/15$ for the sequence-model benchmark, per-qubit $80/20$ for forecasting baselines, randomised $70/30$ for the detector (safe only because it is fit on nominal windows alone). Scalers are fit on training data and applied forward.</p>
+      </div>
+
+      <div class="math-card">
+        <div class="tag">Ridge closed form</div>
+        <h3>Multivariate ridge forecaster</h3>
+        <p>With flattened windows as rows of $X$ and 8-step horizons as rows of $Y$, ridge regression solves $\min_W \lVert XW - Y\rVert_2^2 + \alpha\lVert W\rVert_2^2$ with the closed form ($\alpha=5$)</p>
+        $$ W^\star = (X^\top X + \alpha I)^{-1} X^\top Y. $$
+        <p>The $\alpha I$ term keeps the normal equations invertible despite correlated channels. Baselines: persistence, climatology, AR-ridge (32-step $T_1$ history only).</p>
+      </div>
+
+      <div class="math-card">
+        <div class="tag">Horizon-skill theorem</div>
+        <h3>Why skill widens with horizon</h3>
+        <p>For a weakly stationary, zero-mean process with variance $\gamma_0$ and autocorrelation $\rho(h)$, persistence has risk $2\gamma_0(1-\rho(h))$ and the optimal single-lag predictor risk $\gamma_0(1-\rho(h)^2)$, so</p>
+        $$ S(h) = 1 - \frac{R_\star(h)}{R_{\mathrm{pers}}(h)} = \frac{1-\rho(h)}{2}. $$
+        <p>As $\rho(h)$ decays, $S(h)$ rises monotonically toward $\tfrac12$. This bound uses only the last sample; the multivariate ridge exceeds it by using the full 32-step, 7-channel history — measured skill reaches 72% at horizon 8.</p>
+      </div>
+
+      <div class="math-card">
+        <div class="tag">PCA reconstruction detector</div>
+        <h3>Drift as off-manifold residual energy</h3>
+        <p>Fit the top-$k$ right singular vectors $V_k$ of the centred nominal matrix and project with $P_k = V_kV_k^\top$. The drift score $s_k(x) = \lVert x - xP_k\rVert_2^2$ is, by an empirical-optimality theorem (Rayleigh–Ritz), the smallest residual any rank-$k$ linear monitor fitted on nominal data can give. When $k = d$, $P_k = I$, the score is constant and detection collapses to chance — a theorem, not a tuning artefact.</p>
+      </div>
+
+      <div class="math-card">
+        <div class="tag">ROC-AUC (Mann–Whitney)</div>
+        <h3>The scale-free yardstick for detection</h3>
+        <p>For independent drift $X^{+}$ and nominal $X^{-}$ windows, $\mathrm{AUC} = \Pr[s(X^{+}) > s(X^{-})] + \tfrac12\Pr[s(X^{+}) = s(X^{-})]$. AUC is invariant under any strictly increasing reparametrisation of $s$ — including per-feature affine rescaling — which is why it, not MAE/RMSE, is the basis for the cross-domain comparison.</p>
+      </div>
+    </section>
+
+    <!-- 5. EXPERIMENTAL DESIGN & STATISTICS -->
+    <section id="design">
+      <div class="section-header">
+        <div class="section-label">Experimental Design &amp; Statistics</div>
+        <div class="section-intro body-copy">
+          <h2>How the numbers were produced</h2>
+          <p>The benchmark separates replicated quantities from single-run point estimates and reports the metric matched to each objective.</p>
         </div>
       </div>
 
       <div class="grid-2">
-        <figure class="figure">
-          <img src="../outputs/qubit_trajectories.png" alt="Simulated qubit coherence drift trajectories used to illustrate the forecasting problem" />
-          <figcaption class="figure-copy">
-            <h3>Drift trajectory illustration</h3>
-            <p>
-              A compact visual summary of the drift structure motivating the forecasting task and its connection to reliability monitoring.
-            </p>
-          </figcaption>
-        </figure>
-
-        <figure class="figure">
-          <img src="../outputs/correlation_matrix.png" alt="Correlation matrix of engineered forecasting features" />
-          <figcaption class="figure-copy">
-            <h3>Engineered feature relationships</h3>
-            <p>
-              A summary of the engineered input relationships used throughout the forecasting and anomaly-ranking pipeline.
-            </p>
-          </figcaption>
-        </figure>
+        <article class="card">
+          <div class="tag">Replication &amp; uncertainty</div>
+          <h3>What ± means here</h3>
+          <p>Forecasting metrics are aggregated over <strong>n = 5 generator seeds</strong>; the reconstruction detector over <strong>n = 8 randomised splits</strong>. Uncertainties are <strong>mean ± standard deviation</strong>. The deep sequence-model metrics (thermal &amp; cross-domain tables) are <strong>single deterministic, seeded runs reported as point estimates</strong> — stated plainly, not as confidence intervals.</p>
+        </article>
+        <article class="card">
+          <div class="tag">Leakage control</div>
+          <h3>Train/test windowing</h3>
+          <p>Chronological splits keep future intervals out of training: $70/15/15$ for the sequence-model benchmark, per-qubit $80/20$ for baselines, randomised $70/30$ for the detector (fit on nominal windows only). Window length 32, horizon 8, pooled across five qubits.</p>
+        </article>
+        <article class="card">
+          <div class="tag">Model families compared</div>
+          <h3>Four sequence models + baselines</h3>
+          <p>Single-layer Elman RNN, two-layer LSTM, two-layer GRU, encoder-only Transformer (pre-LN, $d_\text{model}=128$, 4 heads, 3 layers). Each emits an 8-step forecast and a drift logit, trained with AdamW under a cosine schedule on $\mathrm{MSE}+\mathrm{BCE}$. Forecasting baselines: persistence, climatology, AR-ridge, multivariate ridge.</p>
+        </article>
+        <article class="card">
+          <div class="tag">ROC-AUC methodology</div>
+          <h3>Threshold-free ranking</h3>
+          <p>Detection is scored by F1 at the default threshold <em>and</em> threshold-free ROC-AUC (Mann–Whitney $U$). Both are reported because they disagree: a model can rank well (high AUC) yet detect nothing at a fixed operating point (zero F1). Cross-domain uses three NAB datasets as analogues for periodic, failure-bearing and irregular regimes.</p>
+        </article>
       </div>
     </section>
 
+    <!-- 6. RESULTS -->
+    <section id="results">
+      <div class="section-header">
+        <div class="section-label">Results</div>
+        <div class="section-intro">
+          <h2>Benchmark tables, mirroring the manuscript</h2>
+          <p>Best per column highlighted. Forecasting is mean ± s.d. over 5 seeds; deep-model tables are single seeded-run point estimates.</p>
+          <div class="section-reference"><strong>Source</strong> Manuscript Table 1 and Extended Data Tables 1–2.</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-caption">Table 1 — Forecasting benchmark (mean ± s.d. over 5 seeds; skill vs persistence @ 8 steps)</div>
+        <table>
+          <thead>
+            <tr><th>Forecaster</th><th class="num">MAE @ 1 (µs)</th><th class="num">MAE @ 8 (µs)</th><th class="num">Skill @ 8</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Persistence</td><td class="num">2.44 ± 0.16</td><td class="num">6.79 ± 0.18</td><td class="num">—</td></tr>
+            <tr><td>Climatology</td><td class="num">13.01 ± 0.05</td><td class="num">12.40 ± 0.05</td><td class="num">−83%</td></tr>
+            <tr><td>AR-ridge (T<sub>1</sub> history)</td><td class="num">1.85 ± 0.07</td><td class="num">2.19 ± 0.06</td><td class="num">68%</td></tr>
+            <tr><td>Multivariate ridge</td><td class="num best">1.80 ± 0.09</td><td class="num best">1.88 ± 0.06</td><td class="num best">72%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">Persistence degrades with horizon (2.44 → 6.79 µs); learned forecasters stay nearly flat, so skill <em>grows</em> from 26% at one step to 72% at eight — the horizon-stable accuracy an early-warning monitor needs.</p>
+
+      <div class="table-wrap">
+        <div class="table-caption">Extended Data Table 1 — Thermal incident detection (single seeded run, point estimates)</div>
+        <table>
+          <thead>
+            <tr><th>Model</th><th class="num">MAE (µs)</th><th class="num">RMSE (µs)</th><th class="num">F1</th><th class="num">ROC-AUC</th><th class="num">Params</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Elman RNN</td><td class="num">61.37</td><td class="num">64.93</td><td class="num">0.000</td><td class="num">0.408</td><td class="num best">5,645</td></tr>
+            <tr><td>LSTM</td><td class="num best">51.48</td><td class="num best">55.00</td><td class="num">0.000</td><td class="num">0.423</td><td class="num">116,845</td></tr>
+            <tr><td>GRU</td><td class="num">51.79</td><td class="num">55.35</td><td class="num best">0.257</td><td class="num best">0.718</td><td class="num">87,949</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">At the default threshold the RNN and LSTM detect nothing (F1 = 0, AUC near chance). The GRU is the only model to surface incidents — F1 0.26, recall 1.0, precision 0.15, ROC-AUC 0.718 (a 75.9% relative ranking improvement over the RNN) — at 25% fewer parameters than the LSTM.</p>
+
+      <div class="table-wrap">
+        <div class="table-caption">Extended Data Table 2 — Cross-domain (3-dataset mean, n=3) &amp; periodic-regime specialisation (point estimates)</div>
+        <table>
+          <thead>
+            <tr><th>Model</th><th class="num">Mean MAE</th><th class="num">Mean RMSE</th><th class="num">Mean ROC-AUC</th><th>Periodic regime</th><th class="num">ROC-AUC</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>GRU</td><td class="num best">1337.3</td><td class="num best">1628.8</td><td class="num best">0.660</td><td>Transformer</td><td class="num best">0.799</td></tr>
+            <tr><td>LSTM</td><td class="num">1528.8</td><td class="num">1895.0</td><td class="num">0.628</td><td>GRU (avg.)</td><td class="num">0.660</td></tr>
+            <tr><td>Transformer</td><td class="num">1436.2</td><td class="num">1791.6</td><td class="num">0.196</td><td>—</td><td class="num">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">Averaged over three datasets the GRU leads ranking (0.66), LSTM close (0.63), Transformer far behind (0.20) — yet the Transformer attains the single highest ranking score in the study (0.80) on periodic telemetry. It is specialised, not weak. ROC-AUC is scale-invariant and the basis for the comparison.</p>
+
+      <div class="grid-2">
+        <article class="card">
+          <div class="tag">Unsupervised drift detector</div>
+          <h3>Low rank separates drift</h3>
+          <p>Rank-3 reconstruction separates regimes with ROC-AUC 0.72 on a held-out split (0.70 ± 0.05 over 8 splits). Sweeping the bottleneck rank, detection is strongest at very low rank (0.87 ± 0.02 at rank 1) and collapses toward chance as the code becomes over-complete and memorises drifted windows.</p>
+          <div class="metric-line">Drift lives off a low-rank manifold; the rank is the false-alarm dial.</div>
+        </article>
+        <article class="card">
+          <div class="tag">Key statistical comparison</div>
+          <h3>F1 and ROC-AUC disagree by design</h3>
+          <p>A model can rank intervals well (high ROC-AUC) yet detect nothing at a fixed threshold (zero F1) — visible in the thermal table, where only the GRU clears both. We report both and treat threshold selection as part of the monitoring problem.</p>
+          <div class="metric-line">Reported metric is matched to the objective, not chosen post-hoc.</div>
+        </article>
+      </div>
+
+      <div class="grid-2">
+        <figure class="figure">
+          <img src="../outputs/qubit_trajectories.png" alt="Simulated five-qubit T1 coherence drift trajectories" />
+          <figcaption class="figure-copy">
+            <h3>Coherence drift dynamics</h3>
+            <p>Five-qubit $T_1$ trajectories repeatedly dip below the 50 µs operational threshold. Detrended $T_1$ keeps autocorrelation above 0.5 for ~7 hours — the slow structure that makes near-future coherence forecastable.</p>
+          </figcaption>
+        </figure>
+        <figure class="figure">
+          <img src="../outputs/correlation_matrix.png" alt="Correlation matrix of the seven telemetry channels" />
+          <figcaption class="figure-copy">
+            <h3>Channel correlation structure</h3>
+            <p>The seven channels are correlated by construction, so the multivariate ridge benefits from all of them and the $\alpha I$ penalty keeps the normal equations well-conditioned.</p>
+          </figcaption>
+        </figure>
+      </div>
+      <p class="table-note">The manuscript's vector figures are in <a href="../submission/figures/">submission/figures/</a> as PDFs and reproduced as the tables above.</p>
+    </section>
+
+    <!-- 7. INTERACTIVE DEMO (PRESERVED) -->
     <section id="demo">
       <div class="section-header">
-        <div class="section-label">Interactive Demonstration</div>
+        <div class="section-label">Interactive Demo</div>
         <div class="section-intro body-copy">
           <h2>Synthetic drift simulation</h2>
           <p>
-            The demonstration below preserves the interactive functionality from the original project materials while keeping the same comparative focus.
-            If the local API is active, forecasts are requested from the backend. Otherwise the browser fallback remains available.
+            Generate a synthetic $T_1$ stream and request an 8-step forecast with a drift probability and an anomaly
+            (reconstruction) score — the same objectives studied in the paper. If a local API is running it serves the
+            trained model; otherwise an in-browser fallback runs the same logic. Raise the drift rate or noise $\sigma$
+            to watch the forecast and drift status respond.
           </p>
+          <div class="section-reference"><strong>Note</strong> Illustrative single-trajectory demo — not the seeded benchmark numbers above.</div>
         </div>
       </div>
 
@@ -293,44 +412,83 @@
       </div>
     </section>
 
-    <section id="reports">
+    <!-- 8. CONCLUSION & IMPACT -->
+    <section id="conclusion">
       <div class="section-header">
-        <div class="section-label">Executed Reports</div>
-        <div class="section-intro">
-          <h2>Primary artifacts</h2>
+        <div class="section-label">Conclusion &amp; Impact</div>
+        <div class="section-intro body-copy">
+          <h2>Match the architecture to the monitoring objective</h2>
           <p>
-            Each notebook addresses a distinct question and retains the full figure and metric record for the benchmark.
+            The work reframes reliability monitoring as a tractable, decision-oriented ML problem with an actionable rule:
+            deploy the GRU as a default generalist and incident detector, reserve the Transformer for periodic signals.
+            The failure of strong models outside their niche is a caution against single-metric benchmarking; the low-rank
+            manifold result gives operators one interpretable dial.
           </p>
+          <h3 style="margin-top:18px;font-size:1.1rem;">Honest limitations (from the paper)</h3>
+          <ul class="limitations">
+            <li>The telemetry generator is physically motivated but a <em>model</em>, not measured device data; cross-domain validation uses standard NAB benchmarks as analogues, not quantum-calibration logs.</li>
+            <li>Absolute detection scores are modest, as expected for an honest, untuned benchmark — no state-of-the-art claim is made.</li>
+            <li>Deep sequence-model metrics are single seeded runs (point estimates), not multi-seed confidence intervals.</li>
+          </ul>
+          <h3 style="margin-top:18px;font-size:1.1rem;">Outlook</h3>
+          <ul class="limitations">
+            <li>Validation on archival calibration records from operating processors.</li>
+            <li>Uncertainty-aware forecasting via Monte-Carlo dropout or deep ensembles.</li>
+            <li>Coupling the forecaster to a recalibration policy under an explicit cost model.</li>
+          </ul>
+          <div class="lead-callout">
+            <p>Open, hardware-agnostic and fast to reproduce — a leakage-controlled, CPU-reproducible substrate for quantum-processor reliability work.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. PAPER & CODE -->
+    <section id="paper">
+      <div class="section-header">
+        <div class="section-label">Paper &amp; Code</div>
+        <div class="section-intro">
+          <h2>Manuscript, notebooks, and reproduction</h2>
+          <p>Every number above regenerates deterministically from fixed seeds on a single CPU; training runs identically on GPU. MIT licence.</p>
         </div>
       </div>
 
       <div class="link-list">
         <div class="link-item">
           <div>
+            <strong>Research manuscript</strong>
+            <div class="table-note">Compiled article and LaTeX source in <code>submission/</code>.</div>
+          </div>
+          <div class="link-actions">
+            <a class="button-link" href="../submission/main.pdf">Manuscript (PDF)</a>
+            <a class="button-link" href="../submission/main.tex">LaTeX source</a>
+            <a class="button-link" href="../submission/figures/">Figures</a>
+          </div>
+        </div>
+        <div class="link-item">
+          <div>
             <strong>Incident-aware recurrent forecasting</strong>
-            <div class="table-note">GRU-centered evidence for thermal-failure detection and recurrent-model comparison.</div>
+            <div class="table-note">GRU-centred evidence for thermal-failure detection and recurrent-model comparison.</div>
           </div>
           <div class="link-actions">
             <a class="button-link" href="../notebooks/rnn_drift_forecast.ipynb">Notebook</a>
             <a class="button-link" href="notebooks_html/rnn_drift_forecast.html">HTML report</a>
           </div>
         </div>
-
         <div class="link-item">
           <div>
             <strong>Transformer calibration analysis</strong>
-            <div class="table-note">Benchmark-leading anomaly ranking on periodic telemetry.</div>
+            <div class="table-note">Anomaly ranking on periodic cloud telemetry — the Transformer's specialist regime.</div>
           </div>
           <div class="link-actions">
             <a class="button-link" href="../notebooks/transformer_calibration.ipynb">Notebook</a>
             <a class="button-link" href="notebooks_html/transformer_calibration.html">HTML report</a>
           </div>
         </div>
-
         <div class="link-item">
           <div>
             <strong>Cross-domain benchmark comparison</strong>
-            <div class="table-note">GRU-leading average forecasting and ranking performance across the three-dataset study.</div>
+            <div class="table-note">Three-dataset average forecast and ranking performance.</div>
           </div>
           <div class="link-actions">
             <a class="button-link" href="../notebooks/quantum_drift_combined.ipynb">Notebook</a>
@@ -338,32 +496,22 @@
           </div>
         </div>
       </div>
-    </section>
-
-    <section id="reproduce">
-      <div class="section-header">
-        <div class="section-label">Reproducibility</div>
-        <div class="section-intro">
-          <h2>Minimal execution path</h2>
-          <p>
-            The same notebook workflow can be used to regenerate the reports and support the optional local demo API.
-          </p>
-        </div>
-      </div>
 
       <pre class="code-block">cd ../submission/code
 export PYTHONPATH=.
-qdrift-reproduce
+KMP_DUPLICATE_LIB_OK=TRUE python -m qdriftforecast.reproduce
 cd ../..
-jupyter nbconvert --to notebook --execute --inplace ../notebooks/rnn_drift_forecast.ipynb
-jupyter nbconvert --to notebook --execute --inplace ../notebooks/transformer_calibration.ipynb
-jupyter nbconvert --to notebook --execute --inplace ../notebooks/quantum_drift_combined.ipynb
-python -m src.server --port 5000</pre>
+jupyter nbconvert --to notebook --execute --inplace notebooks/rnn_drift_forecast.ipynb
+jupyter nbconvert --to notebook --execute --inplace notebooks/transformer_calibration.ipynb
+jupyter nbconvert --to notebook --execute --inplace notebooks/quantum_drift_combined.ipynb
+python -m src.server --port 5000   # optional: serves the demo API</pre>
     </section>
 
+    <!-- 10. FOOTER -->
     <footer>
-      Prepared as a research summary at the intersection of applied mathematics, machine learning, and quantum-hardware reliability —
-      framing decoherence and calibration drift as a stochastic forecasting problem solved with accelerated, reproducible sequence models.
+      Objective-aware sequence modelling for drift forecasting and anomaly detection in quantum hardware — a leakage-free,
+      CPU-reproducible benchmark framing qubit-parameter drift as a multivariate forecasting and off-manifold
+      anomaly-detection problem. Released under the MIT licence.
     </footer>
   </main>
 
