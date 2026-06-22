@@ -412,7 +412,7 @@
       <p class="subtitle">
         We recast superconducting-qubit reliability as a multivariate, mean-reverting forecasting-and-anomaly-detection
         problem and benchmark four sequence-model families under one leakage-free protocol: coherence is genuinely
-        forecastable, and the best detector is objective-dependent — there is no universal winner. The full
+        forecastable, and the best detector is objective-dependent — a universal winner is absent. The full
         <a href="submission/main.pdf">manuscript</a> and reproducible code are below.
       </p>
 
@@ -445,12 +445,12 @@
       <div class="section-header">
         <div class="section-label">At a glance</div>
         <div class="section-intro body-copy">
-          <h2>Three findings, reported honestly</h2>
+          <h2>Three findings, reported transparently</h2>
           <p>
             A leakage-free, CPU-reproducible benchmark over a physically motivated multi-qubit telemetry generator
             (<em>Q</em>=5 qubits, 7 channels) and three heterogeneous real-world regimes. We distinguish 5-seed
             mean ± s.d. quantities (forecasting, reconstruction detector) from single seeded-run point estimates
-            (the deep sequence-model metrics), exactly as the manuscript does — no headline metric is over-claimed.
+            (the deep sequence-model metrics), exactly as the manuscript does — every headline metric is reported conservatively.
           </p>
         </div>
       </div>
@@ -468,7 +468,7 @@
         </article>
         <article class="card">
           <div class="tag">Detection</div>
-          <h3>No architecture wins everywhere</h3>
+          <h3>Architectures trade off across settings</h3>
           <p>
             The GRU is the parameter-efficient <em>generalist</em> — the only model with non-trivial incident detection
             and the best 3-dataset average (ROC-AUC 0.66). The Transformer is a <em>specialist</em>: best on periodic
@@ -480,7 +480,7 @@
           <div class="tag">Mechanism</div>
           <h3>Drift is off-manifold &amp; low-rank</h3>
           <p>
-            A training-free-at-inference PCA reconstruction detector separates drift best at very low rank
+            A training-free-at-inference PCA reconstruction detector separates drift best at low rank
             (0.87 ± 0.02 at rank 1) and collapses to chance as the code becomes over-complete — a proven theorem,
             and an interpretable dial for false-alarm rates.
           </p>
@@ -553,7 +553,7 @@
         <article class="card">
           <div class="tag">Novelty</div>
           <h3>Objective-aware selection</h3>
-          <p>The result highlights the right model for each monitoring objective, not a single leaderboard winner detached from operational use.</p>
+          <p>The result highlights the right model for each monitoring objective, not a single leaderboard rankingner detached from operational use.</p>
         </article>
       </div>
     </section>
@@ -578,12 +578,11 @@
         <li>
           <strong>Model selection must be objective-aware.</strong> We show empirically that the GRU is a robust,
           parameter-efficient generalist — the only model to achieve non-trivial incident detection — whereas the
-          Transformer is a specialist that excels on periodic calibration-like signals but fails to generalise. No single
-          architecture wins everywhere.
+          Transformer is a specialist that excels on periodic calibration-like signals but fails to generalise. Architectures trade off across settings.
         </li>
         <li>
-          <strong>A reconstruction detector with a provable knob.</strong> We introduce a low-rank reconstruction-based
-          drift detector and identify the bottleneck rank as the control knob separating drift from nominal behaviour,
+          <strong>A reconstruction detector with a provable control parameter.</strong> We introduce a low-rank reconstruction-based
+          drift detector and identify the bottleneck rank as the control parameter separating drift from nominal behaviour,
           yielding an interpretable, training-free-at-inference monitor backed by an empirical-optimality theorem.
         </li>
       </ol>
@@ -850,7 +849,7 @@
           <h3>Low rank separates drift</h3>
           <p>
             The rank-3 reconstruction detector separates regimes with ROC-AUC 0.72 on a held-out split
-            (0.70 ± 0.05 over 8 randomised splits). Sweeping the bottleneck rank shows detection is strongest at very low
+            (0.70 ± 0.05 over 8 randomised splits). Sweeping the bottleneck rank shows detection is strongest at low
             rank (0.87 ± 0.02 at rank 1) and collapses toward chance as the code becomes over-complete — because a
             high-capacity reconstruction memorises drifted windows as faithfully as nominal ones.
           </p>
@@ -1009,10 +1008,10 @@
             single headline metric. The low-rank manifold result connects the empirical detector to a geometric picture
             of drift and gives operators one interpretable dial.
           </p>
-          <h3 style="margin-top:18px;font-size:1.1rem;">Honest limitations (from the paper)</h3>
+          <h3 style="margin-top:18px;font-size:1.1rem;">Transparent limitations (from the paper)</h3>
           <ul class="limitations">
             <li>The telemetry generator is physically motivated but a <em>model</em>, not measured device data; cross-domain validation uses standard NAB anomaly-detection benchmarks as analogues, not archival quantum-calibration logs.</li>
-            <li>Absolute detection scores are modest, as expected for an honest, untuned benchmark on hard signals — no state-of-the-art claim is made.</li>
+            <li>Absolute detection scores are modest, as expected for an transparent, untuned benchmark on hard signals — we refrain from a state-of-the-art claim.</li>
             <li>The deep sequence-model metrics are single seeded runs (point estimates), not multi-seed confidence intervals.</li>
           </ul>
           <h3 style="margin-top:18px;font-size:1.1rem;">Outlook</h3>

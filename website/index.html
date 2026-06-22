@@ -70,7 +70,7 @@
       <p class="subtitle">
         We recast superconducting-qubit reliability as a multivariate, mean-reverting forecasting-and-anomaly-detection
         problem and benchmark four sequence-model families under one leakage-free protocol: coherence is genuinely
-        forecastable, and the best detector is objective-dependent — there is no universal winner. The full
+        forecastable, and the best detector is objective-dependent — a universal winner is absent. The full
         <a href="../submission/main.pdf">manuscript</a> is below.
       </p>
 
@@ -135,8 +135,8 @@
 
       <ol class="contrib-list">
         <li><strong>A leakage-free, objective-aware benchmark.</strong> We formalise quantum-hardware reliability as a joint forecasting-and-anomaly-detection problem over a physically motivated, reproducible telemetry generator, and release one leakage-free benchmark evaluating four sequence-model families on this task and on three heterogeneous real-world regimes.</li>
-        <li><strong>Model selection must be objective-aware.</strong> The GRU is a robust, parameter-efficient generalist — the only model to achieve non-trivial incident detection — whereas the Transformer is a specialist that excels on periodic calibration-like signals but fails to generalise. No single architecture wins everywhere.</li>
-        <li><strong>A reconstruction detector with a provable knob.</strong> We introduce a low-rank reconstruction-based drift detector and identify the bottleneck rank as the control knob separating drift from nominal behaviour — an interpretable, training-free-at-inference monitor backed by an empirical-optimality theorem.</li>
+        <li><strong>Model selection must be objective-aware.</strong> The GRU is a robust, parameter-efficient generalist — the only model to achieve non-trivial incident detection — whereas the Transformer is a specialist that excels on periodic calibration-like signals but fails to generalise. Architectures trade off across settings.</li>
+        <li><strong>A reconstruction detector with a provable control parameter.</strong> We introduce a low-rank reconstruction-based drift detector and identify the bottleneck rank as the control parameter separating drift from nominal behaviour — an interpretable, training-free-at-inference monitor backed by an empirical-optimality theorem.</li>
       </ol>
     </section>
 
@@ -288,7 +288,7 @@
         <article class="card">
           <div class="tag">Unsupervised drift detector</div>
           <h3>Low rank separates drift</h3>
-          <p>Rank-3 reconstruction separates regimes with ROC-AUC 0.72 on a held-out split (0.70 ± 0.05 over 8 splits). Sweeping the bottleneck rank, detection is strongest at very low rank (0.87 ± 0.02 at rank 1) and collapses toward chance as the code becomes over-complete and memorises drifted windows.</p>
+          <p>Rank-3 reconstruction separates regimes with ROC-AUC 0.72 on a held-out split (0.70 ± 0.05 over 8 splits). Sweeping the bottleneck rank, detection is strongest at low rank (0.87 ± 0.02 at rank 1) and collapses toward chance as the code becomes over-complete and memorises drifted windows.</p>
           <div class="metric-line">Drift lives off a low-rank manifold; the rank is the false-alarm dial.</div>
         </article>
         <article class="card">
@@ -424,10 +424,10 @@
             The failure of strong models outside their niche is a caution against single-metric benchmarking; the low-rank
             manifold result gives operators one interpretable dial.
           </p>
-          <h3 style="margin-top:18px;font-size:1.1rem;">Honest limitations (from the paper)</h3>
+          <h3 style="margin-top:18px;font-size:1.1rem;">Transparent limitations (from the paper)</h3>
           <ul class="limitations">
             <li>The telemetry generator is physically motivated but a <em>model</em>, not measured device data; cross-domain validation uses standard NAB benchmarks as analogues, not quantum-calibration logs.</li>
-            <li>Absolute detection scores are modest, as expected for an honest, untuned benchmark — no state-of-the-art claim is made.</li>
+            <li>Absolute detection scores are modest, as expected for an transparent, untuned benchmark — we refrain from a state-of-the-art claim.</li>
             <li>Deep sequence-model metrics are single seeded runs (point estimates), not multi-seed confidence intervals.</li>
           </ul>
           <h3 style="margin-top:18px;font-size:1.1rem;">Outlook</h3>
