@@ -43,11 +43,10 @@ from sklearn.linear_model import Ridge
 from sklearn.metrics import roc_auc_score, roc_curve
 
 # ── Repository imports ───────────────────────────────────────────────────────
-# Resolve the repo root (this file lives at submission/code/) and import src/.
-REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT))
+# Resolve the submission root (this file lives at submission/code/).
+SUBMISSION_ROOT = Path(__file__).resolve().parents[1]
 
-from src.data import (  # noqa: E402
+from qdriftforecast.data import (  # noqa: E402
     FEATURE_COLS,
     extract_qubit_series,
     generate_synthetic_dataset,
@@ -67,7 +66,7 @@ DETECTOR_SEED = 42                  # telemetry seed for the reconstruction stud
 N_DETECTOR_SPLITS = 8              # randomised 70/30 splits for the rank sweep
 RANK_GRID = list(range(1, SEQ_LEN + 1))  # bottleneck rank 1..32
 
-OUT_DIR = REPO_ROOT / "submission" / "figures"
+OUT_DIR = SUBMISSION_ROOT / "figures"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Publication styling (light theme, print-friendly) ────────────────────────

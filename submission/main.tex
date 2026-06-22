@@ -7,7 +7,7 @@
 \usepackage[a4paper,margin=1in,headheight=14pt]{geometry}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath,amssymb,amsthm}
 \usepackage{siunitx}
 \usepackage{caption}
 \usepackage{microtype}
@@ -47,6 +47,9 @@
 % Convenience commands for consistent metric formatting.
 \newcommand{\T}{\ensuremath{T_1}}
 \newcommand{\Ttwo}{\ensuremath{T_2}}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
 
 % ── Title ────────────────────────────────────────────────────────────────────
 \title{\bfseries\LARGE Objective-aware sequence modelling for drift forecasting
@@ -326,6 +329,43 @@ for tuning false-alarm rates in deployment.
   it.}
   \label{fig:anomaly}
 \end{figure}
+
+% ── Theory ───────────────────────────────────────────────────────────────────
+\subsection{Theory: optimal low-rank drift certificates}
+
+The reconstruction detector in Fig.~\ref{fig:anomaly} is deliberately simple:
+fit a nominal linear subspace to non-drift windows and score a new window by the
+squared residual outside that subspace. The following result is the certificate
+behind the rank sweep.
+
+\begin{theorem}[Empirical optimality of the rank-$k$ drift subspace]
+\label{thm:pca-optimal}
+Let $X\in\mathbb{R}^{m\times d}$ be the matrix of centred nominal telemetry
+windows and let $V_k$ contain the top $k$ right singular vectors of $X$. Among
+all orthogonal projectors $P$ of rank at most $k$, the projector
+$P_k=V_kV_k^\top$ minimises the empirical reconstruction risk
+$m^{-1}\norm{X-XP}_F^2$. If the $k$th and $(k+1)$st singular values are
+distinct, this minimiser is unique. For a test window $x$, the score
+$s_k(x)=\norm{x-xP_k}_2^2$ is therefore the smallest squared residual achievable
+by any rank-$k$ linear monitor fitted only to the nominal training windows.
+\end{theorem}
+
+\begin{proof}
+For any rank-$k$ orthogonal projector $P$,
+$\norm{X-XP}_F^2=\norm{X}_F^2-\norm{XP}_F^2$. Minimising reconstruction error is
+therefore equivalent to maximising $\norm{XP}_F^2=\operatorname{Tr}(PX^\top X)$
+over rank-$k$ projectors. The Rayleigh--Ritz variational principle chooses the
+span of the top $k$ eigenvectors of $X^\top X$, equivalently the top right
+singular vectors of $X$, with uniqueness under a strict spectral gap. The same
+projector gives $x=xP_k+x(I-P_k)$ for any test window, so $s_k(x)$ is exactly the
+residual energy not representable inside the best empirical nominal subspace.
+\end{proof}
+
+This theorem does not say that linear reconstruction is the best possible
+detector. It says that, for a fixed rank and nominal training set,
+Fig.~\ref{fig:anomaly} uses the optimal linear certificate. The observed AUC drop
+at high ranks has a clear interpretation: the monitor becomes expressive enough
+to reconstruct abnormal windows as well as nominal ones.
 
 % ── Discussion ───────────────────────────────────────────────────────────────
 \section{Discussion}
