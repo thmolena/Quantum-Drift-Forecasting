@@ -53,7 +53,7 @@
 and anomaly detection in quantum hardware}
 
 \author[ ]{Molena Huynh}
-\affil[ ]{[Affiliation] \quad\textperiodcentered\quad Correspondence: \texttt{[corresponding-author email]}}
+\affil[ ]{Independent Researcher \quad\textperiodcentered\quad Correspondence: \texttt{molena.huynh@example.com}}
 
 \date{}
 
@@ -64,27 +64,26 @@ and anomaly detection in quantum hardware}
 % ── Abstract ─────────────────────────────────────────────────────────────────
 \begin{abstract}
 \noindent
-The path to fault-tolerant quantum computing is gated by hardware that drifts:
-qubit coherence times, gate fidelities and calibration parameters wander on
-timescales of hours, silently eroding circuit performance and the error budgets
-that quantum error correction depends on. We recast this reliability problem as a
-machine-learning task --- forecasting a multivariate, mean-reverting stochastic
-process and ranking anomalous operating intervals --- and study it through an
-\emph{objective-aware} benchmark of sequence models. Using a physically motivated
-multi-qubit telemetry generator and three heterogeneous real-world regimes under
-one leakage-free protocol, we show first that coherence is genuinely
-forecastable: a learned forecaster predicts $T_1$ eight steps ahead with $73\%$
-lower error than persistence, the advantage widening with horizon. We then find
-that, for detection, no architecture is universally best. The
-gated recurrent unit (GRU) is the strongest \emph{generalist}: it delivers the
-only non-trivial incident detection on thermal-failure telemetry (ROC-AUC~$0.72$,
-recall~$1.0$) using $25\%$ fewer parameters than the LSTM, and the best
-three-dataset average (ROC-AUC~$0.66$). The Transformer is a \emph{specialist},
-leading on periodic calibration-like signals (ROC-AUC~$0.80$) but generalising
-poorly (ROC-AUC~$0.20$). A reconstruction detector further shows that drift lives
-off a low-rank nominal manifold. The entire pipeline is hardware-agnostic and
-reproducible in seconds, providing an open, decision-oriented foundation for
-monitoring quantum-processor reliability.
+Fault-tolerant quantum computing is gated by hardware that drifts: qubit
+coherence times, gate fidelities and calibration parameters wander on timescales
+of hours, eroding the error budgets that quantum error correction depends on. We
+recast this reliability problem as a machine-learning task --- forecasting a
+multivariate, mean-reverting stochastic process and ranking anomalous operating
+intervals --- and study it through an \emph{objective-aware} benchmark of sequence
+models on a physically motivated multi-qubit telemetry generator and three
+heterogeneous real-world regimes, under one leakage-free protocol. Coherence is
+genuinely forecastable: a learned forecaster predicts $T_1$ eight steps ahead with
+$72\%$ lower error than persistence, the advantage widening with horizon. For
+detection, no architecture is universally best. The gated recurrent unit (GRU) is
+the strongest \emph{generalist} --- the only model with non-trivial incident
+detection on thermal-failure telemetry (ROC-AUC~$0.72$, recall~$1.0$) using $25\%$
+fewer parameters than the LSTM, and the best three-dataset average
+(ROC-AUC~$0.66$) --- whereas the Transformer is a \emph{specialist}, leading on
+periodic calibration-like signals (ROC-AUC~$0.80$) but generalising poorly
+(ROC-AUC~$0.20$). A reconstruction detector further shows that drift lives off a
+low-rank nominal manifold. The entire pipeline is hardware-agnostic and
+reproducible in seconds, an open, decision-oriented foundation for monitoring
+quantum-processor reliability.
 \end{abstract}
 
 % ── Introduction ─────────────────────────────────────────────────────────────
@@ -144,7 +143,7 @@ A window is labelled out-of-specification when any qubit crosses an operational
 threshold. The resulting telemetry wanders over tens of microseconds and
 repeatedly dips below the \SI{50}{\micro\second} threshold
 (Fig.~\ref{fig:dynamics}a). Critically, the drift is not white noise: the mean
-autocorrelation of \T\ stays above $0.5$ for roughly ten hours before decaying
+autocorrelation of \T\ stays above $0.5$ for roughly seven hours before decaying
 (Fig.~\ref{fig:dynamics}b), so near-future coherence is genuinely predictable
 from the recent past. This slow temporal structure is what makes forecasting
 worthwhile and frames the task as a multivariate, mean-reverting prediction
@@ -173,13 +172,13 @@ independent telemetry-generator seeds.
 
 Forecasting is both feasible and clearly structured (Fig.~\ref{fig:forecast},
 Table~\ref{tab:forecast}). One step ahead, the multivariate ridge attains
-$1.79\pm0.08$~\si{\micro\second} mean absolute error, against
-$2.45\pm0.15$~\si{\micro\second} for persistence and
-$12.98\pm0.09$~\si{\micro\second} for climatology. Persistence degrades steeply
-with horizon --- to $6.72\pm0.11$~\si{\micro\second} eight steps ahead --- whereas
-the learned forecasters remain nearly flat ($1.84\pm0.05$~\si{\micro\second} for
-the multivariate ridge), so their skill over persistence \emph{grows} from $27\%$
-one step ahead to $73\%$ eight steps ahead (Fig.~\ref{fig:forecast}b). This
+$1.80\pm0.09$~\si{\micro\second} mean absolute error, against
+$2.44\pm0.16$~\si{\micro\second} for persistence and
+$13.01\pm0.05$~\si{\micro\second} for climatology. Persistence degrades steeply
+with horizon --- to $6.79\pm0.18$~\si{\micro\second} eight steps ahead --- whereas
+the learned forecasters remain nearly flat ($1.88\pm0.06$~\si{\micro\second} for
+the multivariate ridge), so their skill over persistence \emph{grows} from $26\%$
+one step ahead to $72\%$ eight steps ahead (Fig.~\ref{fig:forecast}b). This
 horizon-stable accuracy is precisely what an early-warning monitor needs:
 forecasts must stay trustworthy several steps ahead to leave time to act.
 
@@ -205,10 +204,10 @@ forecasts must stay trustworthy several steps ahead to leave time to act.
     \toprule
     Forecaster & MAE @ 1 step (\si{\micro\second}) & MAE @ 8 steps (\si{\micro\second}) & Skill @ 8 steps \\
     \midrule
-    Persistence            & $2.45 \pm 0.15$  & $6.72 \pm 0.11$  & --- \\
-    Climatology            & $12.98 \pm 0.09$ & $12.33 \pm 0.12$ & $-84\%$ \\
-    AR-ridge (\T\ history) & $1.87 \pm 0.06$  & $2.18 \pm 0.06$  & $68\%$ \\
-    Multivariate ridge     & $\mathbf{1.79 \pm 0.08}$ & $\mathbf{1.84 \pm 0.05}$ & $\mathbf{73\%}$ \\
+    Persistence            & $2.44 \pm 0.16$  & $6.79 \pm 0.18$  & --- \\
+    Climatology            & $13.01 \pm 0.05$ & $12.40 \pm 0.05$ & $-83\%$ \\
+    AR-ridge (\T\ history) & $1.85 \pm 0.07$  & $2.19 \pm 0.06$  & $68\%$ \\
+    Multivariate ridge     & $\mathbf{1.80 \pm 0.09}$ & $\mathbf{1.88 \pm 0.06}$ & $\mathbf{72\%}$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -307,7 +306,7 @@ Finally, we examine \emph{how} drift is best detected without labels. A
 reconstruction detector compresses each window onto a low-rank nominal subspace
 and scores the residual reconstruction error~\citep{malhotra2016lstmad}. At a
 rank-three bottleneck it separates regimes with ROC-AUC $0.72$ on a held-out split
-($0.73\pm0.02$ over eight randomised splits; Fig.~\ref{fig:anomaly}a). Sweeping
+($0.70\pm0.05$ over eight randomised splits; Fig.~\ref{fig:anomaly}a). Sweeping
 the bottleneck rank reveals a principled design rule (Fig.~\ref{fig:anomaly}b):
 detection is strongest at very low rank ($0.87\pm0.02$ at rank one) and collapses
 to chance as the code becomes over-complete, because a high-capacity
