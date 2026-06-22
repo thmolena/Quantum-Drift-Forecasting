@@ -75,7 +75,6 @@ Quantum-Drift-Forecasting/
 ├── README.md
 ├── LICENSE
 ├── index.html
-├── requirements.txt
 ├── data/
 │   ├── quantum_device_metrics.csv
 │   └── nab/
@@ -117,7 +116,10 @@ Quantum-Drift-Forecasting/
 ## Reproducibility
 
 ```bash
-pip install -r requirements.txt
+cd submission/code
+export PYTHONPATH=.
+PYTHONPATH=. python -m qdriftforecast.reproduce
+cd ../..
 jupyter nbconvert --to notebook --execute --inplace notebooks/rnn_drift_forecast.ipynb
 jupyter nbconvert --to notebook --execute --inplace notebooks/transformer_calibration.ipynb
 jupyter nbconvert --to notebook --execute --inplace notebooks/quantum_drift_combined.ipynb

@@ -1,3 +1,25 @@
+"""
+real_benchmark.py — cross-domain real-world evaluation datasets for Quantum
+Drift Forecasting.
+
+Implements the loading and leak-free windowing of the three heterogeneous
+Numenta Anomaly Benchmark (NAB) series used for the cross-domain generalisation
+study in the paper (Methods, "Evaluation"; Extended Data Table 2):
+
+  - machine_temperature_system_failure : failure-bearing thermal telemetry
+    (the thermal incident-detection benchmark, Extended Data Table 1);
+  - ec2_cpu_utilization_24ae8d         : periodic cloud-utilisation telemetry
+    (the periodic, calibration-like regime where the Transformer specialises);
+  - nyc_taxi                           : aperiodic demand series (irregular regime).
+
+These public series stand in as analogues for periodic calibration-like,
+failure-bearing and irregular quantum-calibration regimes. Sequences are built
+with the same chronological split and training-only normalisation as the
+synthetic telemetry (see qdriftforecast/data.py / src/data.py), so the protocol
+is identical across domains and ROC-AUC (scale-invariant) is the basis for the
+cross-domain comparison.
+"""
+
 from __future__ import annotations
 
 import json

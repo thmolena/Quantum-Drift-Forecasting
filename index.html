@@ -1154,7 +1154,10 @@
         </div>
       </div>
 
-      <pre class="code-block">pip install -r requirements.txt
+      <pre class="code-block">cd submission/code
+export PYTHONPATH=.
+qdrift-reproduce
+cd ../..
 jupyter nbconvert --to notebook --execute --inplace notebooks/rnn_drift_forecast.ipynb
 jupyter nbconvert --to notebook --execute --inplace notebooks/transformer_calibration.ipynb
 jupyter nbconvert --to notebook --execute --inplace notebooks/quantum_drift_combined.ipynb</pre>

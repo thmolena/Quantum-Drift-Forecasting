@@ -248,15 +248,15 @@ def figure3():
     mcol = {"RNN": "#94a3b8", "LSTM": "#f59e0b", "GRU": "#10b981",
             "Transformer": "#6366f1"}
 
-    # (a) Thermal incident detection: ROC-AUC and F1 (Table tab:thermal).
+    # (a) Thermal incident detection: ROC-AUC and F1 (Extended Data Table edtab:thermal).
     thermal_auc = {"RNN": 0.408, "LSTM": 0.423, "GRU": 0.718}
     thermal_f1 = {"RNN": 0.000, "LSTM": 0.000, "GRU": 0.257}
 
-    # (b) Three-dataset average ROC-AUC (Table tab:cross) + Transformer* periodic.
+    # (b) Three-dataset average ROC-AUC (Extended Data Table edtab:cross) + Transformer* periodic.
     avg_auc = {"GRU": 0.660, "LSTM": 0.628, "Transformer": 0.196}
     transformer_periodic = 0.799
 
-    # (c) Parameter counts (Table tab:thermal).
+    # (c) Parameter counts (Extended Data Table edtab:thermal).
     params = {"RNN": 5645, "LSTM": 116845, "GRU": 87949, "Transformer": 116845}
 
     fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.2))
