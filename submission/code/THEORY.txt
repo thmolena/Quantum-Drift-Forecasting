@@ -1,0 +1,265 @@
+================================================================================
+THEORY.txt  --  Objective-aware sequence modelling for quantum-hardware drift
+A from-scratch derivation of every concept the code in this folder implements.
+================================================================================
+
+This document is meant to be read top-to-bottom by someone who has seen linear
+algebra and basic probability but NOT quantum hardware telemetry, time-series
+forecasting, anomaly detection, or the specific estimators used here. Every
+symbol used in the code is defined. Each section maps to a source file so you can
+read theory and implementation side by side. The whole artifact is CPU-only and
+deterministic: every number in the paper is a fixed function of integer seeds.
+
+Source-file map (everything lives under submission/code/):
+  qdriftforecast/data.py        telemetry generator, windowing, splitting
+  make_paper_figures.py         all figures + table bodies + machine-readable data
+  qdriftforecast/reproduce.py   the installed "qdrift-reproduce" entry point
+  generated_data/*.json         the numbers behind each figure, written on each run
+
+--------------------------------------------------------------------------------
+0. THE PROBLEM IN ONE PARAGRAPH
+--------------------------------------------------------------------------------
+A quantum processor is not a static device. Its relaxation time T1, dephasing
+time T2, gate fidelities, readout error and coupling parameters drift over hours
+as temperature, flux noise and recalibration history change. This erodes the
+error budget that quantum error correction depends on, so an operator must decide
+WHEN a device has drifted out of specification and WHICH intervals warrant
+recalibration. We recast that reliability question as two machine-learning tasks
+on a multivariate time series: (i) FORECAST near-future coherence so a monitor
+can warn ahead of time, and (ii) DETECT anomalous (drifted) windows without
+labels. The scientific findings are that coherence is genuinely forecastable
+(a learned forecaster beats persistence by 72% eight steps ahead) and that no
+single sequence-model architecture is best for detection (the GRU is the robust
+generalist, the Transformer a periodic-signal specialist).
+
+--------------------------------------------------------------------------------
+1. COMPUTATION MODEL: TELEMETRY AS ARRAYS      [qdriftforecast/data.py]
+--------------------------------------------------------------------------------
+A telemetry record is a finite table. Each row is a (timestamp, qubit_id) pair
+holding measured/simulated features. A program sees the table as arrays of real
+numbers. The seven feature channels (FEATURE_COLS) are:
+  T1_us, T2_us, gate_fidelity_1q, gate_fidelity_2q, readout_error,
+  gate_error_per_clifford, cross_resonance_phase_rad.
+All results in the paper are deterministic functions of these arrays and a fixed
+integer seed (Python's random.Random(seed) in generate_synthetic_dataset).
+
+--------------------------------------------------------------------------------
+2. THE PHYSICS OF THE GENERATOR (why drift is structured, not noise)
+                                               [generate_synthetic_dataset]
+--------------------------------------------------------------------------------
+The generator encodes a physically motivated, MEAN-REVERTING process. For qubit
+q at time t (hours, t = step * 0.5), the relaxation time is
+
+    T1(q,t) = max(10, 80 + 20 sin(2 pi t / 48 + 0.8 q) - 0.05 t + eps),
+    eps ~ Normal(0, 2^2).
+
+Read this as three superposed effects, each with a hardware meaning:
+  - 80 + 20 sin(2 pi t / 48 + ...): a slow, qubit-dependent OSCILLATION with a
+    48-hour period (diurnal/recalibration-like cycling); the phase 0.8 q
+    decorrelates qubits.
+  - -0.05 t: a small SECULAR DECAY (slow degradation/ageing).
+  - eps: Gaussian FLUCTUATION (measurement + environmental noise).
+The other channels track T1 by construction: T2 = 0.9 * T1 * Normal(1, 0.04^2);
+gate fidelities, readout error, error-per-Clifford and cross-resonance phase are
+analogous bounded processes with small secular trends (and cr_phase carries its
+own 24-hour ripple). A binary drift_label marks any step with T1 < 50 us OR
+1-qubit fidelity < 0.998 -- i.e. "out of specification."
+
+KEY CONSEQUENCE. Because the deterministic part is smooth and the noise is small,
+the DETRENDED series is well modelled as weakly stationary with autocorrelation
+that DECAYS slowly rather than vanishing. Section 5 turns that single fact into a
+provable forecasting advantage; Fig. 1b measures it (mean autocorrelation stays
+above 0.5 for ~7 hours).
+
+--------------------------------------------------------------------------------
+3. SUPERVISED WINDOWING AND LEAK-FREE SPLITS   [make_sequences, temporal_split]
+--------------------------------------------------------------------------------
+A sequence model maps a recent window of length L to a future target of length H.
+make_sequences slides a window of seq_len = L = 32 and, for each window, records:
+  X_seq : (N, 32, 7)  the 32-step, 7-channel input window
+  y_seq : (N, 8)      the next H = 8 values of T1 (the forecast target)
+  lbl   : (N,)        the drift label at the forecast horizon (the detection target)
+
+LEAKAGE is the cardinal sin of time-series ML: if any training window overlaps
+the future of a test window, the model "sees" the answer and scores are inflated.
+We prevent it by CHRONOLOGICAL splitting (never shuffling across the time axis):
+  - sequence-model benchmark: 70/15/15 chronological (temporal_split);
+  - forecasting baselines: per-qubit 80/20 chronological, then pooled
+    (_forecast_one_seed in make_paper_figures.py);
+  - unsupervised detector: randomised 70/30, which is SAFE here ONLY because the
+    detector is fit on nominal windows alone (Section 6), so shuffling cannot leak
+    a label the detector never uses.
+normalize() fits a min-max scaler on TRAINING data only and applies it to val/test
+-- the same one-directional discipline.
+
+--------------------------------------------------------------------------------
+4. THE ML ESTIMATOR: RIDGE REGRESSION FROM SCRATCH   [_forecast_one_seed]
+--------------------------------------------------------------------------------
+The learned forecasters are ridge (Tikhonov) regressions. Given a design matrix
+X (rows = flattened windows) and targets Y (rows = 8-step horizons), ridge solves
+
+    minimize_W  || X W - Y ||_2^2  +  alpha || W ||_2^2.
+
+Setting the gradient to zero gives the closed form
+
+    W* = (X^T X + alpha I)^{-1} X^T Y,
+
+which is UNIQUE and deterministic for fixed X, Y, alpha (we use alpha = 5). The
+alpha I term is what makes (X^T X + alpha I) invertible even when features are
+correlated (T1, T2 and fidelities are), and it shrinks W toward zero to control
+variance -- the bias-variance trade-off in one line. Two flavours are fit:
+  - AR-ridge: features = the 32-step T1 history only (X[:, :, 0]).
+  - multivariate ridge: features = the flattened 32 x 7 window (all channels).
+The non-learning BASELINES need no fit:
+  - persistence: repeat the last observed T1 across the horizon (carry-forward);
+  - climatology: repeat the training-mean horizon trajectory.
+
+--------------------------------------------------------------------------------
+5. WHY FORECAST SKILL GROWS WITH THE HORIZON (Theorem 1 in the paper)
+--------------------------------------------------------------------------------
+Let {x_t} be weakly stationary, zero-mean, variance gamma_0 > 0, with
+autocorrelation rho(h) = Corr(x_{t+h}, x_t). Define SKILL of a forecaster over
+persistence as one minus its risk ratio.
+
+PERSISTENCE RISK. The persistence forecast is x_hat_{t+h} = x_t, so
+    R_pers(h) = E[(x_{t+h} - x_t)^2]
+              = Var(x_{t+h}) + Var(x_t) - 2 Cov(x_{t+h}, x_t)
+              = gamma_0 + gamma_0 - 2 gamma_0 rho(h)
+              = 2 gamma_0 (1 - rho(h)).
+
+OPTIMAL SINGLE-LAG RISK. For a scalar gain a, E[(x_{t+h} - a x_t)^2]
+= gamma_0 - 2 a gamma_0 rho(h) + a^2 gamma_0 is a parabola in a, minimised at
+a = rho(h), giving R_*(h) = gamma_0 (1 - rho(h)^2). (This is the best linear
+predictor using only x_t, and the MMSE predictor in the Gaussian case.)
+
+SKILL. Dividing,
+    R_*(h) / R_pers(h) = (1 - rho(h)^2) / (2 (1 - rho(h))) = (1 + rho(h)) / 2,
+so
+    S(h) = 1 - R_*/R_pers = (1 - rho(h)) / 2.
+
+INTERPRETATION. S(h) decreases in rho(h); hence if rho is non-increasing in h
+(as it is for mean-reverting telemetry), S(h) is NON-DECREASING and bounded above
+by 1/2 (attained as rho -> 0). For a first-order autoregressive process,
+rho(h) = phi^h with 0 < phi < 1, so S(h) = (1 - phi^h)/2 rises strictly from 0
+toward 1/2 -- a single measured number phi = rho(1) fixes the whole curve.
+This LOWER BOUND uses only the most recent sample; the multivariate ridge beats it
+by using the full 32-step history across all 7 channels, which is exactly why its
+measured skill climbs to 72% at horizon 8 while persistence degrades. Forecasting
+is futile (S == 0) only in the white-noise limit rho == 0, and trivial when
+rho == 1; the decaying-but-positive regime of Fig. 1b is where learning pays off.
+
+--------------------------------------------------------------------------------
+6. UNSUPERVISED DRIFT DETECTION BY RECONSTRUCTION   [_reconstruction_error]
+--------------------------------------------------------------------------------
+Idea: learn what NOMINAL operation looks like, then flag whatever does not fit.
+Concretely, fit a low-rank linear subspace to non-drift windows and SCORE a new
+window by the squared residual left OUTSIDE that subspace.
+
+Algorithm (rank k):
+  1. min-max scale each feature using statistics from the NOMINAL training
+     windows only (so the detector never peeks at drift);
+  2. center: subtract the nominal mean;
+  3. SVD the centered nominal matrix, X - center = U S V^T; keep W_k = top-k rows
+     of V^T (the top-k right singular vectors);
+  4. project a test window: proj = (B W_k^T) W_k, where B = x - center;
+  5. score = mean_j (B - proj)_j^2  -- the residual energy off the subspace.
+A large score means "poorly explained by nominal operation" = likely drift.
+
+--------------------------------------------------------------------------------
+7. WHY LOW RANK DETECTS DRIFT (Theorems 2-3 in the paper)
+--------------------------------------------------------------------------------
+EMPIRICAL OPTIMALITY OF THE RANK-k SUBSPACE. Let X (m x d) be the centred nominal
+windows and V_k the top-k right singular vectors. For ANY rank-k orthogonal
+projector P,
+    || X - X P ||_F^2 = || X ||_F^2 - || X P ||_F^2,
+so minimising reconstruction error is the same as MAXIMISING
+|| X P ||_F^2 = Tr(P X^T X). By the Rayleigh-Ritz variational principle this is
+maximised by the span of the top-k eigenvectors of X^T X, i.e. P_k = V_k V_k^T
+(unique under a strict spectral gap). Hence the score s_k(x) = || x - x P_k ||_2^2
+is the SMALLEST residual any rank-k linear monitor fitted on nominal data can give
+-- a certificate, not a heuristic. (This is exactly steps 3-5 above.)
+
+OVER-COMPLETE COLLAPSE. If the subspace grows to span the drift directions too
+(in particular k = d, P_k = I), then s_k(x) = || x - x I ||^2 = 0 for every
+window: the score is constant and cannot separate anything. So detection AUC
+falls toward chance (1/2) as rank rises -- which is precisely the curve in
+Fig. 4b (strongest at rank 1, collapsing as the code becomes over-complete). The
+high-rank AUC drop is therefore a THEOREM, not a tuning artefact: a monitor
+expressive enough to reconstruct abnormal windows as faithfully as nominal ones
+cannot tell them apart.
+
+--------------------------------------------------------------------------------
+8. METRICS: MAE FOR FORECASTING, ROC-AUC FOR DETECTION
+--------------------------------------------------------------------------------
+FORECASTING uses mean absolute error per horizon step, MAE(h) = mean |y - y_hat|.
+We report it per step so the WIDENING gap over persistence is visible, and skill
+S = 1 - MAE/MAE_pers connects directly to Section 5.
+
+DETECTION uses ROC-AUC, the area under the true-positive vs false-positive curve
+as the threshold sweeps R. By the Mann-Whitney identity,
+    AUC = Pr[s(X+) > s(X-)] + (1/2) Pr[s(X+) = s(X-)],
+i.e. the probability a random drift window outranks a random nominal one (ties at
+1/2). Two consequences we rely on: (i) AUC is invariant under any strictly
+increasing rescaling of the score, hence under per-feature affine scaling -- which
+is why ROC-AUC, not MAE/RMSE, is the basis for the CROSS-DOMAIN comparison whose
+datasets live on wildly different scales; and (ii) a constant score gives AUC
+exactly 1/2, the collapse mechanism of Section 7. We also report F1 at a fixed
+threshold, because a model can RANK well (high AUC) yet DETECT nothing at a given
+operating point (zero F1) -- the two disagree, so we report both.
+
+--------------------------------------------------------------------------------
+9. THE FOUR SEQUENCE-MODEL FAMILIES (what Fig. 3 / Tables 2-3 compare)
+--------------------------------------------------------------------------------
+The deep benchmark compares four standard families, each emitting an 8-step
+forecast and a drift logit, trained with AdamW under a cosine schedule on
+MSE + BCE. These are trained in the executed notebooks (device-agnostic PyTorch);
+make_paper_figures.py RENDERS their recorded metrics verbatim (NOTEBOOK_METRICS),
+it does not re-train them -- which is why Fig. 3 is reproducible on CPU with no
+GPU or torch dependency.
+  - Elman RNN: one recurrent layer; cheapest, weakest memory.
+  - LSTM: gated cell with explicit long-term state; many parameters.
+  - GRU: gated cell with fewer gates than the LSTM -> 25% fewer parameters here,
+    yet the strongest GENERALIST (only model with non-trivial thermal detection,
+    best 3-dataset average).
+  - Transformer: encoder-only self-attention; the periodic-signal SPECIALIST
+    (best single ROC-AUC on calibration-like signals, poor average).
+The decision rule the paper draws: match the architecture to the objective.
+
+--------------------------------------------------------------------------------
+10. HOW TO REPRODUCE EVERYTHING
+--------------------------------------------------------------------------------
+From submission/code:
+    export KMP_DUPLICATE_LIB_OK=TRUE
+    python make_paper_figures.py        # or the installed entry point:
+    qdrift-reproduce                    # (qdriftforecast.reproduce:main)
+This writes, deterministically from fixed seeds on a single CPU:
+  - figures: ../figures/{fig0_overview, fig1_dynamics, fig2_forecasting,
+    fig3_benchmark, fig4_anomaly}.pdf  (vector PDF, Nature Machine Intelligence
+    house style: pdf.fonttype=42, sans-serif, colour-blind-safe Okabe-Ito
+    palette, despined frame, bold panel labels a/b/c, no in-plot titles, and
+    error bars / shaded +-1 s.d. or 95% bands wherever a mean is shown);
+  - table bodies: ../tables/{forecasting, thermal, cross_domain}_benchmark.tex
+    (booktabs, no vertical rules; mean +- s.d. for the multi-seed forecasting
+    table);
+  - machine-readable source data: generated_data/*.json (the numbers behind every
+    panel), so nothing in the manuscript is typed by hand.
+Reported uncertainties are mean +- standard deviation across the n = 5 generator
+seeds (forecasting) or n = 8 randomised splits (detector). The cross-domain and
+thermal sequence-model values are single deterministic, seeded notebook runs and
+are reported as point estimates (the captions say so).
+
+--------------------------------------------------------------------------------
+11. WHAT THE RESULT MEANS (and what it does NOT)
+--------------------------------------------------------------------------------
+Coherence drift is forecastable, and a cheap learned forecaster beats naive
+baselines by a margin that GROWS with horizon (Section 5) -- the regime an
+early-warning monitor needs. For detection there is NO universal winner: the GRU
+is the robust, parameter-efficient generalist; the Transformer is a periodic
+specialist; and drift is geometrically an OFF-MANIFOLD, low-rank phenomenon whose
+detectability is governed by how tightly the nominal manifold is modelled
+(Section 7). No quantum-hardware superiority claim is made: the telemetry is a
+physically motivated MODEL, the real-world validation uses standard
+anomaly-detection benchmarks as analogues, and absolute detection scores are
+modest by honest design. The value delivered is a reusable, leakage-controlled,
+CPU-reproducible, decision-oriented benchmark for quantum-processor reliability.
+================================================================================

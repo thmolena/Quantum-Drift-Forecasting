@@ -7,7 +7,7 @@
 ## Highlights
 
 - **A new framing at the applied-math / ML / quantum-hardware interface.** Qubit decoherence and calibration drift are cast as a multivariate, mean-reverting stochastic-dynamical *forecasting* and *anomaly-detection* problem — the reliability question that gates the path to fault-tolerant quantum computing.
-- **Coherence is genuinely forecastable.** A learned forecaster predicts T1 eight steps ahead with **73% lower error than persistence**, and the advantage *widens* with horizon (multi-seed, leak-free, with confidence intervals).
+- **Coherence is genuinely forecastable.** A learned forecaster predicts T1 eight steps ahead with **72% lower error than persistence**, and the advantage *widens* with horizon (multi-seed, leak-free, with confidence intervals).
 - **Objective-aware model selection — no architecture wins everywhere.** The **GRU is the parameter-efficient generalist**: the only model with non-trivial incident detection (ROC-AUC **0.72**, recall **1.0**) using **25% fewer parameters than the LSTM**; the **Transformer is a specialist**, best on periodic calibration-like signals (ROC-AUC **0.80**) but weak elsewhere. A concrete caution against single-metric benchmarking.
 - **A mechanistic insight into drift detection.** Drift is an *off-manifold* phenomenon: a low-rank reconstruction bottleneck detects it (ROC-AUC **0.87** at rank 1) and collapses to chance when over-complete — an interpretable dial for false-alarm control.
 - **Research-grade rigor, reproducible on a laptop.** Leak-free protocol, multi-seed confidence intervals, and a CPU-only pipeline that regenerates every figure and number in seconds — end to end: data generation, models, training, evaluation, an interactive demo, and a journal-format manuscript.
