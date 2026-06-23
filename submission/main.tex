@@ -11,6 +11,9 @@
 \usepackage{siunitx}
 \usepackage{caption}
 \usepackage{microtype}
+% Allow a small amount of extra interword stretch to avoid overfull boxes around
+% long verbatim path/identifier literals (typography only; no content change).
+\setlength{\emergencystretch}{3em}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{xcolor}
 \definecolor{nmiaccent}{HTML}{1A4E8A}
@@ -21,7 +24,7 @@
 
 % ── Published-article styling (self-contained; single-spaced, no line numbers) ─
 \captionsetup{font=small,labelfont=bf,labelsep=period}
-\graphicspath{{figures/}}
+\graphicspath{{code/figures/}}
 \setlength{\parskip}{0.45em}
 \renewcommand{\Affilfont}{\normalsize\itshape}
 \renewcommand{\Authfont}{\large\bfseries}
@@ -142,8 +145,9 @@ calibration stream; sliding windows feed three analyses under one leakage-free
 protocol --- learned forecasters that predict the eight-step \T\ horizon,
 sequence-model families benchmarked for incident detection, and a low-rank
 reconstruction detector that flags off-manifold drift --- each scored by the
-metric matched to its monitoring objective (horizon-stable MAE for forecasting,
-threshold-free ROC-AUC for detection).
+metric matched to its monitoring objective (horizon-stable mean absolute error,
+MAE, for forecasting; the threshold-free area under the
+receiver-operating-characteristic curve, ROC-AUC, for detection).
 
 \begin{figure}[t]
   \centering
@@ -211,7 +215,9 @@ $13.01\pm0.05$~\si{\micro\second} for climatology. Persistence degrades steeply
 with horizon --- to $6.79\pm0.18$~\si{\micro\second} eight steps ahead --- whereas
 the learned forecasters remain nearly flat ($1.88\pm0.06$~\si{\micro\second} for
 the multivariate ridge), so their skill over persistence \emph{grows} from $26\%$
-one step ahead to $72\%$ eight steps ahead (Fig.~\ref{fig:forecast}b). This
+one step ahead to $72\%$ eight steps ahead (Fig.~\ref{fig:forecast}b). The full
+per-step error and skill breakdowns appear in Extended Data
+Tables~\ref{edtab:perhorizon} and~\ref{edtab:skill}. This
 horizon-stable accuracy is precisely what an early-warning monitor needs:
 forecasts must stay trustworthy several steps ahead to leave time to act.
 
@@ -235,14 +241,25 @@ forecasts must stay trustworthy several steps ahead to leave time to act.
   telemetry-generator seeds). Skill is relative to persistence at the eight-step
   horizon; best value per column in \textbf{bold}.}
   \label{tab:forecast}
-  \input{tables/forecasting_benchmark.tex}
+\begin{tabular}{lccc}
+  \toprule
+  Forecaster & MAE @ 1 step (\si{\micro\second}) & MAE @ 8 steps (\si{\micro\second}) & Skill @ 8 steps \\
+  \midrule
+  Persistence            & $2.44 \pm 0.16$ & $6.79 \pm 0.18$ & --- \\
+  Climatology            & $13.01 \pm 0.05$ & $12.40 \pm 0.05$ & -83\% \\
+  AR-ridge (\T\ history) & $1.85 \pm 0.07$ & $2.19 \pm 0.06$ & 68\% \\
+  Multivariate ridge     & $\mathbf{1.80 \pm 0.09}$ & $\mathbf{1.88 \pm 0.06}$ & $\mathbf{72\%}$ \\
+  \bottomrule
+\end{tabular}
 \end{table}
 
 \subsection{No architecture wins everywhere}
 
-We next benchmark four sequence-model families --- a single-layer Elman RNN, a
-two-layer LSTM, a two-layer GRU, and an encoder-only Transformer --- on incident
-detection and on cross-domain generalisation, using one leak-free protocol and an
+We next benchmark four sequence-model families --- a single-layer Elman recurrent
+neural network (RNN), a two-layer long short-term memory network (LSTM), a
+two-layer gated recurrent unit (GRU), and an encoder-only Transformer --- on
+incident detection and on cross-domain generalisation, using one leak-free
+protocol and an
 objective-aware metric suite (Methods; metrics from the executed notebooks). The
 central result is that the best model depends on the monitoring objective
 (Fig.~\ref{fig:benchmark}, Extended Data Tables~\ref{edtab:thermal}--\ref{edtab:cross}).
@@ -264,7 +281,8 @@ far behind ($0.20$). The Transformer is not weak but \emph{specialised}: on
 periodic, calibration-like telemetry it attains the single highest ranking score
 in the study (ROC-AUC $0.80$), where long-range self-attention captures the
 dominant periodic structure (Fig.~\ref{fig:benchmark}b, Extended Data
-Table~\ref{edtab:cross}). Its poor average reflects a collapse on aperiodic
+Table~\ref{edtab:cross}), at a cost of \num{226765} parameters --- more than twice
+the GRU's. Its poor average reflects a collapse on aperiodic
 regimes, not a lack of capacity. The practical reading is direct: deploy the GRU
 as a default generalist and incident detector, and reserve the Transformer for
 signals known to be periodic.
@@ -294,7 +312,9 @@ rank-three bottleneck it separates regimes with ROC-AUC $0.72$ on a held-out spl
 the bottleneck rank reveals a principled design rule (Fig.~\ref{fig:anomaly}b):
 detection is strongest at very low rank ($0.87\pm0.02$ at rank one) and collapses
 to chance as the code becomes over-complete, because a high-capacity
-reconstruction memorises drifted windows as faithfully as nominal ones. Drift, in
+reconstruction memorises drifted windows as faithfully as nominal ones (the full
+rank-$1$-to-$32$ sweep is tabulated in Extended Data
+Table~\ref{edtab:ranksweep}). Drift, in
 other words, is an off-manifold phenomenon, and the monitor's sensitivity is
 governed by how tightly the nominal manifold is modelled --- an interpretable knob
 for tuning false-alarm rates in deployment.
@@ -343,25 +363,85 @@ there and bounded above by $\tfrac12$, attained as $\rho(h)\to0$.
 \end{theorem}
 
 \begin{proof}
-Expanding the persistence risk,
-$R_{\mathrm{pers}}(h)=\mathbb{E}[(x_{t+h}-x_t)^2]
-=\gamma_0+\gamma_0-2\gamma_0\rho(h)=2\gamma_0(1-\rho(h))$. For a scalar gain $a$,
-$\mathbb{E}[(x_{t+h}-a x_t)^2]=\gamma_0-2a\gamma_0\rho(h)+a^2\gamma_0$ is minimised
-at $a=\rho(h)$ with value $\gamma_0(1-\rho(h)^2)$; this is the minimum-mean-square
-predictor measurable with respect to $x_t$ alone in the Gaussian case and the best
-linear predictor in general. Dividing,
-$R_\star/R_{\mathrm{pers}}=(1-\rho(h)^2)/\big(2(1-\rho(h))\big)=(1+\rho(h))/2$ for
-$\rho(h)<1$, so $S(h)=(1-\rho(h))/2$, which decreases in $\rho(h)$. Monotonicity
-and the $\tfrac12$ ceiling follow because $\rho(h)\in[-1,1]$.
+Write $\gamma_0=\operatorname{Var}(x_t)=\mathbb{E}[x_t^2]$ (the process is
+zero-mean), and note that weak stationarity gives
+$\operatorname{Var}(x_{t+h})=\gamma_0$ and
+$\operatorname{Cov}(x_{t+h},x_t)=\gamma_0\,\rho(h)$ for every $t$.
+
+\emph{Step 1 (persistence risk).} Since $\hat{x}_{t+h}=x_t$,
+\begin{align*}
+  R_{\mathrm{pers}}(h)
+  &=\mathbb{E}\!\big[(x_{t+h}-x_t)^2\big]
+   =\mathbb{E}[x_{t+h}^2]-2\,\mathbb{E}[x_{t+h}x_t]+\mathbb{E}[x_t^2]\\
+  &=\operatorname{Var}(x_{t+h})-2\operatorname{Cov}(x_{t+h},x_t)+\operatorname{Var}(x_t)
+   =\gamma_0-2\gamma_0\rho(h)+\gamma_0
+   =2\gamma_0\big(1-\rho(h)\big),
+\end{align*}
+where the cross term used $\mathbb{E}[x_{t+h}x_t]=\operatorname{Cov}(x_{t+h},x_t)$
+because both factors are zero-mean.
+
+\emph{Step 2 (optimal single-lag gain).} For an arbitrary scalar gain
+$a\in\mathbb{R}$, the predictor $\hat{x}_{t+h}=a\,x_t$ has risk
+\[
+  g(a):=\mathbb{E}\!\big[(x_{t+h}-a x_t)^2\big]
+       =\mathbb{E}[x_{t+h}^2]-2a\,\mathbb{E}[x_{t+h}x_t]+a^2\,\mathbb{E}[x_t^2]
+       =\gamma_0-2a\gamma_0\rho(h)+a^2\gamma_0 .
+\]
+This is a strictly convex parabola in $a$ (coefficient $\gamma_0>0$); setting
+$g'(a)=-2\gamma_0\rho(h)+2a\gamma_0=0$ gives the unique minimiser $a^\star=\rho(h)$.
+Substituting back,
+\[
+  R_\star(h)=g(\rho(h))
+   =\gamma_0-2\rho(h)\gamma_0\rho(h)+\rho(h)^2\gamma_0
+   =\gamma_0\big(1-\rho(h)^2\big).
+\]
+By the projection theorem in $L^2$, $a^\star x_t$ is the orthogonal projection of
+$x_{t+h}$ onto $\operatorname{span}\{x_t\}$, so $a^\star x_t$ is the best
+\emph{linear} predictor of $x_{t+h}$ from $x_t$; in the Gaussian case the
+conditional expectation $\mathbb{E}[x_{t+h}\mid x_t]$ is itself linear in $x_t$, so
+$a^\star x_t$ is moreover the minimum-mean-square (MMSE) predictor. Since
+$\rho(h)^2\le 1$ implies $1-\rho(h)^2\le 2(1-\rho(h))$ for $\rho(h)\le 1$, we have
+$R_\star(h)\le R_{\mathrm{pers}}(h)$.
+
+\emph{Step 3 (skill).} For $\rho(h)<1$ both risks are positive and, dividing,
+\[
+  \frac{R_\star(h)}{R_{\mathrm{pers}}(h)}
+   =\frac{\gamma_0\big(1-\rho(h)^2\big)}{2\gamma_0\big(1-\rho(h)\big)}
+   =\frac{\big(1-\rho(h)\big)\big(1+\rho(h)\big)}{2\big(1-\rho(h)\big)}
+   =\frac{1+\rho(h)}{2},
+\]
+so $S(h)=1-R_\star/R_{\mathrm{pers}}=1-\tfrac{1+\rho(h)}{2}=\tfrac{1-\rho(h)}{2}$.
+
+\emph{Step 4 (monotonicity and ceiling).} The map $\rho\mapsto(1-\rho)/2$ is
+strictly decreasing, so wherever $\rho(h)$ is non-increasing in $h$, $S(h)$ is
+non-decreasing in $h$. Because $\rho(h)\in[-1,1]$, $S(h)=(1-\rho(h))/2\in[0,1]$,
+and on the mean-reverting range $\rho(h)\in[0,1]$ we have $S(h)\le\tfrac12$, with
+equality attained in the limit $\rho(h)\to0$. \qedhere
 \end{proof}
 
 \begin{corollary}[Mean-reverting case]
 \label{cor:ar1}
-For a first-order autoregressive (discrete Ornstein--Uhlenbeck) process with
-$\rho(h)=\phi^{\,h}$, $0<\phi<1$, the skill $S(h)=(1-\phi^{\,h})/2$ is strictly
-increasing in $h$ from $0$ towards $\tfrac12$. The single measured quantity
-$\phi=\rho(1)$ then determines the entire skill-versus-horizon curve.
+For a first-order autoregressive (discrete Ornstein--Uhlenbeck) process
+$x_t=\phi\,x_{t-1}+\xi_t$ with $0<\phi<1$ and i.i.d.\ innovations $\xi_t$ of
+variance $\sigma^2$, the lag-$h$ autocorrelation is $\rho(h)=\phi^{\,h}$, and the
+optimal single-lag skill $S(h)=(1-\phi^{\,h})/2$ is strictly increasing in $h$
+from $S(0)=0$ towards $\tfrac12$. The single measured quantity $\phi=\rho(1)$
+therefore determines the entire skill-versus-horizon curve.
 \end{corollary}
+
+\begin{proof}
+Iterating the recursion $h$ times gives
+$x_{t+h}=\phi^{\,h}x_t+\sum_{j=0}^{h-1}\phi^{\,j}\xi_{t+h-j}$, where the
+innovations $\xi_{t+1},\dots,\xi_{t+h}$ are independent of $x_t$ (which depends
+only on $\xi_{s}$ for $s\le t$). Taking covariance with $x_t$ annihilates the
+innovation sum, so
+$\operatorname{Cov}(x_{t+h},x_t)=\phi^{\,h}\operatorname{Var}(x_t)=\phi^{\,h}\gamma_0$
+and hence $\rho(h)=\operatorname{Cov}(x_{t+h},x_t)/\gamma_0=\phi^{\,h}$.
+Substituting into Theorem~\ref{thm:skill} yields $S(h)=(1-\phi^{\,h})/2$. Because
+$0<\phi<1$, the sequence $\phi^{\,h}$ is strictly decreasing in $h$ with
+$\phi^{\,0}=1$ and $\phi^{\,h}\to0$, so $S(h)$ is strictly increasing from
+$S(0)=(1-1)/2=0$ towards $\lim_{h\to\infty}(1-\phi^{\,h})/2=\tfrac12$.
+\end{proof}
 
 \noindent Theorem~\ref{thm:skill} is a \emph{lower bound} that uses only the most
 recent sample; the multivariate ridge of Fig.~\ref{fig:forecast} exceeds it by
@@ -391,15 +471,96 @@ by any rank-$k$ linear monitor fitted only to the nominal training windows.
 \end{theorem}
 
 \begin{proof}
-For any rank-$k$ orthogonal projector $P$,
-$\norm{X-XP}_F^2=\norm{X}_F^2-\norm{XP}_F^2$. Minimising reconstruction error is
-therefore equivalent to maximising $\norm{XP}_F^2=\operatorname{Tr}(PX^\top X)$
-over rank-$k$ projectors. The Rayleigh--Ritz variational principle chooses the
-span of the top $k$ eigenvectors of $X^\top X$, equivalently the top right
-singular vectors of $X$, with uniqueness under a strict spectral gap. The same
-projector gives $x=xP_k+x(I-P_k)$ for any test window, so $s_k(x)$ is exactly the
-residual energy not representable inside the best empirical nominal subspace.
+\emph{Step 1 (reconstruction $=$ retained energy).} Let $P$ be any orthogonal
+projector ($P=P^\top=P^2$) of rank at most $k$. Using
+$\norm{M}_F^2=\operatorname{Tr}(M^\top M)$ and writing $X-XP=X(I-P)$,
+\[
+  \norm{X-XP}_F^2
+   =\operatorname{Tr}\!\big((I-P)X^\top X(I-P)\big)
+   =\operatorname{Tr}\!\big(X^\top X(I-P)\big)
+   =\norm{X}_F^2-\operatorname{Tr}\!\big(X^\top X\,P\big),
+\]
+where the second equality uses $(I-P)^2=I-P$ and cyclicity of the trace, and the
+third expands $I-P$. Hence minimising $\norm{X-XP}_F^2$ over rank-$k$ projectors
+is equivalent to \emph{maximising}
+$\operatorname{Tr}(X^\top X\,P)=\operatorname{Tr}(P X^\top X)=\norm{XP}_F^2$.
+
+\emph{Step 2 (variational maximisation).} Let $X^\top X=\sum_{i=1}^d
+\lambda_i v_i v_i^\top$ be the spectral decomposition, with eigenvalues
+$\lambda_1\ge\lambda_2\ge\dots\ge\lambda_d\ge0$ (the squared singular values of
+$X$) and orthonormal eigenvectors $v_i$ (the right singular vectors). Any rank-$k$
+orthogonal projector can be written $P=\sum_{j=1}^{k}u_j u_j^\top$ for some
+orthonormal $u_1,\dots,u_k$. Then
+\[
+  \operatorname{Tr}(PX^\top X)
+   =\sum_{j=1}^{k} u_j^\top X^\top X\, u_j
+   =\sum_{j=1}^{k}\sum_{i=1}^{d}\lambda_i\,(v_i^\top u_j)^2
+   =\sum_{i=1}^{d}\lambda_i\, c_i,
+   \qquad c_i:=\sum_{j=1}^{k}(v_i^\top u_j)^2 .
+\]
+The coefficients satisfy $0\le c_i\le 1$ (Bessel's inequality, since the $u_j$ are
+orthonormal) and $\sum_{i=1}^d c_i=\sum_{j=1}^k\norm{u_j}^2=k$. Maximising the
+linear functional $\sum_i\lambda_i c_i$ over this polytope
+$\{0\le c_i\le1,\ \sum_i c_i=k\}$ puts all admissible mass on the $k$ largest
+$\lambda_i$, i.e.\ $c_1=\dots=c_k=1$ and $c_{k+1}=\dots=c_d=0$, giving the optimal
+value $\sum_{i=1}^{k}\lambda_i$. This is attained by $P_k=\sum_{i=1}^k v_i v_i^\top
+=V_kV_k^\top$.
+
+\emph{Step 3 (uniqueness).} If $\lambda_k>\lambda_{k+1}$ (strict spectral gap),
+the maximiser is unique: any optimal $P$ must place $c_i=1$ for $i\le k$ and
+$c_i=0$ for $i>k$, which forces $\operatorname{span}\{u_1,\dots,u_k\}
+=\operatorname{span}\{v_1,\dots,v_k\}$ and hence $P=V_kV_k^\top$; were the gap
+absent, eigenvectors within a degenerate block could be rotated freely.
+
+\emph{Step 4 (test-window certificate).} For any test window $x$, the orthogonal
+decomposition $x=xP_k+x(I-P_k)$ holds, and
+$s_k(x)=\norm{x-xP_k}_2^2=\norm{x(I-P_k)}_2^2$ is exactly the energy of $x$ outside
+the optimal nominal subspace $\operatorname{range}(P_k)$. By Steps 1--3 no rank-$k$
+linear monitor fitted on the nominal windows can yield a smaller mean residual, so
+$s_k$ is the certified-optimal rank-$k$ score.
 \end{proof}
+
+\paragraph{Uniqueness of the learned forecaster.}
+The forecasters of Fig.~\ref{fig:forecast} that exceed the Theorem~\ref{thm:skill}
+bound are ridge (Tikhonov) regressions. The following records that, for any fixed
+penalty, the fitted predictor is unique and given in closed form, so every reported
+number is a deterministic function of the seeded design matrix --- there is no
+optimisation randomness to tune away.
+
+\begin{proposition}[Existence, uniqueness and determinism of the ridge forecaster]
+\label{prop:ridge}
+Let $X\in\mathbb{R}^{m\times p}$ and $Y\in\mathbb{R}^{m\times H}$ be the design
+matrix of flattened windows and the matrix of $H$-step targets, and fix a penalty
+$\alpha>0$. The Tikhonov objective
+$J(W)=\norm{XW-Y}_F^2+\alpha\norm{W}_F^2$ has a unique minimiser
+\[
+  W^\star=(X^\top X+\alpha I)^{-1}X^\top Y,
+\]
+which is a deterministic function of $(X,Y,\alpha)$ for every $X$, irrespective of
+rank or feature collinearity.
+\end{proposition}
+
+\begin{proof}
+Write $J(W)=\sum_{c=1}^{H} J_c(w_c)$ over the columns $w_c$ of $W$ and
+$y_c$ of $Y$, with $J_c(w)=\norm{Xw-y_c}_2^2+\alpha\norm{w}_2^2$. Expanding,
+$J_c(w)=w^\top(X^\top X+\alpha I)w-2\,w^\top X^\top y_c+\norm{y_c}_2^2$. The Hessian
+is $\nabla^2 J_c=2(X^\top X+\alpha I)$. Since $X^\top X\succeq0$ and $\alpha I\succ0$,
+$X^\top X+\alpha I\succ0$ is symmetric positive definite (its smallest eigenvalue is
+at least $\alpha>0$), hence invertible for \emph{any} $X$ --- this is exactly the
+role of the ridge term when features are collinear, as $T_1$, $T_2$ and the
+fidelities are. Strict positive definiteness makes $J_c$ strictly convex, so its
+unique stationary point is the global minimiser. Setting
+$\nabla J_c(w)=2(X^\top X+\alpha I)w-2X^\top y_c=0$ gives
+$w_c^\star=(X^\top X+\alpha I)^{-1}X^\top y_c$; stacking the columns yields
+$W^\star=(X^\top X+\alpha I)^{-1}X^\top Y$. As a composition of the deterministic maps
+$X,Y\mapsto X^\top X+\alpha I$, matrix inversion, and multiplication, $W^\star$ is a
+deterministic function of $(X,Y,\alpha)$.
+\end{proof}
+
+\noindent Proposition~\ref{prop:ridge} is why the multivariate and AR ridge curves
+of Fig.~\ref{fig:forecast} and the per-seed spreads of Extended Data
+Table~\ref{edtab:perhorizon} carry no optimiser noise: at $\alpha=5$ the only
+randomness is in the seeded telemetry that builds $X$ and $Y$.
 
 \begin{proposition}[Threshold-free ranking and scale invariance]
 \label{prop:auc}
@@ -416,12 +577,37 @@ cross-domain comparison in Extended Data Table~\ref{edtab:cross}.
 \end{proposition}
 
 \begin{proof}
-The ROC curve plots true-positive against false-positive rate as the decision
-threshold sweeps $\mathbb{R}$; its area equals the probability that a random
-positive outranks a random negative, ties counted at one half --- the standard
-equivalence of the AUC and the normalised Mann--Whitney $U$ statistic. A strictly
-increasing map preserves the ordering of all scores, hence every
-$(\mathrm{FPR},\mathrm{TPR})$ pair and the enclosed area.
+\emph{Step 1 (AUC as an integral of TPR over FPR).} Let $F_{+}$ and $F_{-}$ be the
+cumulative distribution functions of the score $s$ under the drift (positive) and
+nominal (negative) classes. For a threshold $\tau$ that flags $s>\tau$ as drift,
+the true- and false-positive rates are
+$\mathrm{TPR}(\tau)=\Pr[s(X^{+})>\tau]=1-F_{+}(\tau)$ and
+$\mathrm{FPR}(\tau)=\Pr[s(X^{-})>\tau]=1-F_{-}(\tau)$. The ROC curve is the locus
+$\{(\mathrm{FPR}(\tau),\mathrm{TPR}(\tau)):\tau\in\mathbb{R}\}$, and its area is
+$\mathrm{AUC}=\int_0^1\mathrm{TPR}\,\mathrm{d}(\mathrm{FPR})$.
+
+\emph{Step 2 (change of variables to the Mann--Whitney form).} Substituting
+$u=\mathrm{FPR}(\tau)=1-F_{-}(\tau)$, so that $\mathrm{d}u=-\,\mathrm{d}F_{-}(\tau)$
+and $\mathrm{TPR}=1-F_{+}(\tau)=\Pr[s(X^{+})>\tau]$,
+\[
+  \mathrm{AUC}
+   =\int_{-\infty}^{\infty}\Pr\!\big[s(X^{+})>\tau\big]\,\mathrm{d}F_{-}(\tau)
+   =\mathbb{E}_{X^{-}}\!\Big[\Pr\!\big[s(X^{+})>s(X^{-})\,\big|\,X^{-}\big]\Big]
+   =\Pr\!\big[s(X^{+})>s(X^{-})\big],
+\]
+for $X^{+}\perp X^{-}$ and a continuous score. When the score has atoms, the ROC
+curve interpolates each jump by a line segment whose trapezoidal area contributes
+exactly one half of the tie mass at that level; summing over levels adds the term
+$\tfrac12\Pr[s(X^{+})=s(X^{-})]$, giving the stated identity. This is the
+normalised Mann--Whitney $U$ statistic.
+
+\emph{Step 3 (scale invariance).} Let $\psi:\mathbb{R}\to\mathbb{R}$ be strictly
+increasing and replace $s$ by $\psi\circ s$. For any two windows,
+$s(X^{+})>s(X^{-})\iff\psi(s(X^{+}))>\psi(s(X^{-}))$ and likewise for equality, so
+the events in the identity of Step~2 are unchanged and $\mathrm{AUC}$ is invariant.
+Per-feature affine rescaling $x\mapsto a\odot x+b$ with $a>0$ composes such strictly
+increasing maps on each coordinate and hence leaves the induced score ordering --
+and therefore $\mathrm{AUC}$ -- unchanged.
 \end{proof}
 
 \begin{corollary}[Over-complete collapse to chance]
@@ -435,10 +621,21 @@ nominal subspace expands to also span the drift directions.
 \end{corollary}
 
 \begin{proof}
-$P_k=I$ gives $x-xP_k=0$, hence $s_k\equiv0$; a constant score has
-$\Pr[s(X^{+})>s(X^{-})]=0$ with all mass on ties, so $\mathrm{AUC}=\tfrac12$. As
-$k$ grows, the residual projector $I-P_k$ contracts monotonically, shrinking the
-score gap between drift and nominal windows and driving the AUC towards chance.
+\emph{Exact collapse at $k=d$.} When $P_k=I$ we have $x-xP_k=x-x=0$ for every
+window, so $s_k(x)\equiv0$ is constant. A constant score gives
+$\Pr[s(X^{+})>s(X^{-})]=0$ and $\Pr[s(X^{+})=s(X^{-})]=1$, so by
+Proposition~\ref{prop:auc} $\mathrm{AUC}=0+\tfrac12\cdot1=\tfrac12$.
+
+\emph{Monotone approach to chance.} For nested subspaces, increasing $k$ to $k+1$
+replaces $P_k=\sum_{i\le k}v_iv_i^\top$ by $P_{k+1}=P_k+v_{k+1}v_{k+1}^\top$, so the
+residual projector satisfies $I-P_{k+1}=(I-P_k)-v_{k+1}v_{k+1}^\top\preceq I-P_k$ in
+the Loewner order. Consequently every score decreases pointwise,
+$s_{k+1}(x)=\norm{x(I-P_{k+1})}_2^2\le\norm{x(I-P_k)}_2^2=s_k(x)$, and once
+$\operatorname{range}(P_k)$ contains the drift directions the residuals of drifted
+and nominal windows become equal, collapsing the gap that
+Proposition~\ref{prop:auc} converts into above-chance AUC. Hence detection AUC
+decreases towards $\tfrac12$ as the nominal subspace expands to also span the drift
+directions.
 \end{proof}
 
 \noindent Together these results frame the two operating regimes of the study:
@@ -553,8 +750,10 @@ analogues for periodic calibration-like, failure-bearing and irregular regimes.
 
 \paragraph{Reproducibility and compute.}
 The analyses run entirely on a single CPU and regenerate in seconds.
-Figures~\ref{fig:dynamics},~\ref{fig:forecast},~\ref{fig:anomaly} and
-Table~\ref{tab:forecast} are computed live from the telemetry generator;
+Figures~\ref{fig:dynamics},~\ref{fig:forecast},~\ref{fig:anomaly},
+Table~\ref{tab:forecast} and Extended Data
+Tables~\ref{edtab:perhorizon}--\ref{edtab:ranksweep} are computed live from the
+telemetry generator;
 Fig.~\ref{fig:benchmark} and Extended Data Tables~\ref{edtab:thermal}--\ref{edtab:cross}
 reproduce the metrics recorded by the executed sequence-model notebooks (for
 which the training loop is device-agnostic and runs identically on CPU or GPU).
@@ -605,7 +804,15 @@ The author thanks the open-source scientific-Python and PyTorch communities.
   GRU is the only model with non-zero F1 (recall $=1.0$, precision $=0.15$) and
   the only one above chance-level ranking.}
   \label{edtab:thermal}
-  \input{tables/thermal_benchmark.tex}
+\begin{tabular}{lccccr}
+  \toprule
+  Model & MAE (\si{\micro\second}) & RMSE (\si{\micro\second}) & F1 & ROC-AUC & Params \\
+  \midrule
+  Elman RNN   & 61.37 & 64.93 & 0.000 & 0.408 & \textbf{\num{5645}} \\
+  LSTM        & \textbf{51.48} & \textbf{55.00} & 0.000 & 0.423 & \num{116845} \\
+  GRU         & 51.79 & 55.35 & \textbf{0.257} & \textbf{0.718} & \num{87949} \\
+  \bottomrule
+\end{tabular}
 \end{table}
 
 \begin{table}[h]
@@ -620,7 +827,104 @@ The author thanks the open-source scientific-Python and PyTorch communities.
   the $n=3$ datasets). Averaged MAE/RMSE span heterogeneous scales; ROC-AUC is
   scale-invariant and the basis for cross-domain comparison.}
   \label{edtab:cross}
-  \input{tables/cross_domain_benchmark.tex}
+\begin{tabular}{lccc@{\hskip 2.4em}lc}
+  \toprule
+  \multicolumn{4}{c}{Three-dataset average} & \multicolumn{2}{c}{Periodic regime} \\
+  \cmidrule(r){1-4}\cmidrule(l){5-6}
+  Model & MAE & RMSE & ROC-AUC & Model & ROC-AUC \\
+  \midrule
+  GRU         & \textbf{1337.3} & \textbf{1628.8} & \textbf{0.660} & Transformer & \textbf{0.799} \\
+  LSTM        & 1528.8 & 1895.0 & 0.628 & GRU (avg.)   & 0.660 \\
+  Transformer & 1436.2 & 1791.6 & 0.196 & ---          & ---   \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+  \centering
+  \small
+  \caption{\textbf{Extended Data Table 3: Per-horizon forecasting error}
+  (mean absolute error in \si{\micro\second}, mean~$\pm$~s.d.\ over the $n=5$
+  telemetry-generator seeds). Each row is one step of the eight-step \T\ horizon;
+  best (lowest) value per row in \textbf{bold}. The learned ridge forecasters stay
+  nearly flat across the horizon while persistence degrades monotonically and
+  climatology is uniformly poor, the per-step view underlying
+  Fig.~\ref{fig:forecast}a and Table~\ref{tab:forecast}.}
+  \label{edtab:perhorizon}
+\begin{tabular}{ccccc}
+  \toprule
+  Horizon (steps) & Persistence & Climatology & AR-ridge & Multivariate ridge \\
+  \midrule
+  1 & $2.44 \pm 0.16$ & $13.01 \pm 0.05$ & $1.85 \pm 0.07$ & $\mathbf{1.80 \pm 0.09}$ \\
+  2 & $2.70 \pm 0.11$ & $12.89 \pm 0.05$ & $1.88 \pm 0.08$ & $\mathbf{1.82 \pm 0.12}$ \\
+  3 & $3.21 \pm 0.08$ & $12.79 \pm 0.07$ & $1.91 \pm 0.05$ & $\mathbf{1.84 \pm 0.11}$ \\
+  4 & $3.78 \pm 0.17$ & $12.69 \pm 0.06$ & $1.96 \pm 0.07$ & $\mathbf{1.84 \pm 0.11}$ \\
+  5 & $4.47 \pm 0.11$ & $12.63 \pm 0.06$ & $2.04 \pm 0.06$ & $\mathbf{1.88 \pm 0.10}$ \\
+  6 & $5.25 \pm 0.19$ & $12.55 \pm 0.06$ & $2.11 \pm 0.05$ & $\mathbf{1.91 \pm 0.10}$ \\
+  7 & $6.05 \pm 0.14$ & $12.49 \pm 0.04$ & $2.14 \pm 0.07$ & $\mathbf{1.90 \pm 0.08}$ \\
+  8 & $6.79 \pm 0.18$ & $12.40 \pm 0.05$ & $2.19 \pm 0.06$ & $\mathbf{1.88 \pm 0.06}$ \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+  \centering
+  \small
+  \caption{\textbf{Extended Data Table 4: Per-horizon forecast skill over
+  persistence} ($S(h)=1-\mathrm{MAE}/\mathrm{MAE}_{\text{persistence}}$, in per
+  cent; mean~$\pm$~s.d.\ over the $n=5$ telemetry-generator seeds). Skill grows
+  monotonically with horizon for both learned forecasters, the empirical signature
+  of the horizon-growing advantage proved in Theorem~\ref{thm:skill}; larger value
+  per row in \textbf{bold}. This is the source data for Fig.~\ref{fig:forecast}b.}
+  \label{edtab:skill}
+\begin{tabular}{ccc}
+  \toprule
+  Horizon (steps) & AR-ridge skill (\%) & Multivariate-ridge skill (\%) \\
+  \midrule
+  1 & $24.1 \pm 4.1$ & $\mathbf{26.0 \pm 5.3}$ \\
+  2 & $30.3 \pm 2.4$ & $\mathbf{32.6 \pm 3.8}$ \\
+  3 & $40.4 \pm 2.1$ & $\mathbf{42.9 \pm 2.6}$ \\
+  4 & $48.0 \pm 1.7$ & $\mathbf{51.3 \pm 1.0}$ \\
+  5 & $54.5 \pm 1.1$ & $\mathbf{58.0 \pm 1.2}$ \\
+  6 & $59.7 \pm 1.3$ & $\mathbf{63.6 \pm 1.1}$ \\
+  7 & $64.6 \pm 1.5$ & $\mathbf{68.6 \pm 1.2}$ \\
+  8 & $67.8 \pm 1.4$ & $\mathbf{72.4 \pm 0.9}$ \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+  \centering
+  \small
+  \caption{\textbf{Extended Data Table 5: Reconstruction-detector rank sweep}
+  (detection ROC-AUC versus bottleneck rank $k$; mean~$\pm$~s.d.\ over the $n=8$
+  randomised splits). Detection is strongest at the tightest manifold ($k=1$,
+  ROC-AUC $\mathbf{0.870\pm0.023}$, in \textbf{bold}) and collapses towards chance
+  ($\tfrac12$) as the code becomes over-complete, the certified mechanism of
+  Corollary~\ref{cor:collapse} and the full curve behind Fig.~\ref{fig:anomaly}b.}
+  \label{edtab:ranksweep}
+\begin{tabular}{cc@{\hskip 3em}cc}
+  \toprule
+  Rank $k$ & ROC-AUC & Rank $k$ & ROC-AUC \\
+  \midrule
+  1  & $\mathbf{0.870 \pm 0.023}$ & 17 & $0.476 \pm 0.037$ \\
+  2  & $0.798 \pm 0.027$          & 18 & $0.476 \pm 0.036$ \\
+  3  & $0.704 \pm 0.050$          & 19 & $0.479 \pm 0.038$ \\
+  4  & $0.628 \pm 0.044$          & 20 & $0.476 \pm 0.037$ \\
+  5  & $0.466 \pm 0.037$          & 21 & $0.476 \pm 0.036$ \\
+  6  & $0.463 \pm 0.040$          & 22 & $0.476 \pm 0.035$ \\
+  7  & $0.460 \pm 0.039$          & 23 & $0.475 \pm 0.033$ \\
+  8  & $0.464 \pm 0.040$          & 24 & $0.474 \pm 0.034$ \\
+  9  & $0.467 \pm 0.038$          & 25 & $0.479 \pm 0.036$ \\
+  10 & $0.470 \pm 0.042$          & 26 & $0.478 \pm 0.036$ \\
+  11 & $0.474 \pm 0.043$          & 27 & $0.478 \pm 0.036$ \\
+  12 & $0.473 \pm 0.041$          & 28 & $0.482 \pm 0.036$ \\
+  13 & $0.472 \pm 0.041$          & 29 & $0.484 \pm 0.035$ \\
+  14 & $0.473 \pm 0.041$          & 30 & $0.483 \pm 0.034$ \\
+  15 & $0.477 \pm 0.041$          & 31 & $0.480 \pm 0.036$ \\
+  16 & $0.477 \pm 0.038$          & 32 & $0.480 \pm 0.033$ \\
+  \bottomrule
+\end{tabular}
 \end{table}
 
 % ── References ───────────────────────────────────────────────────────────────
@@ -765,9 +1069,11 @@ version of this guide also ships as runnable documentation in
 
 \paragraph{Source-file map.} All paths are relative to \texttt{submission/code/}:
 \texttt{qdriftforecast/data.py} (telemetry generator, windowing, splitting);
-\texttt{make\_paper\_figures.py} (all figures, table bodies and machine-readable
-source data); \texttt{qdriftforecast/reproduce.py} (the installed
-\texttt{qdrift-reproduce} entry point); and \texttt{generated\_data/*.json} (the
+\texttt{make\_\allowbreak paper\_\allowbreak figures.py} (all figures, table
+bodies and machine-readable source data);
+\texttt{qdriftforecast/\allowbreak reproduce.py} (the installed
+\texttt{qdrift-reproduce} entry point); and
+\texttt{generated\_\allowbreak data/*.json} (the
 numbers behind each figure panel, rewritten on every run).
 
 \subsection*{S1. The problem in one paragraph}
@@ -789,9 +1095,12 @@ steps ahead) and that no single sequence-model architecture is best for detectio
 finite table; each row is a \texttt{(timestamp, qubit\_id)} pair holding
 measured or simulated features. A program sees the table as arrays of real
 numbers. The seven feature channels (\texttt{FEATURE\_COLS}) are \texttt{T1\_us},
-\texttt{T2\_us}, \texttt{gate\_fidelity\_1q}, \texttt{gate\_fidelity\_2q},
-\texttt{readout\_error}, \texttt{gate\_error\_per\_clifford} and
-\texttt{cross\_resonance\_phase\_rad}. All results in the paper are deterministic
+\texttt{T2\_us}, \texttt{gate\_\allowbreak fidelity\_\allowbreak 1q},
+\texttt{gate\_\allowbreak fidelity\_\allowbreak 2q},
+\texttt{readout\_\allowbreak error},
+\texttt{gate\_\allowbreak error\_\allowbreak per\_\allowbreak clifford} and
+\texttt{cross\_\allowbreak resonance\_\allowbreak phase\_\allowbreak rad}. All
+results in the paper are deterministic
 functions of these arrays and a fixed integer seed (Python's
 \texttt{random.Random(seed)} inside \texttt{generate\_synthetic\_dataset}).
 
@@ -839,7 +1148,7 @@ The scaler \texttt{normalize} is fit on training data only and applied forward t
 validation and test, the same one-directional discipline.
 
 \subsection*{S5. Ridge regression and the reconstruction detector, from scratch}
-\paragraph{Ridge forecasting (\texttt{\_forecast\_one\_seed}).} Given a design
+\paragraph{Ridge forecasting (\texttt{\_forecast\_\allowbreak one\_\allowbreak seed}).} Given a design
 matrix $X$ (rows are flattened windows) and targets $Y$ (rows are $8$-step
 horizons), ridge (Tikhonov) regression solves
 $\min_{W}\norm{XW-Y}_2^2+\alpha\norm{W}_2^2$, whose gradient vanishes at the
@@ -935,16 +1244,20 @@ average). The decision rule the paper draws is to match the architecture to the
 monitoring objective.
 
 \subsection*{S10. How to reproduce everything}
-From \texttt{submission/code/}, with \texttt{KMP\_DUPLICATE\_LIB\_OK=TRUE} set,
+\par\sloppy
+From \texttt{submission/code/}, with
+\texttt{KMP\_\allowbreak DUPLICATE\_\allowbreak LIB\_\allowbreak OK=TRUE} set,
 run \texttt{python -m qdriftforecast.reproduce} (equivalently the installed
-\texttt{qdrift-reproduce} entry point, or \texttt{python make\_paper\_figures.py}).
+\texttt{qdrift-reproduce} entry point, or
+\texttt{python make\_\allowbreak paper\_\allowbreak figures.py}).
 Dependencies are declared in \texttt{pyproject.toml} and installed with
 \texttt{pip install -e .} (add the optional \texttt{[ml]} extra for the PyTorch
 training notebooks). The script writes, deterministically from fixed seeds on a
 single CPU: the five vector PDF figures into \texttt{../figures/}; the three table
-bodies into \texttt{../tables/} (\texttt{forecasting\_benchmark.tex},
-\texttt{thermal\_benchmark.tex}, \texttt{cross\_domain\_benchmark.tex}); and the
-machine-readable source data into \texttt{generated\_data/*.json}, so no
+bodies into \texttt{../tables/} (\texttt{forecasting\_\allowbreak benchmark.tex},
+\texttt{thermal\_\allowbreak benchmark.tex},
+\texttt{cross\_\allowbreak domain\_\allowbreak benchmark.tex}); and the
+machine-readable source data into \texttt{generated\_\allowbreak data/*.json}, so no
 manuscript number is typed by hand. Reported uncertainties are mean~$\pm$~standard
 deviation across the $n=5$ generator seeds (forecasting) or $n=8$ randomised
 splits (detector); the cross-domain and thermal sequence-model values are single
