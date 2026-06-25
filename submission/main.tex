@@ -61,7 +61,7 @@
 and anomaly detection in quantum hardware}
 
 \author[ ]{Molena Huynh}
-\affil[ ]{Independent Researcher \quad\textperiodcentered\quad Correspondence: \texttt{molena.huynh@example.com}}
+\affil[ ]{North Carolina State University \quad\textperiodcentered\quad Correspondence: \texttt{molena.huynh@jmp.com}}
 
 \date{}
 
@@ -109,6 +109,18 @@ threshold for long enough for error correction to suppress logical errors
 hundreds and thousands of qubits, deciding \emph{when} a device has drifted out
 of specification, and \emph{which} qubits or intervals warrant recalibration,
 becomes a data problem at a scale that manual inspection cannot meet.
+
+This reliability framing is the sixth manuscript in an ordered quantum-AI
+series that treats resource accounting and CPU-reproducible evidence as design
+constraints rather than afterthoughts.  Earlier papers in the sequence study
+query allocation for QAOA, topology-conditioned warm starts, commutator-graph
+term ordering, learned Trotter residuals, and CPTP-constrained open-system
+identification~\citep{huynh2026uqqaoa,huynh2026topoqaoa,huynh2026topoham,huynh2026liergtc,huynh2026cptppinn}.
+The Hamiltonian-simulation papers of Nguyen and Jing provide complementary
+fixed-depth and representation-theoretic context for non-commutative quantum
+dynamics~\citep{nguyen2025zassenhaus,jing2026complexity}.  Here the object of
+study is different: time-ordered calibration telemetry from a drifting device,
+not a variational objective or simulator error.
 
 We argue that this is naturally a sequence-modelling problem. The temporal
 evolution of calibration telemetry is a multivariate stochastic process with
@@ -1048,6 +1060,50 @@ Alexander Lavin and Subutai Ahmad.
 \newblock In \emph{IEEE Int. Conf. on Machine Learning and Applications
   (ICMLA)}, pages 38--44, 2015.
 \newblock \doi{10.1109/ICMLA.2015.141}.
+
+\bibitem[Huynh(2026{\natexlab{a}})]{huynh2026uqqaoa}
+Molena Huynh.
+\newblock Query-efficient quantum approximate optimization via
+  graph-conditioned trust regions.
+\newblock \emph{arXiv preprint arXiv:2604.24803}, 2026.
+\newblock \doi{10.48550/arXiv.2604.24803}.
+
+\bibitem[Huynh(2026{\natexlab{b}})]{huynh2026topoqaoa}
+Molena Huynh.
+\newblock Topology-conditioned warm starts match spectral initialization for
+  depth-one {QAOA}.
+\newblock Manuscript in preparation, 2026.
+
+\bibitem[Huynh(2026{\natexlab{c}})]{huynh2026topoham}
+Molena Huynh.
+\newblock Commutator-graph term ordering reduces first-order {Trotter} error at
+  matched gate cost.
+\newblock Manuscript in preparation, 2026.
+
+\bibitem[Huynh(2026{\natexlab{d}})]{huynh2026liergtc}
+Molena Huynh.
+\newblock Provable operator learning of size-transferable {Trotter}
+  corrections for {Hamiltonian} simulation.
+\newblock Manuscript in preparation, 2026.
+
+\bibitem[Huynh(2026{\natexlab{e}})]{huynh2026cptppinn}
+Molena Huynh.
+\newblock {CPTP-Compiler-PINNs}: structure-preserving residual learning and
+  matrix-free compilation for open quantum dynamics.
+\newblock Manuscript in preparation, 2026.
+
+\bibitem[Nguyen and Jing(2025)]{nguyen2025zassenhaus}
+M.~Nguyen and Naihuan Jing.
+\newblock Zassenhaus expansion in solving the {Schr\"odinger} equation.
+\newblock \emph{arXiv preprint arXiv:2505.09441}, 2025.
+\newblock \doi{10.48550/arXiv.2505.09441}.
+
+\bibitem[Jing and Nguyen(2026)]{jing2026complexity}
+Naihuan Jing and M.~Nguyen.
+\newblock Complexity bounds for {Hamiltonian} simulation in unitary
+  representations.
+\newblock \emph{arXiv preprint arXiv:2603.07231}, 2026.
+\newblock \doi{10.48550/arXiv.2603.07231}.
 
 \end{thebibliography}
 

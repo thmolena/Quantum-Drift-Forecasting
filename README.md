@@ -1,125 +1,126 @@
 # Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware
 
-> A reproducible benchmark and manuscript framing quantum-hardware reliability as a multivariate
-> stochastic forecasting and anomaly-detection problem. The accompanying paper is prepared for
-> submission to *Nature Machine Intelligence* (see [`submission/`](submission/)).
+Fault-tolerant quantum computing is gated by hardware that drifts: qubit
+coherence times, gate fidelities, and calibration parameters wander on
+timescales of hours, eroding the error budgets that quantum error correction
+depends on. This repository recasts the reliability problem as a machine-learning
+task—forecasting a multivariate, mean-reverting stochastic process and ranking
+anomalous operating intervals—and studies it through an objective-aware benchmark
+of sequence models. Evaluation spans a physically motivated multi-qubit telemetry
+generator and three heterogeneous real-world regimes under one leakage-free
+protocol. Coherence proves forecastable; model selection proves
+objective-dependent; and drift is shown to occupy an off-manifold, low-rank
+structure that a reconstruction detector exploits. The full pipeline is
+hardware-agnostic, runs identically on CPU or GPU, and regenerates every figure
+and metric deterministically in seconds. The accompanying manuscript is prepared
+for submission to *Nature Machine Intelligence* (see [`submission/`](submission/)).
 
-## Highlights
+## Principal Contributions
 
-- **A new framing at the applied-math / ML / quantum-hardware interface.** Qubit decoherence and calibration drift are cast as a multivariate, mean-reverting stochastic-dynamical *forecasting* and *anomaly-detection* problem — the reliability question that gates the path to fault-tolerant quantum computing.
-- **Coherence is genuinely forecastable.** A learned forecaster predicts T1 eight steps ahead with **72% lower error than persistence**, and the advantage *widens* with horizon (multi-seed, leak-free, with confidence intervals).
-- **Objective-aware model selection — no architecture wins everywhere.** The **GRU is the parameter-efficient generalist**: the only model with non-trivial incident detection (ROC-AUC **0.72**, recall **1.0**) using **25% fewer parameters than the LSTM**; the **Transformer is a specialist**, best on periodic calibration-like signals (ROC-AUC **0.80**) but weak elsewhere. A concrete caution against single-metric benchmarking.
-- **A mechanistic insight into drift detection.** Drift is an *off-manifold* phenomenon: a low-rank reconstruction bottleneck detects it (ROC-AUC **0.87** at rank 1) and collapses to chance when over-complete — an interpretable dial for false-alarm control.
-- **Research-grade rigor, reproducible on a laptop.** Leak-free protocol, multi-seed confidence intervals, and a CPU-only pipeline that regenerates every figure and number in seconds — end to end: data generation, models, training, evaluation, an interactive demo, and a journal-format manuscript.
+1. **A formalised reliability benchmark.** Quantum-hardware reliability is posed
+   as a joint forecasting-and-anomaly-detection problem over a physically
+   motivated, reproducible telemetry generator, released as a single
+   leakage-free benchmark that evaluates four sequence-model families on the
+   synthetic task and on three heterogeneous real-world regimes.
+2. **Objective-aware model selection.** Empirical evidence shows that
+   architecture choice must follow the monitoring objective: the GRU is a
+   parameter-efficient generalist and the only model to achieve non-trivial
+   incident detection, whereas the Transformer is a specialist that leads on
+   periodic calibration-like signals while generalising weakly.
+3. **A mechanistic drift detector.** A reconstruction-based detector identifies
+   the reconstruction-bottleneck rank as the control knob separating drift from
+   nominal behaviour, yielding an interpretable monitor that requires training
+   only on nominal windows.
 
-## Overview
+## Headline Results
 
-Useful, scalable quantum computing depends on hardware that stays well-characterized over time. Qubit coherence times, gate fidelities, and calibration parameters all drift, and that drift is one of the practical barriers between today's noisy devices and fault-tolerant operation. This repository treats drift as an applied-mathematics problem — a multivariate, mean-reverting stochastic process — and studies how modern sequence models forecast it, rank anomalous operating intervals, and surface failure windows early enough to act on.
+The following figures are transcribed verbatim from the manuscript and the
+project's generated tables. Uncertainties are mean ± standard deviation across
+seeds or randomised splits.
 
-The work is built as a reproducible, GPU-accelerated benchmark. All models are implemented in PyTorch and run unchanged on either CPU or GPU, so the same pipeline scales from a single laptop to a large device fleet. The emphasis throughout is research-grade rigor: chronological train/validation/test splits with no leakage, objective-aware model selection, and metrics reported against the operational decision each model is meant to support.
+**Forecasting (Table 1; five telemetry-generator seeds, leakage-free 80/20
+split).** Mean absolute error (MAE) on the $T_1$ relaxation time, in microseconds
+(µs):
 
-## Research Context
-
-- **Applied mathematics.** Qubit telemetry is modeled as a mean-reverting stochastic process combining slow periodic drift, linear degradation, and Gaussian fluctuation. Forecasting, reconstruction-based anomaly scoring, and uncertainty-aware classification are posed as estimation and optimization problems over this dynamical system.
-- **Quantum hardware reliability.** The feature set — T1, T2, single- and two-qubit gate fidelity, readout error, error-per-Clifford, and cross-resonance phase — mirrors the calibration quantities that determine whether a device is fit to run circuits, and that must remain stable for quantum error correction to hold.
-- **Scalable, accelerated ML.** Recurrent (RNN/LSTM/GRU) and attention-based (Transformer) architectures share one forecasting/anomaly interface and a hardware-agnostic training loop, making the benchmark a clean testbed for accelerated, large-scale time-series modeling of quantum systems.
-
-## Executive Summary
-
-This repository is presented as an objective-aware benchmark for sequence models applied to quantum hardware reliability monitoring. The strongest reported outcomes are concentrated in two places:
-
-- GRU is the leading recurrent model for thermal incident detection and cross-dataset forecasting quality.
-- Transformer is the leading model for anomaly ranking on periodic calibration-like telemetry.
-
-The project therefore supports a practical conclusion suited to research institutions and operational monitoring teams: architecture choice should follow the monitoring objective, with the reported evidence emphasizing the settings in which each selected model leads existing alternatives.
-
-## Benchmark-Leading Results
-
-| Evaluation Context | Leading Model | Reported Result | Practical Meaning |
+| Forecaster | MAE @ 1 step (µs) | MAE @ 8 steps (µs) | Skill @ 8 steps |
 |---|---|---|---|
-| Machine-temperature failure telemetry | **GRU** | F1 = **0.2574**, Recall = **1.000**, ROC-AUC = **0.7182**, MAE = **51.7912** | Stronger surfacing of true failure windows and stronger ranking of abnormal intervals for thermal reliability monitoring |
-| Periodic cloud telemetry used as a calibration-like regime | **Transformer** | ROC-AUC = **0.7987**, MAE = **0.0436**, RMSE = **0.1335** | Stronger prioritization of suspicious intervals when anomaly scores are reviewed before recalibration or inspection |
-| Three-dataset benchmark average | **GRU** | Mean MAE = **1337.33**, Mean RMSE = **1628.83**, Mean ROC-AUC = **0.6603** | Stronger average forecasting and anomaly-ranking performance across heterogeneous monitoring signals |
+| Persistence | 2.44 ± 0.16 | 6.79 ± 0.18 | — |
+| Climatology | 13.01 ± 0.05 | 12.40 ± 0.05 | −83% |
+| AR-ridge ($T_1$ history) | 1.85 ± 0.07 | 2.19 ± 0.06 | 68% |
+| Multivariate ridge | **1.80 ± 0.09** | **1.88 ± 0.06** | **72%** |
 
-## Meaning of Better Performance in This Project
+The multivariate-ridge forecaster predicts $T_1$ eight steps ahead with 72%
+lower error than persistence, and the advantage widens with horizon.
 
-In this repository, better performance is interpreted in operational terms rather than as a purely abstract metric improvement.
+**Thermal-failure incident detection (Extended Data Table; machine-temperature
+telemetry).** MAE and RMSE in microseconds (µs); ROC-AUC and F1 on the unit
+scale; parameter counts as integers:
 
-- In thermal-failure monitoring, the stronger GRU result means more reliable identification of failure-bearing intervals, which improves the chance of timely intervention before persistent degradation affects downstream system behavior.
-- In calibration-oriented anomaly review, the stronger Transformer ranking result means engineering attention can be directed first toward the intervals most likely to warrant recalibration or closer inspection.
-- In multi-stream drift forecasting, the stronger GRU average results mean lower forecast error and stronger anomaly prioritization across several time-series regimes, supporting a steadier monitoring pipeline when multiple data sources are tracked together.
+| Model | MAE (µs) | RMSE (µs) | F1 | ROC-AUC | Params |
+|---|---|---|---|---|---|
+| Elman RNN | 61.37 | 64.93 | 0.000 | 0.408 | **5,645** |
+| LSTM | **51.48** | **55.00** | 0.000 | 0.423 | 116,845 |
+| GRU | 51.79 | 55.35 | **0.257** | **0.718** | 87,949 |
 
-## Report Suite
+The GRU is the only model to surface incidents, with F1 = 0.257 (0.2574),
+ROC-AUC = 0.718 (0.7182), and recall = 1.0 (precision = 0.15)—a 75.9% relative
+improvement in ranking quality over the Elman RNN—using 25% fewer parameters
+than the LSTM (87,949 versus 116,845).
 
-Each experiment is available as both an executable notebook and an HTML report.
+**Cross-domain forecasting and detection (Extended Data Table; three-dataset
+average and periodic regime).** MAE and RMSE on the dataset's native scale;
+ROC-AUC on the unit scale:
 
-| Report | Focus | Links |
-|---|---|---|
-| `rnn_drift_forecast` | GRU-centered recurrent benchmark for thermal-failure detection | [Notebook](notebooks/rnn_drift_forecast.ipynb) · [HTML](website/notebooks_html/rnn_drift_forecast.html) |
-| `transformer_calibration` | Transformer-centered anomaly ranking on periodic telemetry | [Notebook](notebooks/transformer_calibration.ipynb) · [HTML](website/notebooks_html/transformer_calibration.html) |
-| `quantum_drift_combined` | GRU-leading cross-domain forecasting and ranking summary | [Notebook](notebooks/quantum_drift_combined.ipynb) · [HTML](website/notebooks_html/quantum_drift_combined.html) |
+| Model | MAE | RMSE | ROC-AUC | Periodic regime | ROC-AUC |
+|---|---|---|---|---|---|
+| GRU | **1337.3** | **1628.8** | **0.660** | Transformer | **0.799** |
+| LSTM | 1528.8 | 1895.0 | 0.628 | GRU (avg.) | 0.660 |
+| Transformer | 1436.2 | 1791.6 | 0.196 | — | — |
 
-## Manuscript
+The GRU attains the strongest three-dataset average (MAE = 1337.3,
+RMSE = 1628.8, ROC-AUC = 0.660), whereas the Transformer leads on periodic
+calibration-like telemetry (ROC-AUC = 0.799, i.e. 0.7987) while generalising
+weakly across regimes (ROC-AUC = 0.196).
 
-A full research manuscript — *Objective-aware sequence modelling for drift forecasting and anomaly detection in quantum hardware* — is prepared for submission to *Nature Machine Intelligence* and lives in [`submission/`](submission/) as a self-contained article:
+**Reconstruction detector (Fig. 4; telemetry seed 42, eight randomised 70/30
+splits).** Detection ROC-AUC on the unit scale is strongest at a rank-one
+bottleneck (0.870 ± 0.023) and collapses toward chance as the code becomes
+over-complete. A rank-three bottleneck separates regimes with ROC-AUC = 0.72 on
+a single held-out split (0.70 ± 0.05 across the eight splits). Drift is therefore
+an off-manifold phenomenon, and the bottleneck rank governs false-alarm
+sensitivity.
 
-- [`main.pdf`](submission/main.pdf) — the compiled, publication-format article (single-spaced, journal-style headings): four figures (all bar or line charts), three results tables, Methods, an inlined bibliography, and the required data/code-availability, author-contributions and competing-interests statements.
-- [`main.tex`](submission/main.tex) — the self-contained LaTeX source (standard `article` class, bibliography inlined; no external `.cls` or `.bib` needed).
-
-The figures embedded in `main.pdf` were generated from the project's own data — Figures 1, 2 and 4 (coherence dynamics and autocorrelation, the forecasting benchmark, and the reconstruction detector) computed on CPU from the telemetry generator in [src/data.py](src/data.py), and Figure 3 and the sequence-model tables from the metrics recorded by the executed notebooks. Reported uncertainties are mean ± s.d. across seeds or randomised splits. `main.pdf` is the canonical, self-contained artifact with all figures embedded.
-
-## Repository Structure
-
-```text
-Quantum-Drift-Forecasting/
-├── README.md
-├── LICENSE
-├── index.html
-├── data/
-│   ├── quantum_device_metrics.csv
-│   └── nab/
-│       ├── labels/combined_windows.json
-│       ├── realAWSCloudwatch/ec2_cpu_utilization_24ae8d.csv
-│       └── realKnownCause/
-│           ├── machine_temperature_system_failure.csv
-│           └── nyc_taxi.csv
-├── notebooks/
-│   ├── rnn_drift_forecast.ipynb
-│   ├── transformer_calibration.ipynb
-│   └── quantum_drift_combined.ipynb
-├── outputs/
-│   ├── anomaly_scores.csv
-│   ├── calibration_forecast.csv
-│   ├── correlation_matrix.png
-│   ├── drift_predictions.csv
-│   └── qubit_trajectories.png
-├── src/
-│   ├── data.py
-│   ├── evaluate.py
-│   ├── models.py
-│   ├── real_benchmark.py
-│   ├── server.py
-│   └── train.py
-├── submission/
-│   ├── main.tex
-│   └── main.pdf
-└── website/
-    ├── index.html
-    ├── style.css
-    ├── demo.js
-    └── notebooks_html/
-        ├── rnn_drift_forecast.html
-        ├── transformer_calibration.html
-        └── quantum_drift_combined.html
-```
-
-## Reproducibility
+## Installation
 
 ```bash
-cd submission/code
-export PYTHONPATH=.
-PYTHONPATH=. python -m qdriftforecast.reproduce
-cd ../..
+pip install qdriftforecast
+```
+
+The packaged reproduction pipeline (`qdriftforecast`) resides at
+[`submission/code`](submission/code) and depends on NumPy, pandas, SciPy,
+scikit-learn, and Matplotlib. PyTorch is required only for re-training the
+sequence models in the notebooks and is available through the optional `ml`
+extra (`pip install "qdriftforecast[ml]"`).
+
+## Reproduction
+
+After installation, the figures and tables regenerate deterministically through
+the console entry point:
+
+```bash
+qdrift-reproduce
+```
+
+The command pins `KMP_DUPLICATE_LIB_OK=TRUE` and `OMP_NUM_THREADS=1`, then
+executes the figure-and-table pipeline, writing five vector PDF figures to
+`submission/figures/`, three LaTeX table bodies to `submission/tables/`, and
+diagnostic JSON summaries to `submission/code/generated_data/`. Determinism,
+seeds, and the regenerated artifacts are documented in
+[`submission/code/README.md`](submission/code/README.md).
+
+The interactive notebooks and HTML reports regenerate with:
+
+```bash
 jupyter nbconvert --to notebook --execute --inplace notebooks/rnn_drift_forecast.ipynb
 jupyter nbconvert --to notebook --execute --inplace notebooks/transformer_calibration.ipynb
 jupyter nbconvert --to notebook --execute --inplace notebooks/quantum_drift_combined.ipynb
@@ -129,8 +130,82 @@ jupyter nbconvert --to html --output-dir website/notebooks_html \
   notebooks/quantum_drift_combined.ipynb
 ```
 
-To run the optional local inference API used by the interactive demo:
+The optional local inference API used by the interactive demo runs with
+`python -m src.server --port 5000`.
 
-```bash
-python -m src.server --port 5000
+## Repository Layout
+
+```text
+Quantum-Drift-Forecasting/
+├── README.md
+├── LICENSE
+├── index.html
+├── data/                         # synthetic telemetry and real-world (NAB) regimes
+│   ├── quantum_device_metrics.csv
+│   └── nab/
+├── notebooks/                    # executable experiment notebooks
+│   ├── rnn_drift_forecast.ipynb
+│   ├── transformer_calibration.ipynb
+│   └── quantum_drift_combined.ipynb
+├── outputs/                      # cached anomaly scores, forecasts, plots
+├── src/                          # data generator, models, training, evaluation, server
+│   ├── data.py
+│   ├── models.py
+│   ├── train.py
+│   ├── evaluate.py
+│   ├── real_benchmark.py
+│   └── server.py
+├── submission/                   # manuscript and reproduction package
+│   ├── main.tex
+│   ├── main.pdf
+│   ├── figures/                  # regenerated vector PDF figures
+│   ├── tables/                   # regenerated LaTeX table bodies
+│   └── code/                     # the qdriftforecast package
+│       ├── pyproject.toml
+│       ├── LICENSE
+│       ├── README.md
+│       ├── make_paper_figures.py
+│       ├── generated_data/
+│       └── qdriftforecast/
+└── website/                      # static site and HTML notebook reports
+    ├── index.html
+    ├── style.css
+    ├── demo.js
+    └── notebooks_html/
 ```
+
+## Manuscript
+
+A self-contained research manuscript—*Objective-aware sequence modelling for
+drift forecasting and anomaly detection in quantum hardware*—is prepared for
+submission to *Nature Machine Intelligence* and lives in
+[`submission/`](submission/):
+
+- [`main.pdf`](submission/main.pdf): the compiled, journal-format article with
+  embedded figures, three results tables, Methods, an inlined bibliography, and
+  the data/code-availability, author-contributions, and competing-interests
+  statements.
+- [`main.tex`](submission/main.tex): the self-contained LaTeX source (standard
+  `article` class, bibliography inlined).
+
+Figures 1, 2, and 4 and the forecasting table are computed live from the seeded
+telemetry generator in [`submission/code/qdriftforecast/data.py`](submission/code/qdriftforecast/data.py);
+Figure 3 and the sequence-model tables render metrics recorded by the executed
+notebooks.
+
+## Citation
+
+```bibtex
+@article{huynh2026qdriftforecast,
+  title   = {Objective-aware sequence modelling for drift forecasting and
+             anomaly detection in quantum hardware},
+  author  = {Huynh, Molena},
+  year    = {2026},
+  note    = {North Carolina State University. Correspondence:
+             molena.huynh@jmp.com},
+}
+```
+
+## License
+
+Released under the MIT License. See [`LICENSE`](LICENSE).

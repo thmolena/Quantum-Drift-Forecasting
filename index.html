@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware</title>
-  <meta name="description" content="A leakage-free benchmark recasting quantum-hardware reliability as joint forecasting and anomaly detection, with horizon-growing forecast skill and a certified low-rank drift detector." />
+  <meta name="description" content="A leakage-free benchmark that recasts quantum-hardware reliability as joint drift forecasting and anomaly detection, establishing that coherence is forecastable with horizon-growing skill and that drift is detectable on a certified low-rank subspace, with model choice governed by the monitoring objective." />
 
   <!-- KaTeX for rendered mathematics -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous" />
@@ -152,8 +152,8 @@
     code { font-family: var(--font-mono); font-size: 0.86em; background: var(--surface); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border); }
     pre {
       font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.5;
-      background: #0f1c2e; color: #e6edf6; padding: 18px 20px;
-      border-radius: 8px; overflow-x: auto; margin: 16px 0;
+      background: #eef2f7; color: #1b2330; padding: 18px 20px;
+      border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; margin: 16px 0;
     }
     pre code { background: none; border: none; color: inherit; padding: 0; }
 
@@ -165,8 +165,8 @@
       overflow: hidden;
       margin: 22px 0;
     }
-    .demo-head { background: #0f1c2e; color: #e6edf6; padding: 12px 18px; font-family: var(--font-sans); font-size: 0.9rem; }
-    .demo-head .tag { font-family: var(--font-mono); font-size: 0.72rem; color: #8fb4e0; letter-spacing: 0.08em; text-transform: uppercase; }
+    .demo-head { background: #eef2f7; color: var(--ink); padding: 12px 18px; border-bottom: 1px solid var(--border); font-family: var(--font-sans); font-size: 0.9rem; }
+    .demo-head .tag { font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-2); letter-spacing: 0.08em; text-transform: uppercase; }
     .demo-body { padding: 18px; }
     .demo-grid { display: grid; grid-template-columns: 280px 1fr; gap: 22px; }
     @media (max-width: 760px) { .demo-grid { grid-template-columns: 1fr; } h1 { font-size: 1.6rem; } body { font-size: 17px; } }
@@ -192,9 +192,9 @@
 
 <header class="hero">
   <div class="wrap">
-    <p class="eyebrow">Sequence Modelling &middot; Quantum-Hardware Reliability</p>
+    <p class="eyebrow">Sequence Modelling &middot; Quantum-Hardware Reliability &middot; Part of a unified graph-learning program for quantum computation</p>
     <h1>Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware</h1>
-    <p class="byline"><strong>Molena Huynh</strong> &mdash; Independent Researcher</p>
+    <p class="byline"><strong>Molena Huynh</strong> &mdash; North Carolina State University &middot; <a href="mailto:molena.huynh@jmp.com">molena.huynh@jmp.com</a></p>
     <p class="byline">Manuscript: <em>Sequence modelling for quantum-hardware drift</em> &middot; 18 pp.</p>
     <div class="meta-row">
       <span>Q = 5 qubits</span><span>7 telemetry channels</span><span>window L = 32</span><span>horizon H = 8</span><span>CPU-reproducible</span>
@@ -213,36 +213,36 @@
   <!-- BACKGROUND -->
   <section id="background">
     <h2><span class="num">1</span>Background and Motivation</h2>
-    <p class="lede">Fault-tolerant quantum computing is gated by hardware that does not hold still.</p>
+    <p class="lede">Fault-tolerant quantum computing is gated by hardware whose error rates evolve on operational timescales.</p>
     <p>
-      Superconducting quantum processors are non-stationary devices. The relaxation time $T_1$, the dephasing
-      time $T_2$, single- and two-qubit gate fidelities, readout-assignment error, error-per-Clifford and
-      tunable-coupling parameters evolve continuously under temperature variation, flux noise, two-level-system
-      dynamics and recalibration history. This drift is not cosmetic: in the noisy intermediate-scale quantum
-      (NISQ) regime it caps the depth of usable circuits, and in the fault-tolerant regime it threatens the
-      load-bearing assumption that physical error rates stay below the quantum-error-correction threshold long
-      enough for logical errors to be suppressed.
+      Superconducting quantum processors are non-stationary by construction. Their relaxation time $T_1$,
+      dephasing time $T_2$, single- and two-qubit gate fidelities, readout-assignment error, error-per-Clifford
+      and tunable-coupling parameters drift continuously under temperature variation, flux noise,
+      two-level-system dynamics and recalibration history. The drift is consequential: in
+      the noisy intermediate-scale quantum (NISQ) regime it caps the depth of usable circuits, and in the
+      fault-tolerant regime it endangers the load-bearing assumption that physical error rates remain below the
+      quantum-error-correction threshold long enough for logical errors to be suppressed.
     </p>
     <p>
-      As processors scale to hundreds and thousands of qubits, deciding the instant at which a device has
-      drifted out of specification &mdash; and the subset of qubits or intervals that warrant recalibration &mdash;
-      becomes a data problem beyond the reach of manual inspection. The open problem this work addresses is the
-      absence of <em>decision-oriented</em> guidance for that setting: given multivariate calibration telemetry,
-      which sequence-model family an operations pipeline should deploy, at what parameter cost, and matched to
-      which monitoring objective.
+      Scale turns this physics into a data problem. Across hundreds to thousands of qubits, deciding the instant
+      at which a device has left specification &mdash; and isolating the qubits and intervals that warrant
+      recalibration &mdash; exceeds the reach of manual inspection. The literature remains
+      descriptive rather than <em>decision-oriented</em> for this setting: given multivariate calibration
+      telemetry, an operations pipeline needs a principled basis for selecting which sequence-model family to
+      deploy, at what parameter cost, and matched to which monitoring objective. This work supplies that basis.
     </p>
   </section>
 
   <!-- PRELIMINARIES -->
   <section id="preliminaries">
     <h2><span class="num">2</span>Mathematical Preliminaries</h2>
-    <p class="lede">The formal objects a reader must command before the contributions.</p>
+    <p class="lede">The formal objects on which every later claim rests.</p>
 
     <h3>Telemetry generator</h3>
     <p>
       A physically motivated generator emits seeded multi-qubit calibration telemetry for $Q=5$ qubits over
-      $N=200$ half-hour steps. For qubit $q$ at time $t$ (hours), the relaxation time obeys a mean-reverting
-      process combining a slow qubit-dependent oscillation, secular decay and Gaussian fluctuation:
+      $N=200$ half-hour steps. For qubit $q$ at time $t$ (hours), the relaxation time follows a mean-reverting
+      process that superposes a slow qubit-dependent oscillation, secular decay and Gaussian fluctuation:
     </p>
     \[
       T_1(q,t) \;=\; \max\!\Big(10,\; 80 + 20\sin\!\big(\tfrac{2\pi t}{48} + 0.8\,q\big) - 0.05\,t + \varepsilon\Big),
@@ -250,39 +250,42 @@
     \]
     <p>
       The dephasing time is $T_2 = 0.9\,T_1\,\eta$ with $\eta\sim\mathcal{N}(1, 0.04^2)$; the remaining channels
-      (gate fidelities, readout-assignment error, error-per-Clifford, cross-resonance phase) are coupled bounded
-      processes tracking $T_1$. A window is labelled out-of-specification when $T_1 < 50\,\mu\text{s}$ or
-      single-qubit fidelity $< 0.998$ for any qubit.
+      &mdash; gate fidelities, readout-assignment error, error-per-Clifford and cross-resonance phase &mdash; are
+      coupled bounded processes that track $T_1$. A window is labelled out-of-specification when
+      $T_1 < 50\,\mu\text{s}$ or single-qubit fidelity $< 0.998$ for any qubit.
     </p>
 
     <h3>Windows, split, and objective</h3>
     <p>
-      Per-qubit series are segmented into sliding windows of length $L=32$ predicting an $H=8$-step $T_1$ horizon,
-      pooled across qubits, under a single leakage-free chronological protocol. Sequence models optimise a
-      combined forecasting-and-detection objective over the eight-step forecast $\hat{y}$ and a drift logit $z$:
+      Each per-qubit series is segmented into sliding windows of length $L=32$ that predict an $H=8$-step $T_1$
+      horizon, then pooled across qubits under a single leakage-free chronological protocol. Sequence models are
+      trained on one objective that couples forecasting and detection, jointly over the eight-step forecast
+      $\hat{y}$ and a drift logit $z$:
     </p>
     \[
       \mathcal{L} \;=\; \mathrm{MSE}(\hat{y}, y) \;+\; \mathrm{BCE}\big(\sigma(z), \ell\big),
     \]
     <p>
-      with $\ell\in\{0,1\}$ the drift label and $\sigma$ the logistic function. Forecasting is scored by
+      where $\ell\in\{0,1\}$ is the drift label and $\sigma$ is the logistic function. Forecasting is scored by
       horizon-resolved mean absolute error (MAE); detection by the threshold-free area under the ROC curve
-      (ROC-AUC) and by F1 at the default threshold.
+      (ROC-AUC) and by F1 at the default threshold. The two metrics are reported separately throughout, because
+      they answer different operational questions.
     </p>
 
     <h3>Ridge forecaster and reconstruction detector</h3>
     <p>
-      The strongest baseline is a multivariate Tikhonov (ridge) regression on the flattened $32\times7$ window.
-      With design matrix $X\in\mathbb{R}^{m\times p}$, target matrix $Y\in\mathbb{R}^{m\times H}$ and penalty
-      $\alpha = 5$, the estimator is the closed form
+      The strongest forecasting baseline is a multivariate Tikhonov (ridge) regression on the flattened
+      $32\times7$ window. With design matrix $X\in\mathbb{R}^{m\times p}$, target matrix
+      $Y\in\mathbb{R}^{m\times H}$ and penalty $\alpha = 5$, the estimator has the closed form
     </p>
     \[
       W^\star \;=\; (X^\top X + \alpha I)^{-1} X^\top Y.
     \]
     <p>
-      The unsupervised detector projects each window onto the rank-$k$ nominal subspace $P_k = V_k V_k^\top$
-      (top-$k$ right singular vectors of the nominal data) and scores the residual energy
-      $s_k(x) = \lVert x - x P_k\rVert_2^2$.
+      The unsupervised detector projects each window onto the rank-$k$ nominal subspace $P_k = V_k V_k^\top$,
+      spanned by the top-$k$ right singular vectors of the nominal data, and scores the residual energy left
+      outside that subspace, $s_k(x) = \lVert x - x P_k\rVert_2^2$. A window that fails to reconstruct on the
+      nominal subspace is, by this score, anomalous.
     </p>
   </section>
 
@@ -290,22 +293,22 @@
   <section id="problem">
     <h2><span class="num">3</span>Problem Formulation</h2>
     <p>
-      Quantum-hardware reliability monitoring is cast as a <em>joint</em> sequence-modelling task on a
+      We cast quantum-hardware reliability monitoring as a <em>joint</em> sequence-modelling task on a
       multivariate, mean-reverting calibration stream. Given a sliding window of $L=32$ recent observations across
-      seven telemetry channels, the problem is twofold:
+      seven telemetry channels, a deployed monitor must do two things at once:
     </p>
     <ol class="claims">
-      <li><strong>Forecasting.</strong> Predict the $H=8$-step $T_1$ trajectory under a leakage-free
-        chronological split, minimising horizon-resolved MAE, such that accuracy remains stable several steps
-        ahead &mdash; the lead time an early-warning monitor requires.</li>
-      <li><strong>Detection.</strong> Rank operating intervals by anomaly so that out-of-specification windows
-        are surfaced, scored by threshold-free ROC-AUC across heterogeneous regimes and, where labels permit, by
-        F1 at a fixed operating threshold.</li>
+      <li><strong>Forecast.</strong> Predict the $H=8$-step $T_1$ trajectory under a leakage-free chronological
+        split, minimising horizon-resolved MAE, and remain accurate several steps ahead &mdash; the lead time an
+        early-warning monitor needs in order to act before a device leaves specification.</li>
+      <li><strong>Detect.</strong> Rank operating intervals by anomaly so that out-of-specification windows rise
+        to the top, scored by threshold-free ROC-AUC across heterogeneous regimes and, where labels permit, by F1
+        at a fixed operating threshold.</li>
     </ol>
     <p>
-      The governing question is not whether a single universally optimal model exists, but which architecture an
-      operations pipeline should select <em>as a function of the monitoring objective and the signal regime</em>,
-      at an honest parameter cost.
+      The governing problem is therefore the selection of an architecture <em>as a function of the monitoring
+      objective and the signal regime</em>, reported at a transparent parameter cost rather than a tuned best
+      case. Universal dominance of a single model is treated as a hypothesis to be tested, not assumed.
     </p>
   </section>
 
@@ -313,20 +316,22 @@
   <section id="contributions">
     <h2><span class="num">4</span>Principal Contributions</h2>
     <ol class="claims">
-      <li>Quantum-hardware reliability is formalised as a joint forecasting-and-anomaly-detection problem over a
-        physically motivated, fully seeded telemetry generator, accompanied by a single leakage-free benchmark
-        that evaluates four sequence-model families on this task and on three heterogeneous real-world regimes.</li>
-      <li>Coherence is shown to be genuinely forecastable: a learned forecaster predicts $T_1$ eight steps ahead
-        with <strong>72% lower error than persistence</strong>, the advantage widening monotonically with horizon
-        (from 26% one step ahead).</li>
-      <li>Model selection is established to be <em>objective-aware</em>: the GRU is a parameter-efficient
-        generalist and the only model with non-trivial incident detection, whereas the Transformer is a
-        specialist that leads on periodic signals (ROC-AUC 0.80) yet generalises poorly (ROC-AUC 0.20).</li>
-      <li>A reconstruction-based detector is introduced, and the reconstruction bottleneck rank is identified as
-        the control knob separating drift from nominal behaviour &mdash; an interpretable, training-free-at-inference
-        monitor showing drift lives off a low-rank manifold.</li>
-      <li>The complete pipeline is hardware-agnostic (identical code on CPU or GPU) and regenerates every figure,
-        table and confidence interval deterministically in seconds.</li>
+      <li><strong>A benchmark and problem definition.</strong> We formalise quantum-hardware reliability as a
+        joint forecasting-and-anomaly-detection problem over a physically motivated, fully seeded telemetry
+        generator, and evaluate four sequence-model families on it &mdash; and on three heterogeneous real-world
+        regimes &mdash; under one leakage-free protocol.</li>
+      <li><strong>Coherence is forecastable.</strong> A learned forecaster predicts $T_1$ eight steps ahead with
+        <strong>72% lower error than persistence</strong>, and the margin widens monotonically with horizon (from
+        26% one step ahead): the further out the prediction, the more learning pays.</li>
+      <li><strong>Model choice is objective-aware.</strong> Architecture rankings reverse across objectives. The
+        GRU is a parameter-efficient generalist and the sole model with non-trivial incident detection, whereas
+        the Transformer is a specialist that leads on periodic signals (ROC-AUC 0.80) while generalising weakly
+        (ROC-AUC 0.20).</li>
+      <li><strong>Drift lives on a low-rank manifold.</strong> We introduce a reconstruction-based detector and
+        identify the bottleneck rank as the single knob that separates drift from nominal behaviour &mdash; an
+        interpretable monitor that, at inference, evaluates a fixed linear projection.</li>
+      <li><strong>The pipeline is reproducible end to end.</strong> Identical code runs on CPU or GPU and
+        regenerates every figure, table and confidence interval deterministically in seconds.</li>
     </ol>
   </section>
 
@@ -334,31 +339,32 @@
   <section id="novelty">
     <h2><span class="num">5</span>Methodological Novelty</h2>
     <p>
-      Modern time-series learning (Lim &amp; Zohren 2021; Wen et al. 2023) offers a rich toolbox of recurrent and
-      attention architectures, but it has not been brought to bear on quantum-calibration telemetry under a
-      decision-oriented, leakage-free protocol. Prior reliability work treats drift descriptively rather than as
-      a forecasting target with quantified, horizon-resolved skill.
+      The novelty resides in framing and in guarantees rather than in new layers. Modern time-series learning
+      (Lim &amp; Zohren 2021; Wen et al. 2023) supplies a mature toolbox of recurrent and attention architectures;
+      this work brings that toolbox to quantum-calibration telemetry under a decision-oriented, leakage-free
+      protocol. Prior reliability work treats drift descriptively; here it becomes a forecasting target with
+      quantified, horizon-resolved skill.
     </p>
     <p>
-      Against the LSTM encoder&ndash;decoder anomaly detector of Malhotra et al. (2016), this work replaces the
-      black-box reconstruction with a <em>certified linear</em> rank-$k$ projector, exposing the bottleneck rank
-      as an explicit interpretable dial and proving (Theorem 2, Corollary 3) that detection is optimal at low
-      rank and provably collapses to chance as the code becomes over-complete &mdash; a guarantee absent from
-      reconstruction detectors that fix capacity heuristically.
+      For detection, we depart from the LSTM encoder&ndash;decoder anomaly detector of Malhotra et al. (2016) by
+      replacing its black-box reconstruction with a <em>certified linear</em> rank-$k$ projector. This exposes
+      the bottleneck rank as an explicit, interpretable dial and lets us prove (Theorem 2, Corollary 3) that
+      detection is optimal at low rank and collapses to chance once the code becomes over-complete &mdash; a
+      guarantee that reconstruction detectors fixing capacity heuristically cannot offer.
     </p>
     <p>
-      Relative to single-headline-metric benchmarking common in the sequence-modelling literature (the LSTM of
-      Hochreiter &amp; Schmidhuber 1997; the GRU of Cho et al. 2014; the Transformer of Vaswani et al. 2017), the
-      contribution is the demonstration that F1 and ROC-AUC <em>disagree systematically</em> here: a model can
-      rank intervals well yet detect nothing at a fixed threshold, so threshold selection is itself part of the
-      monitoring problem.
+      For evaluation, we depart from the single-headline-metric benchmarking common in the sequence-modelling
+      literature (the LSTM of Hochreiter &amp; Schmidhuber 1997; the GRU of Cho et al. 2014; the Transformer of
+      Vaswani et al. 2017) by showing that F1 and ROC-AUC <em>disagree systematically</em> in this regime: a
+      model can rank intervals well yet detect nothing at a fixed threshold. Threshold selection is therefore not
+      a post-processing detail but part of the monitoring problem itself.
     </p>
   </section>
 
   <!-- THEORY -->
   <section id="theory">
     <h2><span class="num">6</span>Theoretical Guarantees</h2>
-    <p class="lede">Two elementary results explain the central empirics: horizon-growing forecast skill and low-rank detectability.</p>
+    <p class="lede">Two elementary results account for the central empirics: forecast skill that grows with horizon, and drift that is detectable only at low rank.</p>
 
     <div class="theorem">
       <p><span class="tlabel">Theorem 1 (Horizon-growing skill over persistence).</span>
@@ -370,8 +376,9 @@
       \[ S(h) \;=\; 1 - \frac{R_\star(h)}{R_{\mathrm{pers}}(h)} \;=\; \frac{1-\rho(h)}{2}. \]
       If $\rho$ is non-increasing across a horizon range, $S(h)$ is non-decreasing there, bounded above by
       $\tfrac12$ as $\rho(h)\to 0$.</p>
-      <p class="interp">Interpretation: wherever recent telemetry stays autocorrelated, a learned forecaster's
-      margin over persistence <em>grows</em> with lead time &mdash; the measured 26% &rarr; 72% widening.</p>
+      <p class="interp">Interpretation: wherever recent telemetry remains autocorrelated, a learned forecaster's
+      margin over persistence <em>grows</em> with lead time. This is the mechanism behind the measured
+      26% &rarr; 72% widening.</p>
     </div>
 
     <div class="theorem">
@@ -379,8 +386,8 @@
       For $x_t = \phi\,x_{t-1} + \xi_t$ with $0<\phi<1$, the lag-$h$ autocorrelation is $\rho(h)=\phi^{\,h}$ and
       $S(h) = (1-\phi^{\,h})/2$ is strictly increasing from $S(0)=0$ towards $\tfrac12$. The single measured
       quantity $\phi=\rho(1)$ determines the entire skill-versus-horizon curve.</p>
-      <p class="interp">Interpretation: the AR(1) coefficient alone fixes the forecastability of coherence &mdash; the
-      law animated in the interactive illustration below.</p>
+      <p class="interp">Interpretation: a single measured coefficient fixes the forecastability of coherence at
+      every horizon &mdash; the law animated in the interactive illustration below.</p>
     </div>
 
     <div class="theorem">
@@ -390,8 +397,8 @@
       over all rank-$\le k$ orthogonal projectors, uniquely when $\sigma_k > \sigma_{k+1}$. The test score
       $s_k(x) = \lVert x - xP_k\rVert_2^2$ is the smallest squared residual achievable by any rank-$k$ linear
       monitor fitted to nominal windows only.</p>
-      <p class="interp">Interpretation: the PCA residual is a certified-optimal detector at each rank &mdash; not a
-      heuristic choice.</p>
+      <p class="interp">Interpretation: at each rank the PCA residual is the optimal linear detector, not a
+      heuristic choice &mdash; the bottleneck rank is the only quantity left to set.</p>
     </div>
 
     <div class="theorem">
@@ -400,8 +407,8 @@
       $s_k(x)\to 0$, the scores become constant, and by the Mann&ndash;Whitney identity (Proposition 4)
       $\mathrm{ROC\text{-}AUC} \to \tfrac12$.</p>
       <p class="interp">Interpretation: an over-complete monitor reconstructs abnormal windows as faithfully as
-      nominal ones and cannot separate them &mdash; the measured AUC drop from 0.87 (rank 1) to 0.48 (rank &ge;5)
-      is a theorem, not a tuning artefact.</p>
+      nominal ones, so it cannot separate them. The measured AUC drop from 0.87 (rank 1) to 0.48 (rank &ge;5)
+      follows from the theorem rather than from tuning.</p>
     </div>
 
     <div class="theorem">
@@ -410,21 +417,21 @@
       $\mathrm{AUC} = \Pr[s(X^+) > s(X^-)] + \tfrac12\Pr[s(X^+)=s(X^-)]$, the normalised Mann&ndash;Whitney $U$.
       Hence ROC-AUC is invariant under every strictly increasing reparametrisation of the score, including
       per-feature affine rescaling.</p>
-      <p class="interp">Interpretation: ROC-AUC &mdash; not MAE or RMSE &mdash; is the honest, scale-free yardstick for the
-      cross-domain comparison.</p>
+      <p class="interp">Interpretation: because it is invariant to per-feature rescaling, ROC-AUC &mdash; not MAE or
+      RMSE &mdash; is the scale-free yardstick that makes the cross-domain comparison fair.</p>
     </div>
 
     <p class="footnote">
-      A companion proposition establishes existence, uniqueness and determinism of the ridge forecaster
-      $W^\star=(X^\top X+\alpha I)^{-1}X^\top Y$ for any $X$ at $\alpha = 5$, so every reported number is a
-      deterministic function of the seeded design matrix with no optimiser randomness.
+      A companion proposition establishes the existence, uniqueness and determinism of the ridge forecaster
+      $W^\star=(X^\top X+\alpha I)^{-1}X^\top Y$ for any $X$ at $\alpha = 5$. Every reported number is therefore a
+      deterministic function of the seeded design matrix, with no optimiser randomness to reproduce.
     </p>
   </section>
 
   <!-- EMPIRICAL -->
   <section id="empirical">
     <h2><span class="num">7</span>Empirical Validation</h2>
-    <p class="lede">Headline quantitative results with mean &plusmn; s.d. transcribed from the manuscript.</p>
+    <p class="lede">Headline results, reported as mean &plusmn; s.d. and transcribed verbatim from the manuscript.</p>
 
     <table>
       <caption><strong>Table 1.</strong> Forecasting benchmark (mean &plusmn; s.d. over five telemetry-generator
@@ -453,9 +460,9 @@
         <tr><td>GRU</td><td>51.79</td><td>55.35</td><td class="best">0.257</td><td class="best">0.718</td><td>87,949</td></tr>
       </tbody>
     </table>
-    <p class="footnote">The GRU is the only model above chance-level ranking and the only one with non-zero F1
-      (recall 1.0, precision 0.15), at 25% fewer parameters than the LSTM &mdash; a 75.9% relative gain in ranking
-      quality over the RNN.</p>
+    <p class="footnote">Only the GRU ranks above chance and only the GRU attains non-zero F1 (recall 1.0,
+      precision 0.15), and it does so with 25% fewer parameters than the LSTM &mdash; a 75.9% relative gain in
+      ranking quality over the RNN.</p>
 
     <table>
       <caption><strong>Table 3.</strong> Cross-domain generalisation (three-dataset average: EC2 CPU utilisation,
@@ -486,15 +493,15 @@
         <tr><td>32</td><td>0.480 &plusmn; 0.033</td></tr>
       </tbody>
     </table>
-    <p class="footnote">Detrended $T_1$ retains mean autocorrelation above 0.5 for roughly seven hours, the
-      structure Theorem 1 converts into horizon-growing skill.</p>
+    <p class="footnote">Detrended $T_1$ retains mean autocorrelation above 0.5 for roughly seven hours; this is
+      the persistent structure that Theorem 1 converts into horizon-growing skill.</p>
   </section>
 
   <!-- DEMO -->
   <section id="demo">
     <h2><span class="num">8</span>Interactive Illustration</h2>
-    <p class="lede">A client-side illustration of the paper's two governing laws. This is a qualitative
-      illustration grounded in the paper's formulae, not a re-run of the reported experiments.</p>
+    <p class="lede">A client-side rendering of the paper's two governing laws. It is qualitative, grounded in the
+      paper's formulae, and not a re-run of the reported experiments.</p>
 
     <div class="demo">
       <div class="demo-head">
@@ -532,10 +539,10 @@
       </div>
     </div>
     <p class="footnote">Forecast control: the single-lag skill $S(h)=(1-\phi^{\,h})/2$ rises from $0$ toward the
-      $\tfrac12$ ceiling; green markers anchor the measured multivariate-ridge skill (0.26 at h=1, 0.72 at h=8),
-      which exceeds the single-lag bound by exploiting the full 32-step, 7-channel window. Detector control: a
-      schematic residual-energy model where detectability decays once the rank-$k$ nominal subspace begins to
-      span the drift directions, reproducing the qualitative collapse from 0.87 (rank 1) toward chance; green
+      $\tfrac12$ ceiling, and the green markers anchor the measured multivariate-ridge skill (0.26 at h=1, 0.72 at
+      h=8), which clears the single-lag bound by exploiting the full 32-step, 7-channel window. Detector control:
+      a schematic residual-energy model in which detectability decays once the rank-$k$ nominal subspace begins to
+      span the drift directions, reproducing the qualitative collapse from 0.87 (rank 1) toward chance; the green
       markers are the measured sweep (ranks 1&ndash;5).</p>
   </section>
 
@@ -543,23 +550,24 @@
   <section id="significance">
     <h2><span class="num">9</span>Significance and Impact</h2>
     <p>
-      The results reframe quantum-hardware reliability monitoring as a tractable, decision-oriented
-      machine-learning problem and deliver an actionable deployment rule: <em>match the architecture to the
-      monitoring objective</em>. The GRU is the recommended default generalist and incident detector; the
-      Transformer is reserved for signals known to be periodic. The GRU's parameter efficiency is consequential
-      at scale, where a per-qubit or per-coupler monitor may be instantiated thousands of times. The low-rank
-      manifold result connects an empirical detector to a geometric picture of drift and gives operators a single
-      interpretable dial for trading sensitivity against false-alarm rate.
+      The work reframes quantum-hardware reliability monitoring as a tractable, decision-oriented
+      machine-learning problem and yields a deployment rule operators can act on: <em>match the architecture to
+      the monitoring objective</em>. The GRU is the default generalist and incident detector; the Transformer is
+      reserved for signals known to be periodic. Parameter efficiency is decisive at scale:
+      a per-qubit or per-coupler monitor may be instantiated thousands of times, so the GRU's smaller
+      footprint compounds across the device. The low-rank manifold result ties the empirical detector to
+      a geometric account of drift and hands operators one interpretable dial for trading sensitivity against
+      false-alarm rate.
     </p>
     <div class="limitations">
       <strong>Honest limitations (carried from the manuscript).</strong>
-      The telemetry generator, though physically motivated, is a model rather than measured device data; the
+      The telemetry generator, though physically motivated, is a model and not measured device data; the
       real-world validation uses standard anomaly-detection benchmarks as analogues for periodic and
-      failure-bearing regimes, not archival quantum-calibration logs. Absolute detection scores are modest, as
-      expected for an honest, untuned benchmark on hard signals; no claim of state-of-the-art performance is
-      made. The most valuable extensions are (i) validation on archival calibration records from operating
-      processors, (ii) explicitly uncertainty-aware forecasting (Monte-Carlo dropout or deep ensembles), and
-      (iii) coupling the forecaster to a recalibration policy under an explicit cost model.
+      failure-bearing regimes, rather than archival quantum-calibration logs. Absolute detection scores are
+      modest, as expected for an honest, untuned benchmark on hard signals, and no claim of state-of-the-art
+      performance is made. The extensions with the highest payoff are (i) validation on archival calibration
+      records from operating processors, (ii) explicitly uncertainty-aware forecasting (Monte-Carlo dropout or
+      deep ensembles), and (iii) coupling the forecaster to a recalibration policy under an explicit cost model.
     </div>
   </section>
 
@@ -567,11 +575,12 @@
   <section id="reproducibility">
     <h2><span class="num">10</span>Reproducibility</h2>
     <p>
-      The telemetry generator, model implementations, training and evaluation code, executed notebooks and the
-      figure-and-statistics pipeline are released under an MIT licence in the project repository, packaged as the
-      pip-installable artifact <code>qdriftforecast</code> (v1.0.0) at <code>submission/code</code>. Every figure,
-      table and confidence interval on this page regenerates deterministically from fixed seeds on commodity CPU
-      hardware; the accelerated training pipeline runs identically on GPU without code change.
+      Everything needed to reproduce the paper is released under an MIT licence: the telemetry generator, the
+      model implementations, the training and evaluation code, the executed notebooks and the
+      figure-and-statistics pipeline, packaged as the pip-installable artifact <code>qdriftforecast</code>
+      (v1.0.0) at <code>submission/code</code>. Every figure, table and confidence interval on this page
+      regenerates deterministically from fixed seeds on commodity CPU hardware, and the accelerated training
+      pipeline runs identically on GPU with no code change.
     </p>
     <pre><code>cd submission/code
 python -m pip install -e .          # installs qdriftforecast (numpy, scipy, scikit-learn, ...)
@@ -580,17 +589,17 @@ python -m pip install -e ".[ml]"    # optional: torch, for the sequence-model tr
 qdrift-reproduce                    # regenerates figures, tables and confidence intervals
 </code></pre>
     <p class="footnote">
-      Deterministic seeding and the full hyperparameter configuration (AdamW, lr $10^{-3}$, weight decay
-      $10^{-4}$, batch 64, 30 epochs, cosine-annealed schedule; ridge penalty $\alpha = 5$) are documented in the
-      Methods. The synthetic telemetry requires no external download; the cross-domain series are drawn from a
-      public anomaly-detection benchmark.
+      The Methods document the deterministic seeding and the full hyperparameter configuration (AdamW, lr
+      $10^{-3}$, weight decay $10^{-4}$, batch 64, 30 epochs, cosine-annealed schedule; ridge penalty
+      $\alpha = 5$). The synthetic telemetry requires no external download, and the cross-domain series are drawn
+      from a public anomaly-detection benchmark.
     </p>
   </section>
 
 </main>
 
 <footer class="wrap">
-  <p>Molena Huynh &middot; Independent Researcher</p>
+  <p>Molena Huynh &middot; North Carolina State University &middot; <a href="mailto:molena.huynh@jmp.com">molena.huynh@jmp.com</a></p>
   <p>This page summarises a finished 18-page manuscript. All quantitative claims are transcribed from
     <a href="submission/main.pdf">submission/main.pdf</a> and reproducible from
     <a href="submission/code/">submission/code</a>.</p>
