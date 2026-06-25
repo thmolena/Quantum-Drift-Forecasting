@@ -32,7 +32,7 @@ for submission to *Nature Machine Intelligence* (see [`submission/`](submission/
    nominal behaviour, yielding an interpretable monitor that requires training
    only on nominal windows.
 
-## Headline Results
+## Main Results
 
 The following figures are transcribed verbatim from the manuscript and the
 project's generated tables. Uncertainties are mean ± standard deviation across

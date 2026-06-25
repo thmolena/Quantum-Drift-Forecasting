@@ -353,7 +353,7 @@
       guarantee that reconstruction detectors fixing capacity heuristically cannot offer.
     </p>
     <p>
-      For evaluation, we depart from the single-headline-metric benchmarking common in the sequence-modelling
+      For evaluation, we depart from the single-summary-metric benchmarking common in the sequence-modelling
       literature (the LSTM of Hochreiter &amp; Schmidhuber 1997; the GRU of Cho et al. 2014; the Transformer of
       Vaswani et al. 2017) by showing that F1 and ROC-AUC <em>disagree systematically</em> in this regime: a
       model can rank intervals well yet detect nothing at a fixed threshold. Threshold selection is therefore not
@@ -418,7 +418,7 @@
       Hence ROC-AUC is invariant under every strictly increasing reparametrisation of the score, including
       per-feature affine rescaling.</p>
       <p class="interp">Interpretation: because it is invariant to per-feature rescaling, ROC-AUC &mdash; not MAE or
-      RMSE &mdash; is the scale-free yardstick that makes the cross-domain comparison fair.</p>
+      RMSE &mdash; is the scale-free measure that makes the cross-domain comparison fair.</p>
     </div>
 
     <p class="footnote">
@@ -431,7 +431,7 @@
   <!-- EMPIRICAL -->
   <section id="empirical">
     <h2><span class="num">7</span>Empirical Validation</h2>
-    <p class="lede">Headline results, reported as mean &plusmn; s.d. and transcribed verbatim from the manuscript.</p>
+    <p class="lede">Main results, reported as mean &plusmn; s.d. and transcribed verbatim from the manuscript.</p>
 
     <table>
       <caption><strong>Table 1.</strong> Forecasting benchmark (mean &plusmn; s.d. over five telemetry-generator
@@ -560,11 +560,11 @@
       false-alarm rate.
     </p>
     <div class="limitations">
-      <strong>Honest limitations (carried from the manuscript).</strong>
+      <strong>Limitations (carried from the manuscript).</strong>
       The telemetry generator, though physically motivated, is a model and not measured device data; the
       real-world validation uses standard anomaly-detection benchmarks as analogues for periodic and
       failure-bearing regimes, rather than archival quantum-calibration logs. Absolute detection scores are
-      modest, as expected for an honest, untuned benchmark on hard signals, and no claim of state-of-the-art
+      modest, as expected for an untuned benchmark on hard signals, and no claim of state-of-the-art
       performance is made. The extensions with the highest payoff are (i) validation on archival calibration
       records from operating processors, (ii) explicitly uncertainty-aware forecasting (Monte-Carlo dropout or
       deep ensembles), and (iii) coupling the forecaster to a recalibration policy under an explicit cost model.
