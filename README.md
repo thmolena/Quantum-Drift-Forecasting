@@ -1,5 +1,9 @@
 # Causal Spectral-Truncation Kernels: Noncommutativity Certifies Drift Detectability in Quantum Hardware
 
+**Molena Huynh** · North Carolina State University · molena.huynh@jmp.com
+
+**[Read the manuscript (PDF)](submission/main.pdf)** · [Full tutorial](index.html) · [Reproducibility package (`qdriftforecast`)](submission/code) · Python 3.9–3.13 · MIT License
+
 Fault-tolerant quantum computing is gated by hardware that drifts: qubit
 coherence times, gate fidelities, and calibration parameters wander on timescales
 of hours, eroding the error budgets that quantum error correction depends on. The
