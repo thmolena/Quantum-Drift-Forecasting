@@ -467,34 +467,34 @@ is traceable to a hypothesis.
 
 \begin{theorem}[Positive definiteness of the causal C\textsuperscript{$\ast$}-kernel]
 \label{thm:pd}
-For every order $n\ge1$ and weights $w_\tau\ge0$, the map $K_n$ in
-\eqref{eq:Kn} is a C\textsuperscript{$\ast$}-algebra-valued positive-definite
-kernel: for any windows $X_1,\dots,X_m$ the block matrix
-$[K_n(X_i,X_j)]_{ij}$ is positive semidefinite over $\Mc$, and the scalar kernel
-$k_n$ is positive definite in the ordinary sense. The self-representation
-$\Phi_n(X)$ is symmetric under $c\leftrightarrow c'$ at $n{=}1$ (the commutative
-instantaneous covariance) and, for $n\ge2$, acquires antisymmetric lagged
-coordinates that the commutative member cannot represent.
+Fix any order $n\ge1$ and nonnegative weights $w_\tau\ge0$. Then the map $K_n$ of
+\eqref{eq:Kn} is a positive-definite C\textsuperscript{$\ast$}-algebra-valued
+kernel: the block matrix $[K_n(X_i,X_j)]_{ij}$ is positive semidefinite over $\Mc$
+for every collection of windows $X_1,\dots,X_m$, and the induced scalar kernel
+$k_n$ is positive definite in the usual sense. Moreover, the self-representation
+$\Phi_n(X)$ is symmetric under the channel exchange $c\leftrightarrow c'$ at $n{=}1$,
+where it reduces to the commutative instantaneous covariance, and for $n\ge2$ it
+carries antisymmetric lagged coordinates that no commutative member can represent.
 \end{theorem}
 
 \begin{proof}
-Define the lifted causal feature operator
+Introduce the lifted causal feature operator
 $\Psi_n(X)=\big(\sqrt{w_0}\,X,\ \sqrt{w_1}\,S^{\top}X,\ \dots,\
-\sqrt{w_{n-1}}\,(S^{\top})^{\,n-1}X\big)\in\mathbb{R}^{nL\times C}$, stacking the
-back-shifted windows. Since $\langle X_{:,c},S^{\tau}Y_{:,c'}\rangle
+\sqrt{w_{n-1}}\,(S^{\top})^{\,n-1}X\big)\in\mathbb{R}^{nL\times C}$, which simply
+stacks the back-shifted windows. Because $\langle X_{:,c},S^{\tau}Y_{:,c'}\rangle
 =\big((S^{\top})^{\tau}X\big)_{:,c}^{\top}\big((S^{\top})^{\tau}Y\big)_{:,c'}$, the
 kernel factorizes as
 $K_n(X,Y)=\sum_{\tau}w_\tau\,(S^{\top\tau}X)^{\top}(S^{\top\tau}Y)
-=\Psi_n(X)^{\top}\Psi_n(Y)$. Hence for any $c_1,\dots,c_m\in\mathbb{R}^C$,
+=\Psi_n(X)^{\top}\Psi_n(Y)$. Consequently, for any $c_1,\dots,c_m\in\mathbb{R}^C$,
 \[
   \sum_{i,j}c_i^{\top}K_n(X_i,X_j)c_j
   =\Big\|\sum_i \Psi_n(X_i)c_i\Big\|_F^2\ \ge 0,
 \]
-the defining inequality for an $\Mc$-valued positive-definite kernel; the scalar
-statement is the case $C{=}1$ applied to the vectorized feature
-$\operatorname{vec}\Phi_n$, whose Gram is $k_n$. At $n{=}1$,
-$\Phi_1(X)_{cc'}=\langle X_{:,c},X_{:,c'}\rangle$ is symmetric under
-$c\leftrightarrow c'$; for $\tau\ge1$, $S^{\tau}\neq S^{\tau\top}$, so
+which is precisely the defining inequality for an $\Mc$-valued positive-definite
+kernel; the scalar claim follows by specializing to $C{=}1$ on the vectorized
+feature $\operatorname{vec}\Phi_n$, whose Gram matrix is $k_n$. Finally, at $n{=}1$
+the entry $\Phi_1(X)_{cc'}=\langle X_{:,c},X_{:,c'}\rangle$ is symmetric under
+$c\leftrightarrow c'$, whereas for $\tau\ge1$ we have $S^{\tau}\neq S^{\tau\top}$, so
 $\Phi_n(X)_{cc'\tau}=\langle X_{:,c},S^{\tau}X_{:,c'}\rangle\neq
 \langle X_{:,c'},S^{\tau}X_{:,c}\rangle=\Phi_n(X)_{c'c\tau}$ whenever the lagged
 cross-correlation is direction-dependent --- the noncommutativity.
@@ -502,70 +502,72 @@ cross-correlation is direction-dependent --- the noncommutativity.
 
 \begin{theorem}[Commutative monitors are blind to noncommutative drift]
 \label{thm:blind}
-Let nominal and drift windows be drawn from distributions $P_0,P_1$ with matched
-per-channel marginals and matched instantaneous cross-covariance,
-$\mathbb{E}_{P_0}[\Phi_1]=\mathbb{E}_{P_1}[\Phi_1]$, but a separated lagged
-coordinate $\Delta_{\tau^\star}:=\mathbb{E}_{P_1}[\Phi_{\cdot\,\cdot\,\tau^\star}]
+Suppose nominal and drift windows are drawn from distributions $P_0,P_1$ that share
+their per-channel marginals and their instantaneous cross-covariance,
+$\mathbb{E}_{P_0}[\Phi_1]=\mathbb{E}_{P_1}[\Phi_1]$, yet differ in a single lagged
+coordinate, $\Delta_{\tau^\star}:=\mathbb{E}_{P_1}[\Phi_{\cdot\,\cdot\,\tau^\star}]
 -\mathbb{E}_{P_0}[\Phi_{\cdot\,\cdot\,\tau^\star}]\neq0$ for some $\tau^\star\ge1$.
-Then every detector that is a function of the order-$1$ (commutative) features
-$\Phi_1$ has zero first-moment separation and hence chance-level mean
-discriminability, whereas the order-$n$ causal kernel with $n>\tau^\star$ has
-nonzero separation in a coordinate it represents; its mean reconstruction-score
-gap is bounded below by the energy of $\Delta_{\tau^\star}$ outside the rank-$k$
-nominal subspace.
+Then every detector that depends on the data only through the order-$1$
+(commutative) features $\Phi_1$ has zero first-moment separation, and hence
+chance-level mean discriminability; by contrast, the order-$n$ causal kernel with
+$n>\tau^\star$ separates the classes in a coordinate it actually represents, and its
+mean reconstruction-score gap is bounded below by the energy of
+$\Delta_{\tau^\star}$ lying outside the rank-$k$ nominal subspace.
 \end{theorem}
 
 \begin{proof}
-A monitor measurable with respect to $\Phi_1$ can separate the classes in mean
-only through $\mathbb{E}_{P_1}[\Phi_1]-\mathbb{E}_{P_0}[\Phi_1]$, which is $0$ by
-hypothesis; thus its expected score is identical under $P_0$ and $P_1$, giving a
-mean separation of $0$ and, for the centered linear detector, ROC-AUC $=\tfrac12$ in
-the population by the Mann--Whitney identity (Proposition~\ref{prop:auc}) applied
-to a score with equal class means and, to first order, equal dispersion. The
-order-$n$ feature map with $n>\tau^\star$ contains the coordinate
-$\Phi_{\cdot\,\cdot\,\tau^\star}$, on which the class means differ by
-$\Delta_{\tau^\star}\neq0$. Writing $P_k$ for the rank-$k$ nominal-subspace
-projector in feature space, the reconstruction score is
-$s(X)=\norm{(I-P_k)(\Phi_n(X)-\bar\Phi)}^2$ and
+Any monitor measurable with respect to $\Phi_1$ can separate the two classes in
+mean only through $\mathbb{E}_{P_1}[\Phi_1]-\mathbb{E}_{P_0}[\Phi_1]$, which vanishes
+by hypothesis; its expected score is therefore identical under $P_0$ and $P_1$, so
+its mean separation is $0$ and, for the centered linear detector, its population
+ROC-AUC equals $\tfrac12$ by the Mann--Whitney identity
+(Proposition~\ref{prop:auc}) applied to a score with equal class means and, to first
+order, equal dispersion. The order-$n$ feature map with $n>\tau^\star$, on the other
+hand, contains the coordinate $\Phi_{\cdot\,\cdot\,\tau^\star}$, on which the class
+means differ by $\Delta_{\tau^\star}\neq0$. Let $P_k$ denote the rank-$k$
+nominal-subspace projector in feature space; the reconstruction score is
+$s(X)=\norm{(I-P_k)(\Phi_n(X)-\bar\Phi)}^2$, and
 $\mathbb{E}_{P_1}[s]-\mathbb{E}_{P_0}[s]\ge\norm{(I-P_k)\Delta_{\tau^\star}}^2$ up to
-cross terms that vanish when $\Delta_{\tau^\star}$ is centered against the nominal
-mean, so any nonzero component of $\Delta_{\tau^\star}$ outside the nominal subspace
-yields strictly positive separation, hence ROC-AUC $>\tfrac12$.
+cross terms that vanish once $\Delta_{\tau^\star}$ is centered against the nominal
+mean. Hence any nonzero component of $\Delta_{\tau^\star}$ outside the nominal
+subspace produces strictly positive separation, and therefore ROC-AUC $>\tfrac12$.
 \end{proof}
 
 \begin{theorem}[Optimal truncation: a detection certificate]
 \label{thm:optn}
-Let $e_\tau=\norm{\Delta_\tau}^2$ be the drift energy at lag $\tau$, with
-$e_\tau=0$ beyond a maximal informative lag $\tau_{\max}$, and suppose each added
-lag contributes $C^2$ noise coordinates of bounded variance to the fixed rank-$k$
-nominal subspace. The order-$n$ detector's mean separation-to-noise ratio is
-$\rho(n)=\big(\sum_{\tau<n}e_\tau\big)^{1/2}\big/\big(\sigma^2(C^2 n-k)_+\big)^{1/2}$.
-Then $\rho$ is unimodal in $n$ with an interior optimum $n^\star$, and its detection
-ROC-AUC, a strictly increasing function of $\rho$, is unimodal with the same
-optimum; both the commutative endpoint ($n{=}1$, $\rho=0$) and the over-complete
-limit ($n\to L$, $\rho\to0$) are at chance. The optimum $n^\star$ is the smallest
-$n$ at which the marginal relative signal gain falls below the marginal relative
-noise cost, $e_{n}/\!\sum_{\tau<n}e_\tau<\big(N(n{+}1)-N(n)\big)/N(n)$; in
-particular $n^\star=2$ whenever the drift energy is concentrated at the first
-informative lag ($e_1$ dominant), and $n^\star$ grows as the energy profile
-spreads to higher lags, never exceeding $\tau_{\max}+1$.
+Let $e_\tau=\norm{\Delta_\tau}^2$ denote the drift energy at lag $\tau$, vanishing
+beyond a maximal informative lag $\tau_{\max}$ ($e_\tau=0$ for $\tau>\tau_{\max}$),
+and suppose each additional lag injects $C^2$ noise coordinates of bounded variance
+into the fixed rank-$k$ nominal subspace. Then the order-$n$ detector's mean
+separation-to-noise ratio is
+$\rho(n)=\big(\sum_{\tau<n}e_\tau\big)^{1/2}\big/\big(\sigma^2(C^2 n-k)_+\big)^{1/2}$,
+and $\rho$ is unimodal in $n$ with an interior optimum $n^\star$; since detection
+ROC-AUC is a strictly increasing function of $\rho$, it is unimodal with the same
+optimum, and both the commutative endpoint ($n{=}1$, $\rho=0$) and the over-complete
+limit ($n\to L$, $\rho\to0$) sit at chance. The optimum $n^\star$ is the smallest
+$n$ at which the marginal relative signal gain drops below the marginal relative
+noise cost, $e_{n}/\!\sum_{\tau<n}e_\tau<\big(N(n{+}1)-N(n)\big)/N(n)$; in particular
+$n^\star=2$ whenever the drift energy is concentrated at the first informative lag
+($e_1$ dominant), and $n^\star$ increases as the energy profile spreads to higher
+lags, never exceeding $\tau_{\max}+1$.
 \end{theorem}
 
 \begin{proof}
-Write $E(n)=\sum_{\tau<n}e_\tau$ (non-decreasing, constant for $n>\tau_{\max}+1$)
-and $N(n)=\sigma^2(C^2 n-k)_+$ (strictly increasing once $C^2 n>k$). Then
-$\rho(n)^2=E(n)/N(n)$, and $\rho(n{+}1)^2>\rho(n)^2$ iff
-$E(n{+}1)/E(n)>N(n{+}1)/N(n)$, i.e.\ iff the relative signal increment
-$e_n/E(n)$ exceeds the relative noise increment $(N(n{+}1)-N(n))/N(n)$. The
-right-hand side is positive for all $n$ (the noise floor always grows), while the
-left-hand side is $0$ once $n>\tau_{\max}+1$ ($e_n=0$) and is non-increasing under a
-concentrated energy profile; hence the inequality holds on an initial range and
-fails thereafter, so $\rho$ rises then falls --- unimodal with a single interior
-optimum $n^\star$, the first $n$ at which it fails. If $e_1$ dominates, the test
-already fails at $n{=}2$ (the small later increments $e_2,\dots$ cannot offset the
-$\sqrt{n}$ noise growth), giving $n^\star=2$; broader energy profiles push $n^\star$
-up to at most $\tau_{\max}+1$. At $n{=}1$, $\rho=0$ by Theorem~\ref{thm:blind}; as
-$n\to L$, $\rho\to0$ by dilution --- the over-complete chance-level collapse.
+Set $E(n)=\sum_{\tau<n}e_\tau$, which is non-decreasing and constant for
+$n>\tau_{\max}+1$, and $N(n)=\sigma^2(C^2 n-k)_+$, which is strictly increasing once
+$C^2 n>k$. Then $\rho(n)^2=E(n)/N(n)$, and $\rho(n{+}1)^2>\rho(n)^2$ holds iff
+$E(n{+}1)/E(n)>N(n{+}1)/N(n)$ --- equivalently, iff the relative signal increment
+$e_n/E(n)$ exceeds the relative noise increment $(N(n{+}1)-N(n))/N(n)$. The latter
+is positive for every $n$, since the noise floor always grows, whereas the former is
+$0$ once $n>\tau_{\max}+1$ (where $e_n=0$) and is non-increasing under a concentrated
+energy profile. The inequality therefore holds on an initial range of $n$ and fails
+beyond it, so $\rho$ first rises and then falls: it is unimodal, with a single
+interior optimum $n^\star$ at the first $n$ where the test fails. When $e_1$
+dominates, the test fails already at $n{=}2$, because the small later increments
+$e_2,\dots$ cannot offset the $\sqrt{n}$ growth of the noise, giving $n^\star=2$;
+broader energy profiles push $n^\star$ upward, to at most $\tau_{\max}+1$. The
+endpoints follow as well: $\rho=0$ at $n{=}1$ by Theorem~\ref{thm:blind}, and
+$\rho\to0$ as $n\to L$ by dilution --- the over-complete chance-level collapse.
 \end{proof}
 
 \noindent Theorem~\ref{thm:optn} is the unsupervised-detection counterpart of the
@@ -583,51 +585,52 @@ diagnostic of the drift geometry rather than a tuned knob.
 \begin{proposition}[Threshold-free ranking and scale invariance]
 \label{prop:auc}
 For any score $s$ and independent draws of a drift window $X^{+}$ and a nominal
-window $X^{-}$, the ROC area obeys the Mann--Whitney identity
+window $X^{-}$, the ROC area satisfies the Mann--Whitney identity
 $\mathrm{AUC}=\Pr[s(X^{+})>s(X^{-})]+\tfrac12\Pr[s(X^{+})=s(X^{-})]$.
-Consequently $\mathrm{AUC}$ is invariant under every strictly increasing
-reparametrization of $s$, and in particular under per-feature affine rescaling of
-the telemetry; a constant score gives $\mathrm{AUC}=\tfrac12$ exactly.
+It follows that $\mathrm{AUC}$ is invariant under every strictly increasing
+reparametrization of $s$ --- in particular under per-feature affine rescaling of the
+telemetry --- and that a constant score yields $\mathrm{AUC}=\tfrac12$ exactly.
 \end{proposition}
 
 \begin{proof}
-Let $F_{+},F_{-}$ be the score CDFs under the drift and nominal classes. For a
-threshold $\tau$ flagging $s>\tau$, $\mathrm{TPR}(\tau)=1-F_{+}(\tau)$ and
-$\mathrm{FPR}(\tau)=1-F_{-}(\tau)$, and
+Let $F_{+},F_{-}$ be the score CDFs under the drift and nominal classes. At a
+threshold $\tau$ that flags $s>\tau$, we have $\mathrm{TPR}(\tau)=1-F_{+}(\tau)$ and
+$\mathrm{FPR}(\tau)=1-F_{-}(\tau)$, so
 $\mathrm{AUC}=\int_0^1\mathrm{TPR}\,\mathrm{d}(\mathrm{FPR})$. Substituting
-$u=\mathrm{FPR}(\tau)$,
+$u=\mathrm{FPR}(\tau)$ gives
 $\mathrm{AUC}=\int\Pr[s(X^{+})>\tau]\,\mathrm{d}F_{-}(\tau)=\Pr[s(X^{+})>s(X^{-})]$
-for a continuous score; atoms contribute $\tfrac12\Pr[s(X^{+})=s(X^{-})]$ via the
-trapezoidal interpolation of each jump, giving the identity (the normalized
-Mann--Whitney $U$). Strict monotone maps preserve all order and tie events, hence
-$\mathrm{AUC}$; a constant score makes every comparison a tie, so
-$\mathrm{AUC}=0+\tfrac12\cdot1=\tfrac12$.
+for a continuous score, while atoms contribute $\tfrac12\Pr[s(X^{+})=s(X^{-})]$
+through the trapezoidal interpolation of each jump --- which is exactly the
+normalized Mann--Whitney $U$. Since strictly monotone maps preserve every order and
+tie event, they preserve $\mathrm{AUC}$; and a constant score turns every comparison
+into a tie, so $\mathrm{AUC}=0+\tfrac12\cdot1=\tfrac12$.
 \end{proof}
 
 \begin{theorem}[Horizon-growing forecast skill]
 \label{thm:skill}
-Let $\{x_t\}$ be weakly stationary, zero-mean, with variance $\gamma_0>0$ and
-autocorrelation $\rho(h)=\operatorname{Corr}(x_{t+h},x_t)$. Persistence
-$\hat{x}_{t+h}=x_t$ has mean-squared $h$-step risk
-$R_{\mathrm{pers}}(h)=2\gamma_0(1-\rho(h))$, while the optimal single-lag linear
-forecast $\hat{x}_{t+h}=\rho(h)x_t$ has risk
-$R_\star(h)=\gamma_0(1-\rho(h)^2)\le R_{\mathrm{pers}}(h)$, so the relative skill is
-$S(h)=1-R_\star/R_{\mathrm{pers}}=(1-\rho(h))/2$. Where $\rho$ is non-increasing,
-$S(h)$ is non-decreasing, bounded above by $\tfrac12$. For a first-order
-autoregressive process $\rho(h)=\phi^{\,h}$, the single measured number
-$\phi=\rho(1)$ fixes the whole skill curve.
+Let $\{x_t\}$ be weakly stationary and zero-mean, with variance $\gamma_0>0$ and
+autocorrelation $\rho(h)=\operatorname{Corr}(x_{t+h},x_t)$. Persistence,
+$\hat{x}_{t+h}=x_t$, incurs the mean-squared $h$-step risk
+$R_{\mathrm{pers}}(h)=2\gamma_0(1-\rho(h))$, whereas the optimal single-lag linear
+forecast $\hat{x}_{t+h}=\rho(h)x_t$ incurs
+$R_\star(h)=\gamma_0(1-\rho(h)^2)\le R_{\mathrm{pers}}(h)$; the relative skill is thus
+$S(h)=1-R_\star/R_{\mathrm{pers}}=(1-\rho(h))/2$. Wherever $\rho$ is non-increasing,
+$S(h)$ is non-decreasing and bounded above by $\tfrac12$. For a first-order
+autoregressive process, $\rho(h)=\phi^{\,h}$, so the single measured number
+$\phi=\rho(1)$ fixes the entire skill curve.
 \end{theorem}
 
 \begin{proof}
-With $\hat{x}_{t+h}=ax_t$, $\mathbb{E}[(x_{t+h}-ax_t)^2]
-=\gamma_0(1-2a\rho(h)+a^2)$, a strictly convex parabola minimized at
-$a^\star=\rho(h)$, giving $R_\star=\gamma_0(1-\rho(h)^2)$; $a{=}1$ gives
-$R_{\mathrm{pers}}=2\gamma_0(1-\rho(h))$. Dividing,
-$R_\star/R_{\mathrm{pers}}=(1+\rho(h))/2$, so $S(h)=(1-\rho(h))/2$, which is
-strictly decreasing in $\rho$; wherever $\rho(h)$ decreases in $h$, $S(h)$
-increases, and $S\le\tfrac12$ on $\rho\in[0,1]$. For an AR(1) process iterating
-the recursion gives $\operatorname{Cov}(x_{t+h},x_t)=\phi^{\,h}\gamma_0$, hence
-$\rho(h)=\phi^{\,h}$ and $S(h)=(1-\phi^{\,h})/2$, increasing from $0$ toward
+Take the one-parameter predictor $\hat{x}_{t+h}=ax_t$. Then
+$\mathbb{E}[(x_{t+h}-ax_t)^2]=\gamma_0(1-2a\rho(h)+a^2)$ is a strictly convex
+parabola in $a$, minimized at $a^\star=\rho(h)$ and giving
+$R_\star=\gamma_0(1-\rho(h)^2)$, while $a{=}1$ recovers
+$R_{\mathrm{pers}}=2\gamma_0(1-\rho(h))$. Dividing the two yields
+$R_\star/R_{\mathrm{pers}}=(1+\rho(h))/2$, so $S(h)=(1-\rho(h))/2$, which is strictly
+decreasing in $\rho$; hence wherever $\rho(h)$ decreases in $h$ the skill $S(h)$
+increases, and $S\le\tfrac12$ on $\rho\in[0,1]$. For an AR(1) process, iterating the
+recursion gives $\operatorname{Cov}(x_{t+h},x_t)=\phi^{\,h}\gamma_0$, whence
+$\rho(h)=\phi^{\,h}$ and $S(h)=(1-\phi^{\,h})/2$, which increases from $0$ toward
 $\tfrac12$.
 \end{proof}
 
