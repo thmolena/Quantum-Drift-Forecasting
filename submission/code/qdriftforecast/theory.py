@@ -1,55 +1,65 @@
-"""From-principles guide for quantum-hardware drift forecasting.
+"""From-principles guide for causal spectral-truncation drift monitoring.
 
 Problem
 -------
 A quantum processor changes over time: relaxation time, dephasing time, gate
 fidelities, readout error and calibration phases drift because the hardware and
 environment are not static. The code represents that device history as a finite
-multivariate time series. The scientific tasks are:
+multivariate time series (a window ``X`` of shape ``(L, C)``: ``L`` time steps,
+``C`` channels). The scientific tasks are:
 
 * forecast future coherence so recalibration can be scheduled earlier;
 * detect anomalous drift windows without using labels at deployment time.
 
-Computation model
------------------
-data.py creates deterministic telemetry arrays from a fixed random seed. A row
-is a qubit-time observation and the feature vector contains physical quantities
-such as T1, T2, one- and two-qubit fidelities and readout error. The generator
-contains slow periodic structure, secular decay and Gaussian fluctuations.
+Two geometries of drift
+-----------------------
+Marginal drift moves per-channel levels (e.g. T1 crossing a threshold); it is
+visible to ordinary level- and covariance-based monitors. Correlated
+(crosstalk) drift instead couples several channels with propagation delays while
+leaving every marginal and the instantaneous covariance unchanged: it lives
+entirely in the ordered, *lagged* cross-channel correlations. The central point
+of this work is that the second geometry is invisible to commutative monitors and
+visible only to a noncommutative one.
 
-Forecasting model
------------------
-make_paper_figures.py turns a recent window of length L into a design matrix and
-predicts an H-step future target. The main learned forecaster is ridge
-regression:
+The causal spectral-truncation kernel
+--------------------------------------
+``kernels.py`` represents a window inside the channel C*-algebra ``M_C`` through
+the truncated causal shift ``S`` ((S v)_t = v_{t-1}):
 
-    W = (X.T X + alpha I)^(-1) X.T Y.
+    K_n(X, Y) = sum_{tau=0}^{n-1} w_tau X^T S^tau Y   in   M_C,
 
-This is the unique minimizer of squared prediction error plus an L2 penalty.
-Persistence and climatology are non-learning controls.
+whose (c, c') entry is the order-``n`` causal lagged cross-channel correlation.
+The truncation order ``n`` controls noncommutativity: ``n = 1`` is the
+commutative instantaneous covariance ``X^T Y`` (symmetric), while for ``n >= 2``
+the lagged terms are asymmetric in (c, c') because ``S^T != S``. Truncating the
+shift algebra to ``n`` powers is the causal counterpart of truncating the
+Fourier-multiplier algebra to ``n`` modes in the spectral-truncation kernels of
+Hashimoto et al. (NeurIPS 2024); the difference is that ``S`` respects the arrow
+of time. The scalar kernel ``k_n(X, Y) = <Phi_n(X), Phi_n(Y)>`` is positive
+definite for every ``n`` (explicit feature map).
 
-Why forecasting can beat persistence
-------------------------------------
-For a weakly stationary scalar signal with autocorrelation rho(h), persistence
-risk is 2 gamma_0 (1 - rho(h)), while the best one-lag linear predictor has risk
-gamma_0 (1 - rho(h)**2). As rho(h) decays with horizon, the room for skill over
-persistence grows. The multivariate ridge model uses the whole seven-channel
-history, which is why its horizon skill is larger than this one-lag baseline.
+Forecasting
+-----------
+``forecasting.py`` predicts an H-step T1 horizon from a window. The learned
+baseline is ridge regression on the flattened window -- the commutative (``n =
+1``) member of the kernel family. Persistence and climatology are non-learning
+controls. On smooth, mean-reverting marginal telemetry the commutative member is
+already near-optimal, so forecast skill is flat in ``n``: noncommutativity is
+unnecessary here. Skill over persistence grows with horizon because, for a weakly
+stationary signal with autocorrelation rho(h), persistence risk is
+2 gamma_0 (1 - rho(h)) while the best one-lag predictor's risk is
+gamma_0 (1 - rho(h)^2); the gap widens as rho decays.
 
-Anomaly detection
------------------
-The unsupervised detector learns a low-rank nominal subspace from non-drift
-windows. A test window is scored by the squared reconstruction residual outside
-that subspace. Singular value decomposition gives the optimal rank-k linear
-subspace for nominal reconstruction, so the detector is a controlled geometric
-baseline rather than an arbitrary heuristic. If k is too large, drift is also
-reconstructed and detection collapses toward chance.
-
-Sequence-model benchmark
-------------------------
-The manuscript compares RNN, LSTM, GRU and Transformer records from executed
-notebooks. These are not retrained during figure generation; the code renders the
-stored seeded metrics into figures and tables so the artifact is deterministic.
+Detection
+---------
+``detection.py`` fits a low-rank nominal subspace in the kernel feature space and
+scores a test window by its residual energy off that subspace. With ``n = 1`` it
+is the classical reconstruction detector and is at chance on correlated drift
+(matched marginals and instantaneous covariance). With ``n = 2`` it detects at
+ROC-AUC ~0.90. Increasing ``n`` further adds noise coordinates that dilute the
+fixed-rank subspace, so detection is unimodal in ``n`` with an interior optimum:
+a representation-vs-complexity trade-off, the detection analogue of the
+generalization bound that governs spectral-truncation kernels in regression.
 
 Artifacts
 ---------

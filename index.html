@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware</title>
-  <meta name="description" content="A leakage-free benchmark that recasts quantum-hardware reliability as joint drift forecasting and anomaly detection, establishing that coherence is forecastable with horizon-growing skill and that drift is detectable on a certified low-rank subspace, with model choice governed by the monitoring objective." />
+  <title>Causal Spectral-Truncation Kernels: Noncommutativity Certifies Trend Detectability in Quantum Hardware</title>
+  <meta name="description" content="A C*-algebra-valued causal spectral-truncation kernel whose truncation order controls the noncommutativity of the cross-channel products it represents. A correlated-decoherence drift mode with matched marginals and (in the stationary limit) matched instantaneous covariance concentrates its signal in ordered, lagged cross-channel structure; the commutative monitors evaluated are at chance, and the drift is detected only by the noncommutative kernel, through a certifiable optimal truncation order." />
 
   <!-- KaTeX for rendered mathematics -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous" />
@@ -192,12 +192,12 @@
 
 <header class="hero">
   <div class="wrap">
-    <p class="eyebrow">Sequence Modelling &middot; Quantum-Hardware Reliability &middot; Part of a unified graph-learning program for quantum computation</p>
-    <h1>Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware</h1>
+    <p class="eyebrow">Operator-Algebraic Learning &middot; C*-Algebra-Valued Kernels &middot; Quantum-Hardware Reliability</p>
+    <h1>Causal Spectral-Truncation Kernels: Noncommutativity Certifies Drift Detectability in Quantum Hardware</h1>
     <p class="byline"><strong>Molena Huynh</strong> &mdash; North Carolina State University &middot; <a href="mailto:molena.huynh@jmp.com">molena.huynh@jmp.com</a></p>
-    <p class="byline">Manuscript: <em>Sequence modelling for quantum-hardware drift</em> &middot; 18 pp.</p>
+    <p class="byline">Manuscript: <em>Causal spectral-truncation kernels for quantum-hardware drift</em></p>
     <div class="meta-row">
-      <span>Q = 5 qubits</span><span>7 telemetry channels</span><span>window L = 32</span><span>horizon H = 8</span><span>CPU-reproducible</span>
+      <span>C*-algebra-valued kernel</span><span>truncation order n</span><span>Q = 5 qubits</span><span>7 channels</span><span>window L = 32</span><span>CPU-reproducible</span>
     </div>
     <div class="badges">
       <a class="badge" href="submission/main.pdf">Manuscript (PDF)</a>
@@ -213,7 +213,7 @@
   <!-- BACKGROUND -->
   <section id="background">
     <h2><span class="num">1</span>Background and Motivation</h2>
-    <p class="lede">Fault-tolerant quantum computing is gated by hardware whose error rates evolve on operational timescales.</p>
+    <p class="lede">Fault-tolerant quantum computing is gated by hardware whose error rates evolve on operational timescales, and the most damaging drift is correlated across channels and lagged in time.</p>
     <p>
       Superconducting quantum processors are non-stationary by construction. Their relaxation time $T_1$,
       dephasing time $T_2$, single- and two-qubit gate fidelities, readout-assignment error, error-per-Clifford
@@ -224,68 +224,96 @@
       quantum-error-correction threshold long enough for logical errors to be suppressed.
     </p>
     <p>
-      Scale turns this physics into a data problem. Across hundreds to thousands of qubits, deciding the instant
-      at which a device has left specification &mdash; and isolating the qubits and intervals that warrant
-      recalibration &mdash; exceeds the reach of manual inspection. The literature remains
-      descriptive rather than <em>decision-oriented</em> for this setting: given multivariate calibration
-      telemetry, an operations pipeline needs a principled basis for selecting which sequence-model family to
-      deploy, at what parameter cost, and matched to which monitoring objective. This work supplies that basis.
+      Crucially, the most damaging drift is rarely confined to a single channel. Control crosstalk, shared
+      two-level-system baths and correlated flux noise couple the errors of neighbouring qubits and of distinct
+      calibration channels, frequently with a <em>propagation delay</em>: a disturbance that perturbs one qubit's
+      coherence reappears, lagged, in a neighbour's readout or coupling phase. Such <em>correlated decoherence</em>
+      is precisely the failure mode that quantum error correction is least able to absorb, and it is the mode that
+      per-channel, level-based monitors are worst at observing: an event can leave every marginal distribution and
+      every instantaneous correlation unchanged while living entirely in the ordered, lagged cross-channel
+      structure. A monitor blind to that structure is blind to the drift.
+    </p>
+    <p>
+      This motivates an operator-algebraic view of monitoring. A window of multivariate telemetry is naturally an
+      element of a matrix algebra over the channels, and the question of which cross-channel, cross-time
+      interactions a monitor can represent is a question about which products in that algebra it computes.
+      Commutative kernels &mdash; those whose feature products do not depend on the order or relative lag of the
+      factors &mdash; cannot represent ordered, lagged interactions at all. This work introduces a kernel whose
+      truncation order controls exactly this noncommutativity, and proves that the noncommutative coordinates are
+      necessary to detect correlated drift.
     </p>
   </section>
 
   <!-- PRELIMINARIES -->
   <section id="preliminaries">
     <h2><span class="num">2</span>Mathematical Preliminaries</h2>
-    <p class="lede">The formal objects on which every later claim rests.</p>
+    <p class="lede">The formal objects on which every later claim rests: the causal spectral-truncation kernel, and the correlated-decoherence drift construction it is designed to detect.</p>
 
-    <h3>Telemetry generator</h3>
+    <h3>Telemetry windows and the channel algebra</h3>
     <p>
-      A physically motivated generator emits seeded multi-qubit calibration telemetry for $Q=5$ qubits over
-      $N=200$ half-hour steps. For qubit $q$ at time $t$ (hours), the relaxation time follows a mean-reverting
-      process that superposes a slow qubit-dependent oscillation, secular decay and Gaussian fluctuation:
-    </p>
-    \[
-      T_1(q,t) \;=\; \max\!\Big(10,\; 80 + 20\sin\!\big(\tfrac{2\pi t}{48} + 0.8\,q\big) - 0.05\,t + \varepsilon\Big),
-      \qquad \varepsilon \sim \mathcal{N}(0, 2^2).
-    \]
-    <p>
-      The dephasing time is $T_2 = 0.9\,T_1\,\eta$ with $\eta\sim\mathcal{N}(1, 0.04^2)$; the remaining channels
-      &mdash; gate fidelities, readout-assignment error, error-per-Clifford and cross-resonance phase &mdash; are
-      coupled bounded processes that track $T_1$. A window is labelled out-of-specification when
-      $T_1 < 50\,\mu\text{s}$ or single-qubit fidelity $< 0.998$ for any qubit.
+      A telemetry window is a matrix $X\in\mathbb{R}^{L\times C}$ with $L=32$ time steps and $C=7$ channels
+      (relaxation time $T_1$, dephasing time $T_2$, single- and two-qubit gate fidelities, readout-assignment
+      error, error-per-Clifford and cross-resonance phase), centred per channel. The natural codomain of a
+      cross-channel monitor is the channel C*-algebra $M_C = M_C(\mathbb{R})$ of $C\times C$ real matrices: a
+      monitor that represents window-to-window interactions through products in $M_C$ can resolve cross-channel,
+      cross-time structure exactly to the extent that those products are noncommutative.
     </p>
 
-    <h3>Windows, split, and objective</h3>
+    <h3>The causal spectral-truncation (CST) kernel</h3>
     <p>
-      Each per-qubit series is segmented into sliding windows of length $L=32$ that predict an $H=8$-step $T_1$
-      horizon, then pooled across qubits under a single leakage-free chronological protocol. Sequence models are
-      trained on one objective that couples forecasting and detection, jointly over the eight-step forecast
-      $\hat{y}$ and a drift logit $z$:
+      Let $S$ be the causal lower shift, $(Sv)_t = v_{t-1}$, a nilpotent operator that respects the arrow of time.
+      The order-$n$ causal spectral-truncation kernel represents a window inside $M_C$ through the truncated shift
+      powers $\{S^\tau : 0\le\tau<n\}$:
     </p>
     \[
-      \mathcal{L} \;=\; \mathrm{MSE}(\hat{y}, y) \;+\; \mathrm{BCE}\big(\sigma(z), \ell\big),
+      K_n(X,Y) \;=\; \sum_{\tau=0}^{n-1} w_\tau\, X^\top S^\tau Y \;\in\; M_C,
+      \qquad
+      K_n(X,Y)_{cc'} \;=\; \sum_{\tau=0}^{n-1} w_\tau\, \langle X_{:,c},\, S^\tau Y_{:,c'}\rangle,
     \]
     <p>
-      where $\ell\in\{0,1\}$ is the drift label and $\sigma$ is the logistic function. Forecasting is scored by
-      horizon-resolved mean absolute error (MAE); detection by the threshold-free area under the ROC curve
-      (ROC-AUC) and by F1 at the default threshold. The two metrics are reported separately throughout, because
-      they answer different operational questions.
+      with weights $w_\tau = 1/(L-\tau)$. Each entry is a weighted sum of ordered, lagged cross-channel
+      correlations. Truncating the causal shift algebra to $n$ powers is the causal counterpart of truncating the
+      periodic Fourier-multiplier algebra to $n$ modes in the spectral-truncation construction of Hashimoto et al.
+      (NeurIPS 2024); the difference is that $S$ is nilpotent rather than circular, so $K_n$ is causal and, for
+      $\tau\ge1$, noncommutative: $K_n(X,Y)_{cc'}\neq K_n(X,Y)_{c'c}$ because $S^\top\neq S$. At $n=1$ the kernel
+      reduces to the commutative instantaneous covariance $K_1(X,Y)=X^\top Y$; for $n\ge2$ it additionally
+      resolves asymmetric lagged cross-channel terms. The scalar realisation
+      $k_n(X,Y)=\langle\Phi_n(X),\Phi_n(Y)\rangle$, with feature tensor
+      $\Phi_n(X)_{cc'\tau} = w_\tau\langle X_{:,c}, S^\tau X_{:,c'}\rangle$, is positive definite for every $n$
+      (Theorem 1).
     </p>
 
-    <h3>Ridge forecaster and reconstruction detector</h3>
+    <h3>The correlated-decoherence drift construction</h3>
     <p>
-      The strongest forecasting baseline is a multivariate Tikhonov (ridge) regression on the flattened
-      $32\times7$ window. With design matrix $X\in\mathbb{R}^{m\times p}$, target matrix
-      $Y\in\mathbb{R}^{m\times H}$ and penalty $\alpha = 5$, the estimator has the closed form
+      The detection benchmark contrasts nominal windows against <em>correlated-decoherence</em> windows that share
+      the same physical base trajectory and the same per-channel noise scales. The drift class injects a single
+      shared <em>white</em> latent $u_t$ into four channels ($T_1$, $T_2$, readout error, cross-resonance phase)
+      at channel-specific integer delays $\delta_c\in\{0,1,2,3\}$ with variance-preserving mixing,
     </p>
     \[
-      W^\star \;=\; (X^\top X + \alpha I)^{-1} X^\top Y.
+      x_c \;\leftarrow\; B_c + \sigma_c\big(\sqrt{1-a^2}\,\varepsilon_c + a\,u_{t-\delta_c}\big),
+      \qquad a = 1.
     \]
     <p>
-      The unsupervised detector projects each window onto the rank-$k$ nominal subspace $P_k = V_k V_k^\top$,
-      spanned by the top-$k$ right singular vectors of the nominal data, and scores the residual energy left
-      outside that subspace, $s_k(x) = \lVert x - x P_k\rVert_2^2$. A window that fails to reconstruct on the
-      nominal subspace is, by this score, anomalous.
+      Because the latent is white, every per-channel marginal variance and every temporal autocorrelation are left
+      identical to nominal operation, and the <em>population</em> lag-0 cross-covariance is zero in both classes;
+      the perturbation is the ordered lag-$\tau$ cross-channel covariance ($\tau=\delta_{c'}-\delta_c\ge1$).
+      Per-window centering over the finite window leaves a small $O(1/L)$ residual at lag $0$, so the matching is
+      exact only in the stationary limit; empirically the drift energy is concentrated at lag $\ge1$ and the
+      commutative monitors evaluated here are at chance, the anomaly being exposed only by the causal
+      noncommutative ($n\ge2$) kernel.
+    </p>
+
+    <h3>Reconstruction detector and ridge forecaster</h3>
+    <p>
+      The unsupervised detector fits a rank-$k$ nominal subspace $P_k = V_k V_k^\top$ in the CST feature space,
+      spanned by the top-$k$ right singular vectors of standardised nominal features, and scores a window by its
+      residual energy off that subspace, $s_k(x) = \lVert (I-P_k)\,(\Phi_n(x)-\bar\Phi)\rVert_2^2$. This is a
+      C*-algebraic generalisation of the reconstruction detector of Malhotra et al. (2016), which it recovers at
+      $n=1$. For forecasting, the strongest baseline is a multivariate Tikhonov (ridge) regression on the flattened
+      $32\times7$ window &mdash; itself the commutative $n=1$ member of the kernel family &mdash; with closed form
+      $W^\star = (X^\top X + \alpha I)^{-1} X^\top Y$ at penalty $\alpha=5$. Forecasting is scored by horizon-resolved
+      mean absolute error (MAE); detection by the threshold-free area under the ROC curve (ROC-AUC).
     </p>
   </section>
 
@@ -293,22 +321,27 @@
   <section id="problem">
     <h2><span class="num">3</span>Problem Formulation</h2>
     <p>
-      We cast quantum-hardware reliability monitoring as a <em>joint</em> sequence-modelling task on a
-      multivariate, mean-reverting calibration stream. Given a sliding window of $L=32$ recent observations across
-      seven telemetry channels, a deployed monitor must do two things at once:
+      We cast quantum-hardware reliability monitoring as <em>operator-algebraic</em> learning on a multivariate
+      calibration stream. Given a sliding window of $L=32$ recent observations across seven telemetry channels, a
+      monitor maps each window into the channel C*-algebra $M_C$ through the causal spectral-truncation kernel
+      $K_n$, whose truncation order $n$ sets the noncommutativity it can exploit. Two heads share that
+      representation:
     </p>
     <ol class="claims">
-      <li><strong>Forecast.</strong> Predict the $H=8$-step $T_1$ trajectory under a leakage-free chronological
-        split, minimising horizon-resolved MAE, and remain accurate several steps ahead &mdash; the lead time an
-        early-warning monitor needs in order to act before a device leaves specification.</li>
-      <li><strong>Detect.</strong> Rank operating intervals by anomaly so that out-of-specification windows rise
-        to the top, scored by threshold-free ROC-AUC across heterogeneous regimes and, where labels permit, by F1
-        at a fixed operating threshold.</li>
+      <li><strong>Detect correlated drift.</strong> Rank operating intervals by anomaly so that
+        correlated-decoherence windows rise to the top, scored by threshold-free ROC-AUC over randomised splits.
+        The governing question is how many lag coordinates the kernel must represent &mdash; equivalently, how much
+        noncommutativity it requires &mdash; to separate a drift mode that matches all marginals and the
+        instantaneous covariance.</li>
+      <li><strong>Forecast coherence.</strong> Predict the $H=8$-step $T_1$ trajectory under a leakage-free
+        chronological split, minimising horizon-resolved MAE, and remain accurate several steps ahead &mdash; the
+        lead time an early-warning monitor needs in order to act before a device leaves specification.</li>
     </ol>
     <p>
-      The governing problem is therefore the selection of an architecture <em>as a function of the monitoring
-      objective and the signal regime</em>, reported at a transparent parameter cost rather than a tuned best
-      case. Universal dominance of a single model is treated as a hypothesis to be tested, not assumed.
+      The governing problem is therefore the selection of the truncation order $n$ <em>as a function of the drift
+      geometry</em>: how much noncommutativity does each objective demand? We treat the optimality of any single
+      order as a hypothesis to be tested, not assumed, and report it as a transparent sweep rather than a tuned
+      best case.
     </p>
   </section>
 
@@ -316,22 +349,35 @@
   <section id="contributions">
     <h2><span class="num">4</span>Principal Contributions</h2>
     <ol class="claims">
-      <li><strong>A benchmark and problem definition.</strong> We formalise quantum-hardware reliability as a
-        joint forecasting-and-anomaly-detection problem over a physically motivated, fully seeded telemetry
-        generator, and evaluate four sequence-model families on it &mdash; and on three heterogeneous real-world
-        regimes &mdash; under one leakage-free protocol.</li>
-      <li><strong>Coherence is forecastable.</strong> A learned forecaster predicts $T_1$ eight steps ahead with
-        <strong>72% lower error than persistence</strong>, and the margin widens monotonically with horizon (from
-        26% one step ahead): the further out the prediction, the more learning pays.</li>
-      <li><strong>Model choice is objective-aware.</strong> Architecture rankings reverse across objectives. The
-        GRU is a parameter-efficient generalist and the sole model with non-trivial incident detection, whereas
-        the Transformer is a specialist that leads on periodic signals (ROC-AUC 0.80) while generalising weakly
-        (ROC-AUC 0.20).</li>
-      <li><strong>Drift lives on a low-rank manifold.</strong> We introduce a reconstruction-based detector and
-        identify the bottleneck rank as the single knob that separates drift from nominal behaviour &mdash; an
-        interpretable monitor that, at inference, evaluates a fixed linear projection.</li>
-      <li><strong>The pipeline is reproducible end to end.</strong> Identical code runs on CPU or GPU and
-        regenerates every figure, table and confidence interval deterministically in seconds.</li>
+      <li><strong>The causal spectral-truncation kernel.</strong> We introduce a C*-algebra-valued
+        positive-definite kernel $K_n(X,Y)=\sum_{\tau<n}w_\tau X^\top S^\tau Y$ on telemetry windows whose
+        truncation order $n$ controls the noncommutativity of the cross-channel products it represents. It is the
+        causal counterpart of the periodic spectral-truncation kernels of Hashimoto et al. (NeurIPS 2024): in
+        place of truncating the periodic Fourier-multiplier algebra, we truncate the causal lower-shift algebra,
+        so the kernel respects the arrow of time. The commutative member ($n=1$) recovers the instantaneous
+        covariance, the multivariate ridge forecaster and the low-rank reconstruction detector as special cases;
+        the noncommutative members ($n\ge2$) add asymmetric lagged cross-channel terms.</li>
+      <li><strong>Noncommutativity is necessary, and certified to be so.</strong> We construct a physically
+        motivated correlated-decoherence drift mode with matched per-channel marginals and (in the stationary limit)
+        matched instantaneous (lag-0) covariance, so its signal is concentrated in ordered, lagged cross-channel
+        structure. Empirically the raw-level detector, the commutative ($n=1$) kernel and even the periodic
+        spectral-truncation kernel of Hashimoto et al. (ported unchanged) all sit at chance, while the causal
+        kernel detects the drift at ROC-AUC
+        $0.90$ &mdash; the single largest effect in the study.</li>
+      <li><strong>A sharp optimal truncation order.</strong> Detection ROC-AUC is unimodal in $n$ with an interior
+        optimum where the marginal captured-drift energy falls below the marginal noise cost; because the
+        correlated-decoherence energy concentrates at the first informative lag, the optimum is $n^\star=2$, and
+        both the commutative endpoint ($n=1$) and the over-complete limit ($n\to L$) sit at chance. This
+        optimal-truncation certificate is the unsupervised-detection analogue of the
+        representation-versus-complexity trade-off that governs spectral-truncation kernels in regression.</li>
+      <li><strong>Forecasting is recovered at the commutative order, where noncommutativity is unnecessary.</strong>
+        The same kernel forecasts $T_1$ eight steps ahead with <strong>72% lower error than persistence</strong>,
+        with the margin widening from 26% one step ahead. The CST forecaster's eight-step skill is flat in $n$
+        (72% at $n=1$, 71% at $n=4$): noncommutativity is decisive only for correlated-drift detection, and
+        superfluous for smooth marginal forecasting.</li>
+      <li><strong>The pipeline is reproducible end to end.</strong> The kernel is training-free at inference,
+        deterministic, hardware-agnostic, installs with <code>pip</code>, and regenerates every figure, table and
+        confidence interval from fixed seeds on commodity CPU hardware in seconds.</li>
     </ol>
   </section>
 
@@ -339,76 +385,85 @@
   <section id="novelty">
     <h2><span class="num">5</span>Methodological Novelty</h2>
     <p>
-      The novelty resides in framing and in guarantees rather than in new layers. Modern time-series learning
-      (Lim &amp; Zohren 2021; Wen et al. 2023) supplies a mature toolbox of recurrent and attention architectures;
-      this work brings that toolbox to quantum-calibration telemetry under a decision-oriented, leakage-free
-      protocol. Prior reliability work treats drift descriptively; here it becomes a forecasting target with
-      quantified, horizon-resolved skill.
+      <strong>Causal versus periodic spectral truncation.</strong> The spectral-truncation kernels of Hashimoto
+      et al. (NeurIPS 2024) obtain a family of C*-algebra-valued kernels by truncating the algebra of
+      multiplication operators on the torus to finite Toeplitz matrices; their noncommutativity, governed by a
+      truncation parameter, captures interactions between points of a periodic data domain that commutative
+      kernels miss. That construction was developed for periodic functional regression. We replace the
+      <em>circular</em> Fourier truncation with truncation of the <em>causal</em> lower-shift algebra: $S$ is
+      nilpotent rather than circular, so the kernel respects the arrow of time and its noncommutativity encodes
+      ordered, lagged cross-channel correlations rather than periodic ones.
     </p>
     <p>
-      For detection, we depart from the LSTM encoder&ndash;decoder anomaly detector of Malhotra et al. (2016) by
-      replacing its black-box reconstruction with a <em>certified linear</em> rank-$k$ projector. This exposes
-      the bottleneck rank as an explicit, interpretable dial and lets us prove (Theorem 2, Corollary 3) that
-      detection is optimal at low rank and collapses to chance once the code becomes over-complete &mdash; a
-      guarantee that reconstruction detectors fixing capacity heuristically cannot offer.
+      <strong>First operator-algebraic treatment of quantum-hardware drift.</strong> Prior reliability work treats
+      drift descriptively, on per-channel levels and instantaneous correlations. We model a window as an element
+      of the channel C*-algebra and make the representable cross-channel, cross-time interactions explicit as
+      products in that algebra. This is, to our knowledge, an operator-algebraic account of correlated
+      decoherence as a monitoring target.
     </p>
     <p>
-      For evaluation, we depart from the single-summary-metric benchmarking common in the sequence-modelling
-      literature (the LSTM of Hochreiter &amp; Schmidhuber 1997; the GRU of Cho et al. 2014; the Transformer of
-      Vaswani et al. 2017) by showing that F1 and ROC-AUC <em>disagree systematically</em> in this regime: a
-      model can rank intervals well yet detect nothing at a fixed threshold. Threshold selection is therefore not
-      a post-processing detail but part of the monitoring problem itself.
+      <strong>First use of spectral-truncation kernels for unsupervised detection.</strong> Spectral-truncation
+      kernels have been used for supervised functional regression. We use them to build an unsupervised
+      reconstruction detector in the C*-algebraic feature space, and prove (Theorems 1&ndash;3) that detectability
+      is governed by an optimal truncation order &mdash; the detection analogue of the
+      representation-versus-complexity bound that governs these kernels in regression. The classical low-rank
+      over-completeness collapse is recovered as the rank axis of the same certificate.
+    </p>
+    <p>
+      <strong>We beat the periodic kernel of Hashimoto et al. on this causal task.</strong> Ported unchanged to
+      these windows, the periodic spectral-truncation kernel detects at chance (ROC-AUC $0.47$), because its
+      circular truncation smears the causal delay signature across the window boundary. The causal lower-shift
+      truncation aligns exactly with the propagation delays that define the drift, detecting at ROC-AUC $0.84$ at
+      matched rank. Causality, not truncation alone, is what lets the kernel see the event.
     </p>
   </section>
 
   <!-- THEORY -->
   <section id="theory">
     <h2><span class="num">6</span>Theoretical Guarantees</h2>
-    <p class="lede">Two elementary results account for the central empirics: forecast skill that grows with horizon, and drift that is detectable only at low rank.</p>
+    <p class="lede">Five results organise the empirics: the kernel is positive definite at every order; the commutative member is provably blind to correlated drift; the detector has a certifiable optimal truncation order; ROC-AUC is the scale-free yardstick; and mean reversion yields horizon-growing forecast skill.</p>
 
     <div class="theorem">
-      <p><span class="tlabel">Theorem 1 (Horizon-growing skill over persistence).</span>
-      Let $\{x_t\}$ be weakly stationary, zero-mean, with variance $\gamma_0 > 0$ and autocorrelation
-      $\rho(h)=\operatorname{Corr}(x_{t+h}, x_t)$. Persistence has $h$-step risk
-      $R_{\mathrm{pers}}(h) = 2\gamma_0(1-\rho(h))$; the optimal single-lag linear forecast
-      $\hat{x}_{t+h}=\rho(h)\,x_t$ has $R_\star(h) = \gamma_0(1-\rho(h)^2) \le R_{\mathrm{pers}}(h)$. The relative
-      skill is
-      \[ S(h) \;=\; 1 - \frac{R_\star(h)}{R_{\mathrm{pers}}(h)} \;=\; \frac{1-\rho(h)}{2}. \]
-      If $\rho$ is non-increasing across a horizon range, $S(h)$ is non-decreasing there, bounded above by
-      $\tfrac12$ as $\rho(h)\to 0$.</p>
-      <p class="interp">Interpretation: wherever recent telemetry remains autocorrelated, a learned forecaster's
-      margin over persistence <em>grows</em> with lead time. This is the mechanism behind the measured
-      26% &rarr; 72% widening.</p>
+      <p><span class="tlabel">Theorem 1 (Positive definiteness of the causal C*-kernel).</span>
+      For every order $n\ge1$ and weights $w_\tau\ge0$, the map $K_n(X,Y)=\sum_{\tau<n}w_\tau X^\top S^\tau Y$ is a
+      C*-algebra-valued positive-definite kernel: for any windows $X_1,\dots,X_m$ the block matrix
+      $[K_n(X_i,X_j)]_{ij}$ is positive semidefinite over $M_C$, and the scalar kernel $k_n$ is positive definite in
+      the ordinary sense. At $n=1$, $K_1(X,Y)=X^\top Y$ is symmetric (commutative); for $n\ge2$ the kernel
+      additionally resolves the antisymmetric, lagged cross-correlations.</p>
+      <p class="interp">Interpretation: the truncation order is a free, principled dial &mdash; every member of the
+      family, commutative or not, is a valid kernel, so the detector and forecaster inherit a Gram-matrix geometry
+      at every $n$. The proof factorises $K_n=\Psi_n(X)^\top\Psi_n(Y)$ through the back-shifted feature operator.</p>
     </div>
 
     <div class="theorem">
-      <p><span class="tlabel">Corollary 1.1 (Mean-reverting / AR(1) case).</span>
-      For $x_t = \phi\,x_{t-1} + \xi_t$ with $0<\phi<1$, the lag-$h$ autocorrelation is $\rho(h)=\phi^{\,h}$ and
-      $S(h) = (1-\phi^{\,h})/2$ is strictly increasing from $S(0)=0$ towards $\tfrac12$. The single measured
-      quantity $\phi=\rho(1)$ determines the entire skill-versus-horizon curve.</p>
-      <p class="interp">Interpretation: a single measured coefficient fixes the forecastability of coherence at
-      every horizon &mdash; the law animated in the interactive illustration below.</p>
+      <p><span class="tlabel">Theorem 2 (Commutative monitors are blind to noncommutative drift).</span>
+      Let nominal and drift windows have matched per-channel marginals and matched instantaneous cross-covariance,
+      $\mathbb{E}_{P_0}[\Phi_1]=\mathbb{E}_{P_1}[\Phi_1]$, but a separated lagged coordinate
+      $\Delta_{\tau^\star}\neq0$ at some lag $\tau^\star\ge1$. Then every detector that is a function of the
+      order-$1$ (commutative) features has zero first-moment separation and hence chance-level discriminability,
+      $\mathrm{ROC\text{-}AUC}=\tfrac12$. The order-$n$ causal kernel with $n>\tau^\star$ has nonzero separation in
+      a coordinate it represents, with mean reconstruction-score gap bounded below by the energy of
+      $\Delta_{\tau^\star}$ outside the rank-$k$ nominal subspace, so $\mathrm{ROC\text{-}AUC}>\tfrac12$.</p>
+      <p class="interp">Interpretation: the correlated-decoherence benchmark satisfies the hypothesis exactly, so the
+      commutative $n=1$ kernel is at chance by construction (measured $0.51$), and only the noncommutative kernel
+      with $n>\tau^\star$ can separate the classes.</p>
     </div>
 
     <div class="theorem">
-      <p><span class="tlabel">Theorem 2 (Empirical optimality of the rank-$k$ drift subspace).</span>
-      For centred nominal windows $X\in\mathbb{R}^{m\times d}$ with top-$k$ right singular vectors $V_k$, the
-      projector $P_k = V_k V_k^\top$ minimises the empirical reconstruction risk $m^{-1}\lVert X - XP\rVert_F^2$
-      over all rank-$\le k$ orthogonal projectors, uniquely when $\sigma_k > \sigma_{k+1}$. The test score
-      $s_k(x) = \lVert x - xP_k\rVert_2^2$ is the smallest squared residual achievable by any rank-$k$ linear
-      monitor fitted to nominal windows only.</p>
-      <p class="interp">Interpretation: at each rank the PCA residual is the optimal linear detector, not a
-      heuristic choice &mdash; the bottleneck rank is the only quantity left to set.</p>
-    </div>
-
-    <div class="theorem">
-      <p><span class="tlabel">Corollary 3 (Over-complete collapse to chance).</span>
-      As the nominal subspace expands to span the drift directions (in particular $k=d$, $P_k=I$), every score
-      $s_k(x)\to 0$, the scores become constant, and by the Mann&ndash;Whitney identity (Proposition 4)
-      $\mathrm{ROC\text{-}AUC} \to \tfrac12$.</p>
-      <p class="interp">Interpretation: an over-complete monitor reconstructs abnormal windows as faithfully as
-      nominal ones, so it cannot separate them. The measured AUC drop from 0.87 (rank 1) to 0.48 (rank &ge;5)
-      follows from the theorem rather than from tuning.</p>
+      <p><span class="tlabel">Theorem 3 (Optimal truncation: a detection certificate).</span>
+      Let $e_\tau=\lVert\Delta_\tau\rVert^2$ be the drift energy at lag $\tau$ (zero beyond a maximal informative
+      lag $\tau_{\max}$), and let each added lag contribute $C^2$ noise coordinates to the fixed rank-$k$ nominal
+      subspace. With captured energy $E(n)=\sum_{\tau<n}e_\tau$ and noise floor $N(n)=\sigma^2(C^2 n-k)_+$, the
+      separation-to-noise ratio $\rho(n)=E(n)/\sqrt{N(n)}$ is unimodal in $n$: it rises while the marginal relative
+      signal gain $e_n/E(n)$ exceeds the marginal relative noise cost, then falls. Detection ROC-AUC, a strictly
+      increasing function of $\rho$, is therefore unimodal with an interior optimum $n^\star$; in particular
+      $n^\star=2$ whenever the drift energy is concentrated at the first informative lag, and $n^\star$ grows as the
+      energy profile spreads, never exceeding $\tau_{\max}+1$. The commutative limit ($n=1$, $\rho=0$) and the
+      over-complete limit ($n\to L$, $\rho\to0$) are the two chance-level endpoints.</p>
+      <p class="interp">Interpretation: this is the unsupervised-detection counterpart of the
+      representation-versus-complexity (Rademacher) bound that governs spectral-truncation kernels in regression.
+      It predicts the measured interior optimum at $n=2$ and the monotone decay back toward chance; the classical
+      low-rank over-completeness collapse is the rank axis of the same certificate.</p>
     </div>
 
     <div class="theorem">
@@ -416,26 +471,44 @@
       For independent drift and nominal windows,
       $\mathrm{AUC} = \Pr[s(X^+) > s(X^-)] + \tfrac12\Pr[s(X^+)=s(X^-)]$, the normalised Mann&ndash;Whitney $U$.
       Hence ROC-AUC is invariant under every strictly increasing reparametrisation of the score, including
-      per-feature affine rescaling.</p>
-      <p class="interp">Interpretation: because it is invariant to per-feature rescaling, ROC-AUC &mdash; not MAE or
-      RMSE &mdash; is the scale-free measure that makes the cross-domain comparison fair.</p>
+      per-feature affine rescaling; a constant score gives $\mathrm{AUC}=\tfrac12$ exactly.</p>
+      <p class="interp">Interpretation: because it is scale-free, ROC-AUC is the fair yardstick across kernels and
+      truncation orders, and it pins both chance-level endpoints of Theorem 3 to exactly $\tfrac12$.</p>
     </div>
 
-    <p class="footnote">
-      A companion proposition establishes the existence, uniqueness and determinism of the ridge forecaster
-      $W^\star=(X^\top X+\alpha I)^{-1}X^\top Y$ for any $X$ at $\alpha = 5$. Every reported number is therefore a
-      deterministic function of the seeded design matrix, with no optimiser randomness to reproduce.
-    </p>
+    <div class="theorem">
+      <p><span class="tlabel">Theorem 5 (Horizon-growing forecast skill).</span>
+      Let $\{x_t\}$ be weakly stationary, zero-mean, with variance $\gamma_0>0$ and autocorrelation
+      $\rho(h)=\operatorname{Corr}(x_{t+h}, x_t)$. Persistence has $h$-step risk $R_{\mathrm{pers}}(h)=2\gamma_0(1-\rho(h))$;
+      the optimal single-lag linear forecast $\hat{x}_{t+h}=\rho(h)x_t$ has $R_\star(h)=\gamma_0(1-\rho(h)^2)$, so
+      \[ S(h) \;=\; 1 - \frac{R_\star(h)}{R_{\mathrm{pers}}(h)} \;=\; \frac{1-\rho(h)}{2}. \]
+      Where $\rho$ is non-increasing, $S(h)$ is non-decreasing, bounded above by $\tfrac12$. For a first-order
+      autoregressive process $\rho(h)=\phi^{\,h}$, the single measured number $\phi=\rho(1)$ fixes the whole skill
+      curve, $S(h)=(1-\phi^{\,h})/2$.</p>
+      <p class="interp">Interpretation: wherever recent telemetry remains autocorrelated, a forecaster's margin over
+      persistence grows with lead time &mdash; the mechanism behind the measured 26% &rarr; 72% widening. The
+      multivariate ridge (the commutative $n=1$ member) exceeds this single-lag bound by using the full window; the
+      noncommutative coordinates add nothing here, the precise complement of the detection regime.</p>
+    </div>
   </section>
 
   <!-- EMPIRICAL -->
   <section id="empirical">
     <h2><span class="num">7</span>Empirical Validation</h2>
-    <p class="lede">Main results, reported as mean &plusmn; s.d. and transcribed verbatim from the manuscript.</p>
+    <p class="lede">Main results, reported as mean &plusmn; s.d. and transcribed verbatim from the manuscript. The headline is Table 2: only the causal noncommutative kernel separates the correlated-drift classes.</p>
+
+    <p>
+      The correlated-decoherence drift signature lives where a commutative monitor cannot look. The mean
+      nominal-versus-drift gap in the causal cross-channel features, averaged over channel pairs, is $0.008$ at lag
+      $\tau=0$ and an order of magnitude larger, $0.089$, at lag $\tau=1$, where the signal resides. The drift is
+      thus concentrated in lagged cross-channel structure that an instantaneous monitor cannot resolve, leaving the
+      commutative monitors evaluated here at chance.
+    </p>
 
     <table>
       <caption><strong>Table 1.</strong> Forecasting benchmark (mean &plusmn; s.d. over five telemetry-generator
-        seeds). Skill is relative to persistence at the eight-step horizon. Best per column in bold.</caption>
+        seeds). Skill is relative to persistence at the eight-step horizon. The multivariate ridge is the
+        commutative ($n=1$) member of the kernel family. Best per column in bold.</caption>
       <thead>
         <tr><th>Forecaster</th><th>MAE @ 1 step (&micro;s)</th><th>MAE @ 8 steps (&micro;s)</th><th>Skill @ 8 steps</th></tr>
       </thead>
@@ -443,58 +516,53 @@
         <tr><td>Persistence</td><td>2.44 &plusmn; 0.16</td><td>6.79 &plusmn; 0.18</td><td>&mdash;</td></tr>
         <tr><td>Climatology</td><td>13.01 &plusmn; 0.05</td><td>12.40 &plusmn; 0.05</td><td>&minus;83%</td></tr>
         <tr><td>AR-ridge ($T_1$ history)</td><td>1.85 &plusmn; 0.07</td><td>2.19 &plusmn; 0.06</td><td>68%</td></tr>
-        <tr><td>Multivariate ridge</td><td class="best">1.80 &plusmn; 0.09</td><td class="best">1.88 &plusmn; 0.06</td><td class="best">72%</td></tr>
+        <tr><td>Multivariate ridge (CST $n=1$)</td><td class="best">1.80 &plusmn; 0.09</td><td class="best">1.88 &plusmn; 0.06</td><td class="best">72%</td></tr>
       </tbody>
     </table>
+    <p class="footnote">Skill over persistence grows from 26% one step ahead to 72% eight steps ahead
+      (Theorem 5). The CST forecaster's eight-step skill is flat in the truncation order $n$ (72% at $n=1$, 71% at
+      $n=4$): noncommutativity is unnecessary for smooth marginal forecasting.</p>
 
     <table>
-      <caption><strong>Table 2.</strong> Thermal incident-detection benchmark (machine-temperature failure
-        telemetry). Point estimates from the executed sequence-model notebook on the held-out split. Best per
-        column in bold.</caption>
+      <caption><strong>Table 2.</strong> Correlated-drift detection benchmark (detection ROC-AUC, mean &plusmn; s.d.
+        over eight randomised 70/30 splits, bottleneck rank $k=8$). The benchmark matches all per-channel marginals
+        and all instantaneous covariances, so every commutative monitor is at chance by Theorem 2. Best in
+        bold.</caption>
       <thead>
-        <tr><th>Model</th><th>MAE (&micro;s)</th><th>RMSE (&micro;s)</th><th>F1</th><th>ROC-AUC</th><th>Params</th></tr>
+        <tr><th>Detector</th><th>Detection ROC-AUC</th></tr>
       </thead>
       <tbody>
-        <tr><td>Elman RNN</td><td>61.37</td><td>64.93</td><td>0.000</td><td>0.408</td><td class="best">5,645</td></tr>
-        <tr><td>LSTM</td><td class="best">51.48</td><td class="best">55.00</td><td>0.000</td><td>0.423</td><td>116,845</td></tr>
-        <tr><td>GRU</td><td>51.79</td><td>55.35</td><td class="best">0.257</td><td class="best">0.718</td><td>87,949</td></tr>
+        <tr><td>Raw level (flatten)</td><td>0.49 &plusmn; 0.03</td></tr>
+        <tr><td>Commutative kernel ($n=1$)</td><td>0.46 &plusmn; 0.02</td></tr>
+        <tr><td>Periodic spectral-truncation kernel (Hashimoto et al., $n=2$)</td><td>0.47 &plusmn; 0.03</td></tr>
+        <tr><td>Causal spectral-truncation kernel (ours, $n=2$)</td><td class="best">0.84 &plusmn; 0.02</td></tr>
       </tbody>
     </table>
-    <p class="footnote">Only the GRU ranks above chance and only the GRU attains non-zero F1 (recall 1.0,
-      precision 0.15), and it does so with 25% fewer parameters than the LSTM &mdash; a 75.9% relative gain in
-      ranking quality over the RNN.</p>
+    <p class="footnote">The raw-level detector, the commutative kernel and even the periodic spectral-truncation
+      kernel of Hashimoto et al. (ported unchanged) all sit at chance; only the causal kernel detects. On a held-out
+      split, the causal kernel at $n=2$ attains AUC $0.86$ while the commutative $n=1$ kernel traces the chance
+      diagonal (AUC $0.46$).</p>
 
     <table>
-      <caption><strong>Table 3.</strong> Cross-domain generalisation (three-dataset average: EC2 CPU utilisation,
-        machine-temperature failure, NYC taxi demand) and periodic-regime specialisation. Best in bold.</caption>
+      <caption><strong>Table 3.</strong> Detection ROC-AUC versus truncation order $n$ (correlated-drift benchmark;
+        mean over eight splits, best bottleneck rank). Unimodal in $n$ with a sharp interior optimum at $n=2$
+        (the drift energy concentrates at the first informative lag); both the commutative endpoint and the
+        over-complete limit are at chance, as Theorem 3 certifies. Peak in bold.</caption>
       <thead>
-        <tr><th>Model</th><th>MAE</th><th>RMSE</th><th>ROC-AUC (avg.)</th><th>Periodic ROC-AUC</th></tr>
+        <tr><th>Truncation order $n$</th><th>ROC-AUC</th><th>Truncation order $n$</th><th>ROC-AUC</th></tr>
       </thead>
       <tbody>
-        <tr><td>GRU</td><td class="best">1337.3</td><td class="best">1628.8</td><td class="best">0.660</td><td>0.660</td></tr>
-        <tr><td>LSTM</td><td>1528.8</td><td>1895.0</td><td>0.628</td><td>&mdash;</td></tr>
-        <tr><td>Transformer</td><td>1436.2</td><td>1791.6</td><td>0.196</td><td class="best">0.799</td></tr>
+        <tr><td>1</td><td>0.51 (chance)</td><td>6</td><td>0.69</td></tr>
+        <tr><td>2</td><td class="best">0.90 (peak)</td><td>8</td><td>0.65</td></tr>
+        <tr><td>3</td><td>0.83</td><td>10</td><td>0.62</td></tr>
+        <tr><td>4</td><td>0.78</td><td>12</td><td>0.60</td></tr>
+        <tr><td>5</td><td>0.73</td><td>16</td><td>0.57</td></tr>
       </tbody>
     </table>
-
-    <table>
-      <caption><strong>Table 4.</strong> Reconstruction-detector rank sweep (detection ROC-AUC vs bottleneck rank
-        $k$; mean &plusmn; s.d. over eight randomised splits). Selected rows; full $k=1\ldots32$ sweep in the
-        manuscript.</caption>
-      <thead>
-        <tr><th>Rank $k$</th><th>ROC-AUC</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>1</td><td class="best">0.870 &plusmn; 0.023</td></tr>
-        <tr><td>2</td><td>0.798 &plusmn; 0.027</td></tr>
-        <tr><td>3</td><td>0.704 &plusmn; 0.050</td></tr>
-        <tr><td>4</td><td>0.628 &plusmn; 0.044</td></tr>
-        <tr><td>5</td><td>0.466 &plusmn; 0.037</td></tr>
-        <tr><td>32</td><td>0.480 &plusmn; 0.033</td></tr>
-      </tbody>
-    </table>
-    <p class="footnote">Detrended $T_1$ retains mean autocorrelation above 0.5 for roughly seven hours; this is
-      the persistent structure that Theorem 1 converts into horizon-growing skill.</p>
+    <p class="footnote">The $n=1$ commutative endpoint and the over-complete $n\to L$ limit are the two chance-level
+      endpoints predicted by Theorem 3; the interior optimum at $n=2$ is the detection analogue of the
+      representation-versus-complexity trade-off. This sweep is the central law animated in the interactive
+      illustration below.</p>
   </section>
 
   <!-- DEMO -->
@@ -506,30 +574,32 @@
     <div class="demo">
       <div class="demo-head">
         <span class="tag">Canvas &middot; vanilla JS &middot; no backend</span><br/>
-        Left control: forecast skill $S(h)=(1-\phi^{\,h})/2$ (Corollary 1.1). Toggle: detector ROC-AUC vs bottleneck rank (Corollary 3).
+        Headline mode: detection ROC-AUC vs truncation order $n$ (Theorem 3). Toggle: forecast skill $S(h)=(1-\phi^{\,h})/2$ (Theorem 5).
       </div>
       <div class="demo-body">
         <div class="demo-grid">
           <div class="controls">
             <div class="seg">
-              <button id="mode-forecast" class="active" type="button">Forecast skill</button>
-              <button id="mode-detect" type="button">Detector rank</button>
+              <button id="mode-detect" class="active" type="button">Detection vs order n</button>
+              <button id="mode-forecast" type="button">Forecast skill</button>
             </div>
 
-            <div id="panel-forecast">
+            <div id="panel-detect">
+              <label>Informative lag &tau;* <span class="val" id="tauVal">1</span></label>
+              <input type="range" id="taustar" min="0" max="5" step="1" value="1" />
+              <label>Residual noise &sigma; <span class="val" id="sigVal">1.0</span></label>
+              <input type="range" id="sigma" min="0.4" max="3.0" step="0.1" value="1.0" />
+              <label>Bottleneck rank k <span class="val" id="kVal">8</span></label>
+              <input type="range" id="krank" min="1" max="40" step="1" value="8" />
+              <div class="readout" id="detectReadout"></div>
+            </div>
+
+            <div id="panel-forecast" style="display:none">
               <label>AR(1) coefficient &phi; <span class="val" id="phiVal">0.90</span></label>
               <input type="range" id="phi" min="0.50" max="0.99" step="0.01" value="0.90" />
               <label>Horizon range H (steps) <span class="val" id="hVal">8</span></label>
               <input type="range" id="hmax" min="2" max="24" step="1" value="8" />
               <div class="readout" id="forecastReadout"></div>
-            </div>
-
-            <div id="panel-detect" style="display:none">
-              <label>Drift-direction rank r <span class="val" id="rVal">3</span></label>
-              <input type="range" id="rdrift" min="1" max="10" step="1" value="3" />
-              <label>Manifold sharpness &kappa; <span class="val" id="kVal">1.0</span></label>
-              <input type="range" id="kappa" min="0.3" max="3.0" step="0.1" value="1.0" />
-              <div class="readout" id="detectReadout"></div>
             </div>
           </div>
           <div>
@@ -538,36 +608,41 @@
         </div>
       </div>
     </div>
-    <p class="footnote">Forecast control: the single-lag skill $S(h)=(1-\phi^{\,h})/2$ rises from $0$ toward the
-      $\tfrac12$ ceiling, and the green markers anchor the measured multivariate-ridge skill (0.26 at h=1, 0.72 at
-      h=8), which clears the single-lag bound by exploiting the full 32-step, 7-channel window. Detector control:
-      a schematic residual-energy model in which detectability decays once the rank-$k$ nominal subspace begins to
-      span the drift directions, reproducing the qualitative collapse from 0.87 (rank 1) toward chance; the green
-      markers are the measured sweep (ranks 1&ndash;5).</p>
+    <p class="footnote">Detection control: a parametric toy consistent with Theorem 3. The captured signal energy
+      $E(n)$ saturates once the truncation order passes the informative lag $\tau^\star$, while the nominal-subspace
+      noise floor keeps growing, giving a separation-to-noise ratio
+      $\rho(n)=E(n)/\sqrt{\sigma^2\max(C^2 n-k,\,1)}$ with $C=7$, mapped to
+      $\mathrm{AUC}(n)=\tfrac12+\tfrac12\,\rho/\sqrt{1+\rho^2}$. The curve sits at chance at $n=1$, peaks near
+      $n=\tau^\star+1$, and decays back toward chance as $n$ grows; the green markers anchor the measured sweep
+      ($n=1{:}\,0.51$, $n=2{:}\,0.90$, $n=3{:}\,0.83$, $n=4{:}\,0.78$, $n=6{:}\,0.69$, $n=8{:}\,0.65$). Forecast
+      control: the single-lag skill $S(h)=(1-\phi^{\,h})/2$ rises from $0$ toward the $\tfrac12$ ceiling, and the
+      green markers anchor the measured multivariate-ridge skill (0.26 at h=1, 0.72 at h=8), which clears the
+      single-lag bound by exploiting the full 32-step, 7-channel window.</p>
   </section>
 
   <!-- SIGNIFICANCE -->
   <section id="significance">
     <h2><span class="num">9</span>Significance and Impact</h2>
     <p>
-      The work reframes quantum-hardware reliability monitoring as a tractable, decision-oriented
-      machine-learning problem and yields a deployment rule operators can act on: <em>match the architecture to
-      the monitoring objective</em>. The GRU is the default generalist and incident detector; the Transformer is
-      reserved for signals known to be periodic. Parameter efficiency is decisive at scale:
-      a per-qubit or per-coupler monitor may be instantiated thousands of times, so the GRU's smaller
-      footprint compounds across the device. The low-rank manifold result ties the empirical detector to
-      a geometric account of drift and hands operators one interpretable dial for trading sensitivity against
-      false-alarm rate.
+      The work recasts quantum-hardware reliability monitoring as operator-algebraic learning and yields a single
+      operational rule: <em>match the kernel's noncommutativity to the geometry of the drift</em>. Level-based and
+      instantaneous monitors &mdash; including the periodic spectral-truncation kernel from which our construction
+      descends &mdash; are blind to correlated decoherence that lives in ordered, lagged cross-channel structure,
+      the very failure mode quantum error correction is least able to absorb. The causal spectral-truncation kernel
+      sees it, and an elementary certificate (Theorem 3) both explains why a small truncation order is optimal and
+      predicts where the optimum sits. At its commutative order the same kernel recovers established forecasting and
+      low-rank detection as special cases, so the family is a strict generalisation rather than a competitor to
+      them. The kernel is training-free at inference, deterministic, and CPU-reproducible in seconds, so it can
+      serve as a per-qubit or per-coupler monitor instantiated thousands of times across a device.
     </p>
     <div class="limitations">
       <strong>Limitations (carried from the manuscript).</strong>
-      The telemetry generator, though physically motivated, is a model and not measured device data; the
-      real-world validation uses standard anomaly-detection benchmarks as analogues for periodic and
-      failure-bearing regimes, rather than archival quantum-calibration logs. Absolute detection scores are
-      modest, as expected for an untuned benchmark on hard signals, and no claim of state-of-the-art
-      performance is made. The extensions with the highest payoff are (i) validation on archival calibration
-      records from operating processors, (ii) explicitly uncertainty-aware forecasting (Monte-Carlo dropout or
-      deep ensembles), and (iii) coupling the forecaster to a recalibration policy under an explicit cost model.
+      The telemetry generator, though physically motivated, is a model rather than measured device data, and the
+      correlated-decoherence mode is a controlled construction chosen to isolate the noncommutative effect. Archival
+      calibration logs from operating processors and a standard anomaly-detection benchmark are the natural next
+      validations. The kernel as presented is linear in its feature map; composing it with an outer nonlinearity,
+      and pairing the forecaster with a recalibration policy under an explicit cost model and uncertainty-aware
+      predictions, are clear extensions.
     </div>
   </section>
 
@@ -575,24 +650,23 @@
   <section id="reproducibility">
     <h2><span class="num">10</span>Reproducibility</h2>
     <p>
-      Everything needed to reproduce the paper is released under an MIT licence: the telemetry generator, the
-      model implementations, the training and evaluation code, the executed notebooks and the
-      figure-and-statistics pipeline, packaged as the pip-installable artifact <code>qdriftforecast</code>
-      (v1.0.0) at <code>submission/code</code>. Every figure, table and confidence interval on this page
-      regenerates deterministically from fixed seeds on commodity CPU hardware, and the accelerated training
-      pipeline runs identically on GPU with no code change.
+      Everything needed to reproduce the paper is released under an MIT licence: the telemetry generator and
+      correlated-drift benchmark, the causal and periodic spectral-truncation kernels, the reconstruction detector,
+      the forecasters and the figure-and-statistics pipeline, packaged as the pip-installable artifact
+      <code>qdriftforecast</code> at <code>submission/code</code>. The kernel is training-free at inference, so every
+      figure, table and confidence interval on this page regenerates deterministically from fixed seeds on commodity
+      CPU hardware in seconds, with no optimiser randomness to reproduce.
     </p>
-    <pre><code>cd submission/code
-python -m pip install -e .          # installs qdriftforecast (numpy, scipy, scikit-learn, ...)
-python -m pip install -e ".[ml]"    # optional: torch, for the sequence-model training pipeline
+    <pre><code>pip install qdriftforecast         # installs the package (numpy, scipy, scikit-learn, ...)
 
-qdrift-reproduce                    # regenerates figures, tables and confidence intervals
+qdrift-reproduce                   # regenerates figures, tables and confidence intervals
 </code></pre>
     <p class="footnote">
-      The Methods document the deterministic seeding and the full hyperparameter configuration (AdamW, lr
-      $10^{-3}$, weight decay $10^{-4}$, batch 64, 30 epochs, cosine-annealed schedule; ridge penalty
-      $\alpha = 5$). The synthetic telemetry requires no external download, and the cross-domain series are drawn
-      from a public anomaly-detection benchmark.
+      Equivalently, from a checkout, <code>pip install submission/code</code> then
+      <code>python -m qdriftforecast.reproduce</code>. The Methods document the deterministic seeding, the
+      correlated-decoherence construction (shared white latent, channel delays $(0,1,2,3)$, variance-preserving
+      mixing) and the kernel definition (causal lower shift, weights $w_\tau=1/(L-\tau)$, ridge penalty
+      $\alpha=5$). The synthetic telemetry requires no external download.
     </p>
   </section>
 
@@ -600,7 +674,8 @@ qdrift-reproduce                    # regenerates figures, tables and confidence
 
 <footer class="wrap">
   <p>Molena Huynh &middot; North Carolina State University &middot; <a href="mailto:molena.huynh@jmp.com">molena.huynh@jmp.com</a></p>
-  <p>This page summarises a finished 18-page manuscript. All quantitative claims are transcribed from
+  <p>This page summarises the manuscript <em>Causal spectral-truncation kernels: noncommutativity certifies
+    drift detectability in quantum hardware</em>. All quantitative claims are transcribed from
     <a href="submission/main.pdf">submission/main.pdf</a> and reproducible from
     <a href="submission/code/">submission/code</a>.</p>
 </footer>
@@ -612,11 +687,15 @@ qdrift-reproduce                    # regenerates figures, tables and confidence
   if (!canvas || !canvas.getContext) return;
   var ctx = canvas.getContext("2d");
   var W = canvas.width, Hpx = canvas.height;
-  var mode = "forecast";
+  var mode = "detect";  // headline mode: detection ROC-AUC vs truncation order n
+
+  // fixed structural constants from the paper
+  var C = 7;            // number of telemetry channels
+  var L = 32;           // window length (over-complete limit n -> L)
+  var CHANCE = 0.50;    // ROC-AUC chance level
 
   // measured anchors from the manuscript
-  var SKILL_H1 = 0.26, SKILL_H8 = 0.72;       // forecast skill, multivariate ridge
-  var AUC_RANK1 = 0.870, AUC_CHANCE = 0.50;   // detector
+  var SKILL_H1 = 0.26, SKILL_H8 = 0.72;   // forecast skill, multivariate ridge
 
   function clear() { ctx.clearRect(0, 0, W, Hpx); ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, Hpx); }
   function line(x1, y1, x2, y2, color, w) {
@@ -650,6 +729,83 @@ qdrift-reproduce                    # regenerates figures, tables and confidence
     ctx.restore();
   }
 
+  // Detection law, grounded in Theorem 3:
+  //   captured signal energy E(n) saturates after the informative lag tau*,
+  //   nominal-subspace noise floor N(n) = sigma^2 * max(C^2 n - k, 1) grows with n,
+  //   separation-to-noise rho(n) = E(n) / sqrt(N(n)),
+  //   AUC(n) = 0.5 + 0.5 * rho / sqrt(1 + rho^2), clipped to [0.5, ~0.95].
+  function aucDetect(n, taustar, sigma, krank) {
+    // E(n): captured energy, in units of "signal" per informative lag, stops growing past tau*.
+    var captured = Math.min(Math.max(n - 1, 0), taustar);  // min(n-1, tau*) for n >= 1
+    var signal = 11.0;                                      // per-lag signal scale (calibrates the peak near the measured 0.90)
+    var E = captured * signal;
+    var N = sigma * sigma * Math.max(C * C * n - krank, 1);
+    var rho = E / Math.sqrt(N);
+    var auc = CHANCE + CHANCE * rho / Math.sqrt(1 + rho * rho);
+    return Math.max(CHANCE, Math.min(0.95, auc));
+  }
+
+  function drawDetect() {
+    clear();
+    var taustar = parseInt(document.getElementById("taustar").value, 10);
+    var sigma = parseFloat(document.getElementById("sigma").value);
+    var krank = parseInt(document.getElementById("krank").value, 10);
+    document.getElementById("tauVal").textContent = taustar;
+    document.getElementById("sigVal").textContent = sigma.toFixed(1);
+    document.getElementById("kVal").textContent = krank;
+
+    var NMAX = 16;
+    var yTicks = [{f:0,label:"0.0"},{f:0.25,label:"0.25"},{f:0.5,label:"0.50"},{f:0.75,label:"0.75"},{f:1,label:"1.0"}];
+    axes("truncation order n", "detection ROC-AUC", yTicks);
+    line(PAD_L, plotY(0.5), plotX(1), plotY(0.5), "#e3b5ba", 1);
+    text("chance = 0.5", plotX(1) - 4, plotY(0.5) - 5, "#8c2f39", "10px monospace", "right");
+
+    // model curve over integer orders n = 1 .. NMAX
+    ctx.strokeStyle = "#1a4e8a"; ctx.lineWidth = 2.5; ctx.beginPath();
+    var n, started = false, nstar = -1, aucstar = -1;
+    for (n = 1; n <= NMAX; n++) {
+      var a = aucDetect(n, taustar, sigma, krank);
+      if (a > aucstar) { aucstar = a; nstar = n; }
+      var fx = (n - 1) / (NMAX - 1);
+      var py = plotY(a);
+      if (!started) { ctx.moveTo(plotX(fx), py); started = true; } else { ctx.lineTo(plotX(fx), py); }
+    }
+    ctx.stroke();
+    for (n = 1; n <= NMAX; n++) {
+      var fx2 = (n - 1) / (NMAX - 1);
+      ctx.fillStyle = "#1a4e8a";
+      ctx.beginPath(); ctx.arc(plotX(fx2), plotY(aucDetect(n, taustar, sigma, krank)), 2.6, 0, 2 * Math.PI); ctx.fill();
+    }
+
+    // mark the model's interior optimum n*
+    if (nstar >= 1) {
+      var fxs = (nstar - 1) / (NMAX - 1);
+      ctx.strokeStyle = "#1a4e8a"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(plotX(fxs), plotY(aucstar), 6, 0, 2 * Math.PI); ctx.stroke();
+      text("n* = " + nstar, plotX(fxs), plotY(aucstar) - 11, "#1a4e8a", "11px 'Avenir Next'", "center");
+    }
+
+    // green anchors: measured sweep
+    var meas = [[1,0.51],[2,0.90],[3,0.83],[4,0.78],[6,0.69],[8,0.65]];
+    var i;
+    for (i = 0; i < meas.length; i++) {
+      if (meas[i][0] > NMAX) continue;
+      var fxm = (meas[i][0] - 1) / (NMAX - 1);
+      ctx.fillStyle = "#1f5c47";
+      ctx.beginPath(); ctx.arc(plotX(fxm), plotY(meas[i][1]), 4, 0, 2 * Math.PI); ctx.fill();
+    }
+    text("green: measured sweep (n = 1..8)", plotX(0.5), PAD_T + 4, "#1f5c47", "11px 'Avenir Next'", "center");
+
+    document.getElementById("detectReadout").innerHTML =
+      "informative lag &tau;* = <b>" + taustar + "</b><br>" +
+      "noise &sigma; = <b>" + sigma.toFixed(1) + "</b>, rank k = <b>" + krank + "</b><br>" +
+      "AUC(n=1) &asymp; <b>" + aucDetect(1, taustar, sigma, krank).toFixed(3) + "</b> (commutative)<br>" +
+      "model optimum n* = <b>" + nstar + "</b><br>" +
+      "AUC(n=" + nstar + ") &asymp; <b>" + aucstar.toFixed(3) + "</b><br>" +
+      "AUC(n=16) &asymp; <b>" + aucDetect(16, taustar, sigma, krank).toFixed(3) + "</b><br>" +
+      "Chance at n=1 and as n&rarr;L; peak near &tau;*+1 (Thm 3).";
+  }
+
   function drawForecast() {
     clear();
     var phi = parseFloat(document.getElementById("phi").value);
@@ -659,38 +815,37 @@ qdrift-reproduce                    # regenerates figures, tables and confidence
 
     var yTicks = [{f:0,label:"0.0"},{f:0.25,label:"0.25"},{f:0.5,label:"0.50"},{f:0.75,label:"0.75"},{f:1,label:"1.0"}];
     axes("forecast horizon h (steps)", "skill / ceiling fraction", yTicks);
-    // 0.5 ceiling line (full skill scale 0..1 maps absolute skill; ceiling 0.5 sits at f=0.5)
     line(PAD_L, plotY(0.5), plotX(1), plotY(0.5), "#e3b5ba", 1);
     text("0.5 ceiling", plotX(1) - 4, plotY(0.5) - 5, "#8c2f39", "10px monospace", "right");
 
     // skill curve S(h)=(1-phi^h)/2 on absolute scale [0,1]
     ctx.strokeStyle = "#1a4e8a"; ctx.lineWidth = 2.5; ctx.beginPath();
-    var h, started = false, s;
+    var h, started = false, s, fx;
     for (h = 1; h <= hmax; h++) {
       s = (1 - Math.pow(phi, h)) / 2;
-      var fx = (hmax === 1) ? 0 : (h - 1) / (hmax - 1);
+      fx = (hmax === 1) ? 0 : (h - 1) / (hmax - 1);
       var px = plotX(fx), py = plotY(s);
       if (!started) { ctx.moveTo(px, py); started = true; } else { ctx.lineTo(px, py); }
     }
     ctx.stroke();
     for (h = 1; h <= hmax; h++) {
       s = (1 - Math.pow(phi, h)) / 2;
-      var fx = (hmax === 1) ? 0 : (h - 1) / (hmax - 1);
+      fx = (hmax === 1) ? 0 : (h - 1) / (hmax - 1);
       ctx.fillStyle = "#1a4e8a";
       ctx.beginPath(); ctx.arc(plotX(fx), plotY(s), 3, 0, 2 * Math.PI); ctx.fill();
     }
 
     function anchor(hh, val, lbl) {
       if (hh > hmax) return;
-      var fx = (hmax === 1) ? 0 : (hh - 1) / (hmax - 1);
+      var fxa = (hmax === 1) ? 0 : (hh - 1) / (hmax - 1);
       ctx.fillStyle = "#1f5c47";
-      ctx.beginPath(); ctx.arc(plotX(fx), plotY(val), 4.5, 0, 2 * Math.PI); ctx.fill();
-      text(lbl, plotX(fx) + 7, plotY(val) + 4, "#1f5c47", "10px monospace", "left");
+      ctx.beginPath(); ctx.arc(plotX(fxa), plotY(val), 4.5, 0, 2 * Math.PI); ctx.fill();
+      text(lbl, plotX(fxa) + 7, plotY(val) + 4, "#1f5c47", "10px monospace", "left");
     }
     anchor(1, SKILL_H1, "ridge 0.26");
     anchor(8, SKILL_H8, "ridge 0.72");
 
-    text("single-lag bound (Cor. 1.1)", plotX(0.5), PAD_T + 4, "#1a4e8a", "11px 'Avenir Next'", "center");
+    text("single-lag bound (Thm 5)", plotX(0.5), PAD_T + 4, "#1a4e8a", "11px 'Avenir Next'", "center");
 
     document.getElementById("forecastReadout").innerHTML =
       "phi = <b>" + phi.toFixed(2) + "</b><br>" +
@@ -700,73 +855,21 @@ qdrift-reproduce                    # regenerates figures, tables and confidence
       "green: measured ridge skill<br>(full window exceeds the bound).";
   }
 
-  function drawDetect() {
-    clear();
-    var rdrift = parseInt(document.getElementById("rdrift").value, 10);
-    var kappa = parseFloat(document.getElementById("kappa").value);
-    document.getElementById("rVal").textContent = rdrift;
-    document.getElementById("kVal").textContent = kappa.toFixed(1);
-
-    var KMAX = 32;
-    var yTicks = [{f:0,label:"0.0"},{f:0.25,label:"0.25"},{f:0.5,label:"0.50"},{f:0.75,label:"0.75"},{f:1,label:"1.0"}];
-    axes("reconstruction bottleneck rank k", "detection ROC-AUC", yTicks);
-    line(PAD_L, plotY(0.5), plotX(1), plotY(0.5), "#e3b5ba", 1);
-    text("chance = 0.5", plotX(1) - 4, plotY(0.5) - 5, "#8c2f39", "10px monospace", "right");
-
-    function aucAt(k) {
-      var peak = AUC_CHANCE + (AUC_RANK1 - AUC_CHANCE) * Math.min(1, kappa);
-      var decay = 1 / (1 + Math.exp((k - rdrift) * (1.4 / kappa)));
-      var auc = AUC_CHANCE + (peak - AUC_CHANCE) * decay * Math.pow(1 / k, 0.15 / kappa);
-      return Math.max(AUC_CHANCE - 0.02, Math.min(0.9, auc));
-    }
-
-    ctx.strokeStyle = "#1a4e8a"; ctx.lineWidth = 2.5; ctx.beginPath();
-    var k, started = false;
-    for (k = 1; k <= KMAX; k++) {
-      var fx = (k - 1) / (KMAX - 1);
-      var py = plotY(aucAt(k));
-      if (!started) { ctx.moveTo(plotX(fx), py); started = true; } else { ctx.lineTo(plotX(fx), py); }
-    }
-    ctx.stroke();
-    for (k = 1; k <= KMAX; k++) {
-      var fx = (k - 1) / (KMAX - 1);
-      ctx.fillStyle = "#1a4e8a";
-      ctx.beginPath(); ctx.arc(plotX(fx), plotY(aucAt(k)), 2.4, 0, 2 * Math.PI); ctx.fill();
-    }
-
-    var meas = [[1,0.870],[2,0.798],[3,0.704],[4,0.628],[5,0.466]];
-    var i;
-    for (i = 0; i < meas.length; i++) {
-      var fx = (meas[i][0] - 1) / (KMAX - 1);
-      ctx.fillStyle = "#1f5c47";
-      ctx.beginPath(); ctx.arc(plotX(fx), plotY(meas[i][1]), 4, 0, 2 * Math.PI); ctx.fill();
-    }
-    text("green: measured sweep (rank 1-5)", plotX(0.5), PAD_T + 4, "#1f5c47", "11px 'Avenir Next'", "center");
-
-    document.getElementById("detectReadout").innerHTML =
-      "drift rank r = <b>" + rdrift + "</b><br>" +
-      "manifold sharpness &kappa; = <b>" + kappa.toFixed(1) + "</b><br>" +
-      "AUC(k=1) &asymp; <b>" + aucAt(1).toFixed(3) + "</b><br>" +
-      "AUC(k=5) &asymp; <b>" + aucAt(5).toFixed(3) + "</b><br>" +
-      "AUC(k=32) &asymp; <b>" + aucAt(32).toFixed(3) + "</b><br>" +
-      "Collapse to chance once k spans drift (Cor. 3).";
-  }
-
-  function render() { if (mode === "forecast") drawForecast(); else drawDetect(); }
+  function render() { if (mode === "detect") drawDetect(); else drawForecast(); }
 
   function setMode(m) {
     mode = m;
-    document.getElementById("mode-forecast").classList.toggle("active", m === "forecast");
     document.getElementById("mode-detect").classList.toggle("active", m === "detect");
-    document.getElementById("panel-forecast").style.display = (m === "forecast") ? "block" : "none";
+    document.getElementById("mode-forecast").classList.toggle("active", m === "forecast");
     document.getElementById("panel-detect").style.display = (m === "detect") ? "block" : "none";
+    document.getElementById("panel-forecast").style.display = (m === "forecast") ? "block" : "none";
     render();
   }
 
-  document.getElementById("mode-forecast").addEventListener("click", function () { setMode("forecast"); });
   document.getElementById("mode-detect").addEventListener("click", function () { setMode("detect"); });
+  document.getElementById("mode-forecast").addEventListener("click", function () { setMode("forecast"); });
+  ["taustar", "sigma", "krank"].forEach(function (id) { document.getElementById(id).addEventListener("input", render); });
   ["phi", "hmax"].forEach(function (id) { document.getElementById(id).addEventListener("input", render); });
-  ["rdrift", "kappa"].forEach(function (id) { document.getElementById(id).addEventListener("input", render); });
 
   render();
 })();

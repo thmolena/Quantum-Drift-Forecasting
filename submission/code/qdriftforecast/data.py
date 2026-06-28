@@ -247,3 +247,81 @@ def build_dataset(
     combined["x_max"] = x_max_all
     combined["feature_names"] = features
     return combined
+
+
+# ── Correlated (crosstalk) drift benchmark ─────────────────────────────────
+# Channels that receive the crosstalk latent, and their propagation delays.
+# Physically: a shared environmental disturbance (e.g. a two-level-system bath
+# fluctuation or control crosstalk) couples T1, T2, readout error and the
+# cross-resonance phase with channel-specific propagation lags.
+CROSSTALK_CHANNELS = (0, 1, 4, 6)     # T1_us, T2_us, readout_error, cross_resonance_phase_rad
+CROSSTALK_DELAYS = (0, 1, 2, 3)       # adjacent integer step delays
+
+
+def generate_correlated_drift_windows(
+    n_each: int = 700,
+    seq_len: int = 32,
+    seed: int = 0,
+    amplitude: float = 1.0,
+    channels: Tuple[int, ...] = CROSSTALK_CHANNELS,
+    delays: Tuple[int, ...] = CROSSTALK_DELAYS,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Controlled benchmark of *correlated (crosstalk) drift*.
+
+    Returns ``(windows, labels)`` with ``windows`` of shape
+    ``(2 * n_each, seq_len, n_features)`` and ``labels`` in ``{0, 1}``
+    (``0`` = nominal, ``1`` = correlated drift).  Both classes are generated from
+    the same physical base trajectory (slow coherence oscillation plus the
+    nominal feature levels) and the same per-channel noise scales, so they share
+    identical per-channel marginal distributions and, in the stationary limit, an
+    identical instantaneous (lag-0) cross-channel covariance.  The drift class
+    additionally injects a *single shared white latent* into ``channels`` at the
+    channel-specific integer ``delays`` using variance-preserving mixing
+    ``x_c <- B_c + sigma_c (sqrt(1 - a^2) eps_c + a u_{t - delta_c})``.
+
+    Because the latent is white, this leaves every marginal variance and every
+    temporal autocorrelation unchanged and the *population* lag-0 cross-covariance
+    zero in both classes; the perturbation is the *ordered lag-tau* cross-channel
+    covariance (``tau = delta_{c'} - delta_c >= 1``).  Per-window temporal
+    centering over the finite window leaves a small O(1/L) residual at lag 0, so
+    the matching is exact only in the stationary limit; empirically, however, the
+    drift energy is concentrated at lag >= 1 and the commutative monitors evaluated
+    here (raw level, instantaneous covariance, periodic spectral truncation) are
+    all at chance, the anomaly being exposed only by the causal noncommutative
+    (``n >= 2``) kernel.  Generation is fully seeded.
+    """
+    rng = np.random.default_rng(seed)
+    L = seq_len
+    C = len(FEATURE_COLS)
+    t = np.arange(L) * 0.5
+
+    # Physical base trajectory shared by both classes (matched levels).
+    B = np.zeros((L, C))
+    B[:, 0] = 80.0 + 20.0 * np.sin(2 * np.pi * t / 48.0)   # T1_us
+    B[:, 1] = 0.9 * B[:, 0]                                 # T2_us
+    B[:, 2] = 0.999                                         # gate_fidelity_1q
+    B[:, 3] = 0.985                                         # gate_fidelity_2q
+    B[:, 4] = 0.012                                         # readout_error
+    B[:, 5] = 0.0005                                        # gate_error_per_clifford
+    B[:, 6] = 1.5708                                        # cross_resonance_phase_rad
+    sigma = np.array([2.0, 2.0, 3e-4, 8e-4, 1e-3, 5e-5, 1e-2])
+
+    max_delay = max(delays)
+    windows = np.empty((2 * n_each, L, C), dtype=np.float32)
+    labels = np.empty(2 * n_each, dtype=np.float32)
+
+    idx = 0
+    for cls in (0, 1):
+        for _ in range(n_each):
+            eps = rng.standard_normal((L, C))
+            X = B + eps * sigma
+            if cls == 1:
+                u = rng.standard_normal(L + max_delay)
+                for ch, d in zip(channels, delays):
+                    ud = u[max_delay - d: max_delay - d + L]
+                    mixed = np.sqrt(1.0 - amplitude**2) * eps[:, ch] + amplitude * ud
+                    X[:, ch] = B[:, ch] + sigma[ch] * mixed
+            windows[idx] = X
+            labels[idx] = cls
+            idx += 1
+    return windows, labels

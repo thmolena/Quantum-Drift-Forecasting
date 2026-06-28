@@ -1,94 +1,127 @@
-# Objective-Aware Sequence Modelling for Drift Forecasting and Anomaly Detection in Quantum Hardware
+# Causal Spectral-Truncation Kernels: Noncommutativity Certifies Drift Detectability in Quantum Hardware
 
 Fault-tolerant quantum computing is gated by hardware that drifts: qubit
-coherence times, gate fidelities, and calibration parameters wander on
-timescales of hours, eroding the error budgets that quantum error correction
-depends on. This repository recasts the reliability problem as a machine-learning
-task—forecasting a multivariate, mean-reverting stochastic process and ranking
-anomalous operating intervals—and studies it through an objective-aware benchmark
-of sequence models. Evaluation spans a physically motivated multi-qubit telemetry
-generator and three heterogeneous real-world regimes under one leakage-free
-protocol. Coherence proves forecastable; model selection proves
-objective-dependent; and drift is shown to occupy an off-manifold, low-rank
-structure that a reconstruction detector exploits. The full pipeline is
-hardware-agnostic, runs identically on CPU or GPU, and regenerates every figure
-and metric deterministically in seconds. The accompanying manuscript is prepared
-for submission to *Nature Machine Intelligence* (see [`submission/`](submission/)).
+coherence times, gate fidelities, and calibration parameters wander on timescales
+of hours, eroding the error budgets that quantum error correction depends on. The
+most damaging drift mode is *correlated decoherence* — control crosstalk, shared
+two-level-system baths, and correlated flux noise couple the errors of
+neighbouring qubits and calibration channels, often with a propagation delay, so
+that a disturbance reappears lagged in a different channel. Such an event can
+leave every per-channel marginal and every instantaneous cross-channel covariance
+unchanged while living entirely in the *ordered, lagged* cross-channel structure.
+A monitor blind to that structure is blind to the drift.
 
-## Principal Contributions
+This repository recasts reliability monitoring as operator-algebraic learning on
+multivariate calibration telemetry and introduces the **causal spectral-truncation
+(CST) kernel**, a C\*-algebra-valued positive-definite kernel on telemetry windows
+whose truncation order `n` controls the noncommutativity of the cross-channel
+products it represents. It is the *causal* counterpart of the periodic
+spectral-truncation kernels of Hashimoto et al. (NeurIPS 2024,
+[arXiv:2405.17823](https://arxiv.org/abs/2405.17823)): in place of a periodic
+Fourier-multiplier (Toeplitz) truncation we truncate the causal lower-shift
+algebra, so the kernel respects the arrow of time and its noncommutativity encodes
+ordered, lagged cross-channel correlations.
 
-1. **A formalised reliability benchmark.** Quantum-hardware reliability is posed
-   as a joint forecasting-and-anomaly-detection problem over a physically
-   motivated, reproducible telemetry generator, released as a single
-   leakage-free benchmark that evaluates four sequence-model families on the
-   synthetic task and on three heterogeneous real-world regimes.
-2. **Objective-aware model selection.** Empirical evidence shows that
-   architecture choice must follow the monitoring objective: the GRU is a
-   parameter-efficient generalist and the only model to achieve non-trivial
-   incident detection, whereas the Transformer is a specialist that leads on
-   periodic calibration-like signals while generalising weakly.
-3. **A mechanistic drift detector.** A reconstruction-based detector identifies
-   the reconstruction-bottleneck rank as the control knob separating drift from
-   nominal behaviour, yielding an interpretable monitor that requires training
-   only on nominal windows.
+The principal result is a separation that only a noncommutative monitor can
+resolve: a physically motivated correlated-decoherence (crosstalk) drift mode,
+constructed with matched per-channel marginals and (in the stationary limit)
+matched instantaneous cross-covariance, concentrates its signal in the ordered,
+lagged cross-channel structure. The commutative monitors we evaluate are all at
+chance, and the drift is detected only by the noncommutative kernel, with a sharp
+optimal truncation order that the accompanying theory certifies.
 
-## Main Results
+## The causal spectral-truncation kernel
 
-The following figures are transcribed verbatim from the manuscript and the
-project's generated tables. Uncertainties are mean ± standard deviation across
-seeds or randomised splits.
+A telemetry window is `X ∈ ℝ^{L×C}` (`L = 32` time steps, `C = 7` channels). Let
+`S` be the causal lower shift, `(Sv)_t = v_{t-1}`. The order-`n` causal
+spectral-truncation kernel represents the window inside the channel C\*-algebra
+`M_C` through the truncated shift powers `{S^τ : 0 ≤ τ < n}`:
 
-**Forecasting (Table 1; five telemetry-generator seeds, leakage-free 80/20
-split).** Mean absolute error (MAE) on the $T_1$ relaxation time, in microseconds
-(µs):
+```text
+K_n(X, Y) = Σ_{τ=0}^{n-1} w_τ · Xᵀ S^τ Y  ∈  M_C,    w_τ = 1 / (L − τ).
+```
 
-| Forecaster | MAE @ 1 step (µs) | MAE @ 8 steps (µs) | Skill @ 8 steps |
+Each entry is a weighted sum of ordered, lagged cross-channel correlations. At
+`n = 1` the kernel reduces to the commutative instantaneous covariance `XᵀY`; for
+`n ≥ 2` it adds asymmetric lagged cross-channel terms and becomes noncommutative
+(`K_n(X,Y)_{cc'} ≠ K_n(X,Y)_{c'c}`, because `Sᵀ ≠ S`). The kernel is
+positive-definite for every order. The commutative `n = 1` member coincides with
+the low-rank reconstruction detector and the multivariate-ridge forecaster, so the
+family is a strict generalisation of those established methods rather than a
+competitor to them.
+
+## Main result: noncommutativity is necessary for correlated-drift detection
+
+We construct a correlated-decoherence benchmark in which a single shared white
+latent is injected into four channels at channel-specific integer delays with
+variance-preserving mixing. By construction every per-channel marginal, every
+temporal autocorrelation, and (in the stationary limit) the lag-0 cross-covariance
+are held identical to nominal operation; the perturbation is the ordered lag-`τ`
+cross-channel covariance. The drift energy is therefore concentrated in lagged
+structure that monitors built on marginals or instantaneous (commutative)
+covariance cannot resolve: the commutative monitors evaluated here are all at
+chance, and the drift is exposed only by the causal noncommutative (`n ≥ 2`)
+kernel.
+
+**Kernel comparison** (correlated-drift benchmark; ROC-AUC, mean ± s.d. over eight
+randomised 70/30 splits, bottleneck rank `k = 8`):
+
+| Representation | ROC-AUC |
+|---|---|
+| Raw level | 0.49 ± 0.03 |
+| Commutative kernel (`n = 1`) | 0.46 ± 0.02 |
+| Periodic spectral-truncation kernel (Hashimoto et al., `n = 2`) | 0.47 ± 0.03 |
+| **Causal spectral-truncation kernel (ours, `n = 2`)** | **0.84 ± 0.02** |
+
+The raw-level monitor, the commutative kernel, and the periodic
+spectral-truncation kernel applied unchanged are all at chance. Only the causal
+spectral-truncation kernel separates the classes. The periodic kernel fails not
+because spectral truncation is wrong but because its circular truncation smears
+the causal delay signature across the window boundary; the causal lower-shift
+truncation aligns exactly with the propagation delays that define the drift.
+Causality, not truncation alone, is what makes the kernel see the event. On a
+held-out split the causal kernel at `n = 2` attains ROC-AUC 0.86 while the
+commutative kernel traces the chance diagonal (ROC-AUC 0.46).
+
+**Truncation sweep** (best ROC-AUC over bottleneck ranks, mean over eight splits):
+
+| Truncation order `n` | 1 | 2 | 3 | 4 | 6 | 8 | 16 |
+|---|---|---|---|---|---|---|---|
+| ROC-AUC | 0.51 | **0.90** | 0.83 | 0.78 | 0.69 | 0.65 | 0.57 |
+
+Detection is unimodal in `n` with a sharp interior optimum at `n = 2`. The
+commutative endpoint (`n = 1`) sits at chance, as the blindness theorem requires;
+detection then peaks and decays back toward chance as the representation becomes
+over-complete (each added lag beyond the informative one contributes only noise
+coordinates that dilute the fixed-rank nominal subspace). Both endpoints —
+commutative (`n = 1`) and over-complete (`n → L`) — are at chance. This is the
+detection analogue of the representation–complexity trade-off that governs
+spectral-truncation kernels in regression: there the truncation order trades
+representation power against Rademacher complexity; here it trades captured drift
+energy against the dimension of the nominal subspace.
+
+## Secondary result: coherence forecasting
+
+The same kernel forecasts the `T₁` relaxation time with horizon-growing skill.
+Under a leakage-free 80/20 chronological split, aggregated over five
+telemetry-generator seeds (MAE in microseconds):
+
+| Forecaster | MAE @ 1 step | MAE @ 8 steps | Skill @ 8 steps |
 |---|---|---|---|
 | Persistence | 2.44 ± 0.16 | 6.79 ± 0.18 | — |
-| Climatology | 13.01 ± 0.05 | 12.40 ± 0.05 | −83% |
-| AR-ridge ($T_1$ history) | 1.85 ± 0.07 | 2.19 ± 0.06 | 68% |
-| Multivariate ridge | **1.80 ± 0.09** | **1.88 ± 0.06** | **72%** |
+| Climatology | 13.01 | 12.40 | −83% |
+| AR-ridge (`T₁` history) | 1.85 | 2.19 | 68% |
+| Multivariate ridge (commutative `n = 1` member) | 1.80 ± 0.09 | 1.88 ± 0.06 | 72% |
 
-The multivariate-ridge forecaster predicts $T_1$ eight steps ahead with 72%
-lower error than persistence, and the advantage widens with horizon.
-
-**Thermal-failure incident detection (Extended Data Table; machine-temperature
-telemetry).** MAE and RMSE in microseconds (µs); ROC-AUC and F1 on the unit
-scale; parameter counts as integers:
-
-| Model | MAE (µs) | RMSE (µs) | F1 | ROC-AUC | Params |
-|---|---|---|---|---|---|
-| Elman RNN | 61.37 | 64.93 | 0.000 | 0.408 | **5,645** |
-| LSTM | **51.48** | **55.00** | 0.000 | 0.423 | 116,845 |
-| GRU | 51.79 | 55.35 | **0.257** | **0.718** | 87,949 |
-
-The GRU is the only model to surface incidents, with F1 = 0.257 (0.2574),
-ROC-AUC = 0.718 (0.7182), and recall = 1.0 (precision = 0.15)—a 75.9% relative
-improvement in ranking quality over the Elman RNN—using 25% fewer parameters
-than the LSTM (87,949 versus 116,845).
-
-**Cross-domain forecasting and detection (Extended Data Table; three-dataset
-average and periodic regime).** MAE and RMSE on the dataset's native scale;
-ROC-AUC on the unit scale:
-
-| Model | MAE | RMSE | ROC-AUC | Periodic regime | ROC-AUC |
-|---|---|---|---|---|---|
-| GRU | **1337.3** | **1628.8** | **0.660** | Transformer | **0.799** |
-| LSTM | 1528.8 | 1895.0 | 0.628 | GRU (avg.) | 0.660 |
-| Transformer | 1436.2 | 1791.6 | 0.196 | — | — |
-
-The GRU attains the strongest three-dataset average (MAE = 1337.3,
-RMSE = 1628.8, ROC-AUC = 0.660), whereas the Transformer leads on periodic
-calibration-like telemetry (ROC-AUC = 0.799, i.e. 0.7987) while generalising
-weakly across regimes (ROC-AUC = 0.196).
-
-**Reconstruction detector (Fig. 4; telemetry seed 42, eight randomised 70/30
-splits).** Detection ROC-AUC on the unit scale is strongest at a rank-one
-bottleneck (0.870 ± 0.023) and collapses toward chance as the code becomes
-over-complete. A rank-three bottleneck separates regimes with ROC-AUC = 0.72 on
-a single held-out split (0.70 ± 0.05 across the eight splits). Drift is therefore
-an off-manifold phenomenon, and the bottleneck rank governs false-alarm
-sensitivity.
+Persistence degrades steeply with horizon while the learned forecasters stay
+nearly flat, so skill over persistence grows from 26% one step ahead to 72% eight
+steps ahead. Increasing the kernel's truncation order does not change this: the CST
+forecaster's eight-step skill is flat in `n` (72% at `n = 1` to 71% at `n = 4`). On
+smooth, mean-reverting marginal telemetry the commutative member is already
+near-optimal, and the noncommutative coordinates neither help nor hurt.
+Noncommutativity is unnecessary for smooth marginal forecasting and decisive only
+for correlated-drift detection — the operational rule is to match the kernel's
+noncommutativity to the geometry of the drift.
 
 ## Installation
 
@@ -96,42 +129,53 @@ sensitivity.
 pip install qdriftforecast
 ```
 
-The packaged reproduction pipeline (`qdriftforecast`) resides at
-[`submission/code`](submission/code) and depends on NumPy, pandas, SciPy,
-scikit-learn, and Matplotlib. PyTorch is required only for re-training the
-sequence models in the notebooks and is available through the optional `ml`
-extra (`pip install "qdriftforecast[ml]"`).
+Installation from a local checkout of the package directory is equivalent:
+
+```bash
+pip install submission/code
+```
+
+The figure-and-table pipeline runs CPU-only on NumPy, pandas, SciPy,
+scikit-learn, and Matplotlib. PyTorch is not required for the figure/table
+pipeline; it is available through the optional `ml` extra
+(`pip install "qdriftforecast[ml]"`).
 
 ## Reproduction
 
-After installation, the figures and tables regenerate deterministically through
+After installation, every figure and table regenerates deterministically through
 the console entry point:
 
 ```bash
 qdrift-reproduce
 ```
 
-The command pins `KMP_DUPLICATE_LIB_OK=TRUE` and `OMP_NUM_THREADS=1`, then
-executes the figure-and-table pipeline, writing five vector PDF figures to
-`submission/figures/`, three LaTeX table bodies to `submission/tables/`, and
-diagnostic JSON summaries to `submission/code/generated_data/`. Determinism,
-seeds, and the regenerated artifacts are documented in
+This is equivalent to `python -m qdriftforecast.reproduce`, or to running
+`python make_paper_figures.py` from `submission/code/`. The command pins
+`KMP_DUPLICATE_LIB_OK=TRUE` and `OMP_NUM_THREADS=1`, then writes five vector PDF
+figures to `submission/figures/`, three LaTeX table bodies to `submission/tables/`,
+and diagnostic JSON summaries to `submission/code/generated_data/`. Execution
+completes in seconds on a single CPU. Determinism is byte-level: seeds and
+`SOURCE_DATE_EPOCH` are pinned, and the vector PDF output is fixed across runs.
+Determinism and seeds are documented in
 [`submission/code/README.md`](submission/code/README.md).
 
-The interactive notebooks and HTML reports regenerate with:
+Regenerated figures (`submission/figures/`):
 
-```bash
-jupyter nbconvert --to notebook --execute --inplace notebooks/rnn_drift_forecast.ipynb
-jupyter nbconvert --to notebook --execute --inplace notebooks/transformer_calibration.ipynb
-jupyter nbconvert --to notebook --execute --inplace notebooks/quantum_drift_combined.ipynb
-jupyter nbconvert --to html --output-dir website/notebooks_html \
-  notebooks/rnn_drift_forecast.ipynb \
-  notebooks/transformer_calibration.ipynb \
-  notebooks/quantum_drift_combined.ipynb
-```
+| Output | Content |
+|---|---|
+| `fig0_overview.pdf` | Overview of the causal spectral-truncation monitoring pipeline |
+| `fig1_dynamics.pdf` | `T₁` trajectories, detrended autocorrelation, and the noncommutative drift signature by lag |
+| `fig2_forecasting.pdf` | Forecasting MAE versus horizon, skill over persistence, and CST skill versus `n` |
+| `fig3_noncommutative.pdf` | Detection ROC-AUC versus truncation order, the `(n, k)` map, and the kernel comparison |
+| `fig4_detection.pdf` | Operating characteristic on a held-out split and the over-complete collapse |
 
-The optional local inference API used by the interactive demo runs with
-`python -m src.server --port 5000`.
+Regenerated table bodies (`submission/tables/`):
+
+| Output | Content |
+|---|---|
+| `forecasting_benchmark.tex` | Forecasting baselines (MAE at 1 and 8 steps, skill) |
+| `detection_benchmark.tex` | Correlated-drift detection kernel comparison at fixed rank |
+| `truncation_sweep.tex` | Detection ROC-AUC versus truncation order |
 
 ## Repository Layout
 
@@ -139,72 +183,60 @@ The optional local inference API used by the interactive demo runs with
 Quantum-Drift-Forecasting/
 ├── README.md
 ├── LICENSE
-├── index.html
-├── data/                         # synthetic telemetry and real-world (NAB) regimes
-│   ├── quantum_device_metrics.csv
-│   └── nab/
-├── notebooks/                    # executable experiment notebooks
-│   ├── rnn_drift_forecast.ipynb
-│   ├── transformer_calibration.ipynb
-│   └── quantum_drift_combined.ipynb
-├── outputs/                      # cached anomaly scores, forecasts, plots
-├── src/                          # data generator, models, training, evaluation, server
-│   ├── data.py
-│   ├── models.py
-│   ├── train.py
-│   ├── evaluate.py
-│   ├── real_benchmark.py
-│   └── server.py
 ├── submission/                   # manuscript and reproduction package
-│   ├── main.tex
-│   ├── main.pdf
+│   ├── main.tex                  # self-contained LaTeX source (bibliography inlined)
+│   ├── main.pdf                  # compiled journal-format article
 │   ├── figures/                  # regenerated vector PDF figures
 │   ├── tables/                   # regenerated LaTeX table bodies
 │   └── code/                     # the qdriftforecast package
 │       ├── pyproject.toml
-│       ├── LICENSE
 │       ├── README.md
 │       ├── make_paper_figures.py
-│       ├── generated_data/
+│       ├── generated_data/       # diagnostic JSON summaries
 │       └── qdriftforecast/
-└── website/                      # static site and HTML notebook reports
-    ├── index.html
-    ├── style.css
-    ├── demo.js
-    └── notebooks_html/
+│           ├── kernels.py        # causal spectral-truncation kernel + periodic baseline
+│           ├── detection.py      # reconstruction detector, truncation/rank sweeps, baseline comparison
+│           ├── forecasting.py    # forecasting baselines, CST forecast skill
+│           ├── data.py           # telemetry generator + correlated-drift benchmark
+│           └── reproduce.py      # qdrift-reproduce entry point
+└── data/                         # synthetic telemetry
 ```
 
 ## Manuscript
 
-A self-contained research manuscript—*Objective-aware sequence modelling for
-drift forecasting and anomaly detection in quantum hardware*—is prepared for
-submission to *Nature Machine Intelligence* and lives in
+A self-contained research manuscript — *Causal spectral-truncation kernels:
+noncommutativity certifies drift detectability in quantum hardware* — lives in
 [`submission/`](submission/):
 
 - [`main.pdf`](submission/main.pdf): the compiled, journal-format article with
-  embedded figures, three results tables, Methods, an inlined bibliography, and
-  the data/code-availability, author-contributions, and competing-interests
-  statements.
-- [`main.tex`](submission/main.tex): the self-contained LaTeX source (standard
-  `article` class, bibliography inlined).
+  embedded figures, three results tables, the supporting theory (positive
+  definiteness for every order, a blindness theorem for commutative monitors, and
+  an optimal-truncation detection certificate), Methods, and an inlined
+  bibliography.
+- [`main.tex`](submission/main.tex): the self-contained LaTeX source.
 
-Figures 1, 2, and 4 and the forecasting table are computed live from the seeded
-telemetry generator in [`submission/code/qdriftforecast/data.py`](submission/code/qdriftforecast/data.py);
-Figure 3 and the sequence-model tables render metrics recorded by the executed
-notebooks.
+All figures, tables, and reported uncertainties are computed live from the seeded
+telemetry generator in
+[`submission/code/qdriftforecast/data.py`](submission/code/qdriftforecast/data.py)
+and regenerate from the released code on commodity CPU hardware.
 
 ## Citation
 
 ```bibtex
-@article{huynh2026qdriftforecast,
-  title   = {Objective-aware sequence modelling for drift forecasting and
-             anomaly detection in quantum hardware},
+@article{huynh2026cstk,
+  title   = {Causal spectral-truncation kernels: noncommutativity certifies
+             drift detectability in quantum hardware},
   author  = {Huynh, Molena},
   year    = {2026},
   note    = {North Carolina State University. Correspondence:
              molena.huynh@jmp.com},
 }
 ```
+
+We extend, and on this causal detection task outperform, the periodic
+spectral-truncation kernels of Hashimoto, Ghriss, Ikeda, and Kadri, *Spectral
+truncation kernels: noncommutativity in C\*-algebraic kernel machines*, NeurIPS
+2024 ([arXiv:2405.17823](https://arxiv.org/abs/2405.17823)).
 
 ## License
 

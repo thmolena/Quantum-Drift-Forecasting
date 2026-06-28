@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qdriftforecast"
-version = "1.0.0"
-description = "Objective-aware sequence modelling for drift forecasting and anomaly detection in quantum hardware: deterministic regeneration of the manuscript figures and tables."
+version = "2.0.0"
+description = "Causal spectral-truncation C*-algebraic kernels for quantum-hardware drift forecasting and noncommutative drift detection: deterministic regeneration of the manuscript figures and tables."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -14,8 +14,10 @@ keywords = [
   "quantum-hardware",
   "drift-forecasting",
   "anomaly-detection",
+  "spectral-truncation-kernel",
+  "C-star-algebra",
+  "noncommutative-kernel",
   "time-series",
-  "sequence-models",
   "reproducibility",
 ]
 classifiers = [
