@@ -118,16 +118,26 @@ the mode that per-channel, level-based monitors are worst equipped to see: an ev
 can leave every marginal distribution and every instantaneous correlation unchanged
 while residing entirely in the \emph{ordered, lagged} cross-channel structure. A
 monitor blind to that structure is blind to the drift, and no amount of per-channel
-sensitivity recovers it.
+sensitivity recovers it. The established toolbox for diagnosing such errors ---
+randomized benchmarking~\citep{magesan2011rb}, statistical drift
+tracking~\citep{proctor2020drift}, and dedicated crosstalk-error
+detection~\citep{sarovar2020crosstalk} --- relies on purpose-built characterization
+circuits executed as separate experiments; we ask instead what can be inferred
+\emph{passively}, from the multivariate calibration telemetry a processor already
+logs, with no additional circuits and no labels.
 
 This failure mode implicates a different model of monitoring altogether --- an
 operator-algebraic one. A window of calibration telemetry is a multivariate
 stochastic process and is naturally an element of a matrix algebra over the
 channels; which cross-channel, cross-time interactions a monitor can resolve is
-then exactly the question of which products in that algebra it computes --- the setting of operator- and vector-valued kernel
-learning~\citep{micchelli2005vector}. Commutative kernels, whose feature products
-are insensitive to the order or relative lag of their factors, cannot represent
-ordered lagged interactions at all. The recent spectral-truncation kernels of
+then exactly the question of which products in that algebra it computes --- the
+setting of kernel methods and operator- and vector-valued kernel
+learning~\citep{scholkopf2002kernels,micchelli2005vector}, whose unsupervised face
+--- comparing distributions through kernel mean
+embeddings~\citep{muandet2017kme} --- is precisely what an unlabeled drift detector
+requires. Commutative kernels, whose feature products are insensitive to the order
+or relative lag of their factors, cannot represent ordered lagged interactions at
+all. The recent spectral-truncation kernels of
 Hashimoto et~al.\ make this precise for functional data: truncating the algebra of
 multiplication operators on the torus to finite Toeplitz matrices yields a family
 of C\textsuperscript{$\ast$}-algebra-valued kernels whose noncommutativity,
@@ -681,6 +691,33 @@ extensions toward a deployed monitor. Because the entire pipeline is open,
 hardware-agnostic, and fast to reproduce, it is positioned to serve as a common,
 auditable substrate for that work.
 
+% ── Conclusions ──────────────────────────────────────────────────────────────
+\section{Conclusions}
+
+We have introduced the causal spectral-truncation kernel and shown, both empirically
+and through an elementary certificate, that the geometry of hardware drift dictates
+how much noncommutativity a reliability monitor must carry. A single truncation order
+interpolates from a commutative instantaneous monitor to a noncommutative one that
+reads ordered, lagged cross-channel structure: on smooth marginal drift the
+commutative member forecasts coherence with horizon-growing skill, whereas on
+correlated decoherence --- the failure mode quantum error correction can least absorb
+--- only the noncommutative member detects the event, at a truncation order the
+theory predicts with no fitting. The practical content is a single rule: match the
+kernel's noncommutativity to the geometry of the drift.
+
+Because the monitor is training-free, deterministic, and reproducible on one CPU in
+seconds, it can run as a passive layer over the calibration telemetry a processor
+already records, complementing rather than replacing the protocol-based
+characterization that diagnoses errors on
+demand~\citep{magesan2011rb,proctor2020drift,sarovar2020crosstalk}. As devices scale
+toward the qubit counts at which fault tolerance becomes feasible, reliability
+monitoring at that scale is itself a near-term bottleneck, and an operator-algebraic
+monitor whose cost grows only linearly in the noncommutativity it exploits --- and
+whose optimal complexity is certified rather than tuned --- is a concrete step toward
+meeting it. We expect the same representation--complexity trade-off to organize the
+monitoring of other correlated-error channels, and the kernel to compose naturally
+with the nonlinear and uncertainty-aware extensions outlined above.
+
 % ── Methods ──────────────────────────────────────────────────────────────────
 \section{Methods}
 
@@ -753,6 +790,25 @@ is fit on nominal windows only, randomization cannot leak a label it never uses.
 truncation sweep reports, per order $n$, the best ROC-AUC over bottleneck ranks
 $k\in\{1,2,3,5,8,12,16\}$, and the kernel comparison (Table~\ref{tab:detection})
 fixes $k=8$ so that all detectors are compared at matched representational budget.
+
+\paragraph{Computational complexity and resource accounting.}
+Each window $X\in\mathbb{R}^{L\times C}$ is mapped to a feature tensor $\Phi_n(X)$ of
+$nC^2$ coordinates, every coordinate an inner product of length at most $L$, so
+feature extraction costs $O(nC^2 L)$ time and $O(nC^2)$ memory per window --- linear
+in the window length and the truncation order, and quadratic only in the channel
+count $C$ (here $C{=}7$, $L{=}32$, and $n\le16$, for at most $784$ feature
+coordinates). Fitting the detector standardizes these features and extracts a
+rank-$k$ principal subspace of the $N_{\mathrm{train}}\times nC^2$ nominal feature
+matrix, an
+$O\!\big(N_{\mathrm{train}}\,nC^2\min(N_{\mathrm{train}},nC^2)\big)$ singular-value
+decomposition; scoring a test window then costs $O(nC^2 L)$ to featurize and
+$O(nC^2 k)$ to project onto the subspace and measure the residual. Every step is a
+dense linear-algebra primitive with no iterative optimization, no gradients, and no
+learned parameters, so the entire truncation-and-rank sweep is polynomial and runs in
+seconds on a single CPU core. This is the resource counterpart of the
+operating-characteristic result: the monitor is training-free at inference, and its
+cost grows only linearly in the noncommutativity order $n$ that it is permitted to
+exploit.
 
 \paragraph{Reproducibility and compute.}
 The analyses run entirely on a single CPU and regenerate in seconds, with no GPU and
@@ -1025,6 +1081,27 @@ Frank Arute et~al.
 \newblock \emph{Nature}, 574\penalty0 (7779):\penalty0 505--510, 2019.
 \newblock \doi{10.1038/s41586-019-1666-5}.
 
+\bibitem[Proctor et~al.(2020)]{proctor2020drift}
+Timothy Proctor, Melissa Revelle, Erik Nielsen, Kenneth Rudinger, Daniel Lobser,
+  Peter Maunz, Robin Blume-Kohout, and Kevin Young.
+\newblock Detecting and tracking drift in quantum information processors.
+\newblock \emph{Nature Communications}, 11\penalty0 (1):\penalty0 5396, 2020.
+\newblock \doi{10.1038/s41467-020-19074-4}.
+
+\bibitem[Sarovar et~al.(2020)]{sarovar2020crosstalk}
+Mohan Sarovar, Timothy Proctor, Kenneth Rudinger, Kevin Young, Erik Nielsen, and
+  Robin Blume-Kohout.
+\newblock Detecting crosstalk errors in quantum information processors.
+\newblock \emph{Quantum}, 4:\penalty0 321, 2020.
+\newblock \doi{10.22331/q-2020-09-11-321}.
+
+\bibitem[Magesan et~al.(2011)]{magesan2011rb}
+Easwar Magesan, Jay~M. Gambetta, and Joseph Emerson.
+\newblock Scalable and robust randomized benchmarking of quantum processes.
+\newblock \emph{Physical Review Letters}, 106\penalty0 (18):\penalty0 180504,
+  2011.
+\newblock \doi{10.1103/PhysRevLett.106.180504}.
+
 \bibitem[Hashimoto et~al.(2024)]{hashimoto2024spectral}
 Yuka Hashimoto, Ayoub Ghriss, Masahiro Ikeda, and Hachem Kadri.
 \newblock Spectral truncation kernels: noncommutativity in
@@ -1038,6 +1115,20 @@ Charles~A. Micchelli and Massimiliano Pontil.
 \newblock On learning vector-valued functions.
 \newblock \emph{Neural Computation}, 17\penalty0 (1):\penalty0 177--204, 2005.
 \newblock \doi{10.1162/0899766052530802}.
+
+\bibitem[Sch{\"o}lkopf and Smola(2002)]{scholkopf2002kernels}
+Bernhard Sch{\"o}lkopf and Alexander~J. Smola.
+\newblock \emph{Learning with Kernels: Support Vector Machines, Regularization,
+  Optimization, and Beyond}.
+\newblock MIT Press, Cambridge, MA, 2002.
+
+\bibitem[Muandet et~al.(2017)]{muandet2017kme}
+Krikamol Muandet, Kenji Fukumizu, Bharath Sriperumbudur, and Bernhard
+  Sch{\"o}lkopf.
+\newblock Kernel mean embedding of distributions: A review and beyond.
+\newblock \emph{Foundations and Trends in Machine Learning}, 10\penalty0
+  (1--2):\penalty0 1--141, 2017.
+\newblock \doi{10.1561/2200000060}.
 
 \bibitem[Malhotra et~al.(2016)]{malhotra2016lstmad}
 Pankaj Malhotra, Anusha Ramakrishnan, Gaurangi Anand, Lovekesh Vig, Puneet

@@ -15,6 +15,8 @@ leave every per-channel marginal and every instantaneous cross-channel covarianc
 unchanged while living entirely in the *ordered, lagged* cross-channel structure.
 A monitor blind to that structure is blind to the drift.
 
+> **AI for quantum, at HPC scale.** This recasts quantum-hardware reliability monitoring as *operator-algebraic machine learning* on calibration telemetry: a C\*-algebra-valued kernel whose truncation order tunes the noncommutativity it can represent, learning the ordered, lagged cross-channel structure that defines correlated drift (**ROC-AUC 0.84 vs 0.46** at chance for commutative monitors). It is positive-definite for every order and reduces to standard low-rank detection and ridge forecasting at order one, so it strictly generalizes established monitors; its kernel evaluations are batched linear algebra that maps onto GPU backends for fleet-scale telemetry. Byte-deterministic and `pip`-installable.
+
 This repository recasts reliability monitoring as operator-algebraic learning on
 multivariate calibration telemetry and introduces the **causal spectral-truncation
 (CST) kernel**, a C\*-algebra-valued positive-definite kernel on telemetry windows
