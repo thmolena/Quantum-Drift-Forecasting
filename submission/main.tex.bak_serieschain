@@ -53,28 +53,37 @@ Raleigh, North Carolina 27695, USA}
 
 % ── Abstract ─────────────────────────────────────────────────────────────────
 \begin{abstract}
-We introduce the causal spectral-truncation (CST) kernel, a
+Fault-tolerant quantum computing is gated by hardware that drifts: relaxation and
+dephasing times, gate fidelities, and calibration parameters wander on timescales
+of hours, eroding the error budgets that quantum error correction presupposes.
+However, the most damaging drift mode --- correlated decoherence from control
+crosstalk, shared two-level-system baths, and correlated flux noise --- evades the
+per-channel, level-based monitors used in practice, because it can leave every
+marginal distribution and every instantaneous cross-channel covariance unchanged
+while living entirely in the \emph{ordered, lagged} cross-channel structure. We
+recast reliability monitoring as operator-algebraic learning on multivariate
+calibration telemetry and introduce the causal spectral-truncation (CST) kernel, a
 C\textsuperscript{$\ast$}-algebra-valued positive-definite kernel whose truncation
-order $n$ controls the noncommutativity of the cross-channel products it represents,
-and prove that this noncommutativity certifies detectability of hardware drift.
-Fault-tolerant quantum computing is gated by drift whose most damaging mode ---
-correlated decoherence from crosstalk, shared two-level-system baths, and flux noise
---- evades the per-channel monitors used in practice, because it leaves every
-marginal and every instantaneous covariance unchanged while living entirely in the
-\emph{ordered, lagged} cross-channel structure. CST resolves
-this with a \emph{causal lower-shift} truncation, replacing the periodic Fourier
-truncation of existing spectral-truncation kernels so it respects the arrow of time,
-plus a reconstruction detector whose order admits a provable optimum. On a correlated-decoherence benchmark with matched marginals and matched stationary
-covariance, every commutative monitor detects at chance
-(ROC-AUC $\approx0.5$), whereas the noncommutative CST kernel reaches ROC-AUC~$0.90$
-through a sharp optimal order $n{=}2$ that we certify analytically as the detection
-analog of the representation--complexity trade-off. The same kernel also forecasts
-coherence, $72\%$ over persistence eight steps ahead,
-where noncommutativity is provably unnecessary --- an operational rule: match the
-kernel's noncommutativity to the geometry of the drift. Training-free and
-hardware-agnostic, the pipeline installs with \texttt{pip} and deterministically
-regenerates every figure and table on a single CPU in seconds, delivering both a
-certificate for noncommutative monitoring and a reproducible reliability toolbox.
+order $n$ controls the noncommutativity of the cross-channel products it
+represents. The construction rests on two innovations: a \emph{causal lower-shift}
+truncation that replaces the periodic Fourier truncation of recently developed
+spectral-truncation kernels, so the kernel respects the arrow of time; and a
+reconstruction detector on the resulting feature algebra whose truncation order
+admits a provable optimum. On a physically motivated
+correlated-decoherence benchmark with matched marginals and matched stationary
+instantaneous covariance, every commutative monitor we evaluate --- raw-level,
+instantaneous-covariance, and the periodic spectral-truncation kernel --- detects
+at chance (ROC-AUC $\approx0.5$), whereas the noncommutative CST kernel detects at
+ROC-AUC~$0.90$ ($0.84$ at matched bottleneck rank) through a sharp optimal order
+$n{=}2$ that we certify analytically as the detection analog of the
+representation--complexity trade-off. The same kernel forecasts coherence with
+horizon-growing skill --- $72\%$ over persistence eight steps ahead --- a regime in
+which noncommutativity is provably unnecessary, yielding an operational rule:
+match the kernel's noncommutativity to the geometry of the drift. Training-free at
+inference, the pipeline is hardware-agnostic, installs with \texttt{pip}, and
+regenerates every figure and table deterministically on a single CPU in seconds,
+delivering both a theoretical certificate for when noncommutative monitoring is
+necessary and a practical, reproducible toolbox for quantum-processor reliability.
 \end{abstract}
 
 \maketitle
@@ -86,18 +95,12 @@ Quantum processors are not static devices. The relaxation time \T, the dephasing
 time \Ttwo, single- and two-qubit gate fidelities, readout-assignment error, and
 tunable-coupling parameters all evolve continuously with temperature, flux noise,
 two-level-system dynamics, and recalibration history
-\citep{krantz2019guide,kjaergaard2020superconducting}. The microscopic origins are
-well documented: relaxation times fluctuate as qubit frequencies sweep across
-near-resonant two-level-system defects~\citep{klimov2018fluctuations,burnett2019decoherence},
-whose universal low-temperature physics in the amorphous oxides of the device is
-itself an active subject~\citep{muller2019tls}, and the surrounding $1/f$ flux and
-charge noise is routinely mapped by dynamical-decoupling
-spectroscopy~\citep{bylander2011noise}. This drift is more than a
+\citep{krantz2019guide,kjaergaard2020superconducting}. This drift is more than a
 nuisance. In the noisy intermediate-scale quantum (NISQ) regime it limits the
 depth of usable circuits \citep{preskill2018nisq}; in the fault-tolerant regime it
 threatens the foundational assumption that physical error rates stay below
 threshold long enough for error correction to suppress logical errors
-\citep{google2023surfacecode,arute2019supremacy,krinner2022d3,acharya2025below}. As processors scale to hundreds
+\citep{google2023surfacecode,arute2019supremacy}. As processors scale to hundreds
 and then thousands of qubits, deciding \emph{when} a device has drifted out of
 specification, and \emph{which} qubits or intervals warrant the expensive
 intervention of recalibration, becomes a data problem at a scale manual inspection
@@ -109,23 +112,16 @@ channel. Control crosstalk, shared two-level-system baths, and correlated flux
 noise couple the errors of neighboring qubits and of distinct calibration
 channels, frequently with a \emph{propagation delay}: a disturbance that perturbs
 one qubit's coherence reappears, lagged, in a neighbor's readout or coupling phase
-\citep{krantz2019guide}. Such spatially and temporally correlated errors are now
-directly observed --- charge bursts and cosmic-ray impacts that depress relaxation
-across an entire chip~\citep{wilen2021correlated,mcewen2022cosmic} and mobile
-leakage that seeds correlated faults during error
-correction~\citep{google2021leakage}. Such \emph{correlated decoherence} is precisely the
+\citep{krantz2019guide}. Such \emph{correlated decoherence} is precisely the
 failure mode that quantum error correction is least able to absorb, and precisely
 the mode that per-channel, level-based monitors are worst equipped to see: an event
 can leave every marginal distribution and every instantaneous correlation unchanged
 while residing entirely in the \emph{ordered, lagged} cross-channel structure. A
 monitor blind to that structure is blind to the drift, and no amount of per-channel
 sensitivity recovers it. The established toolbox for diagnosing such errors ---
-randomized benchmarking~\citep{magesan2011rb,gambetta2012addressability},
-gate set tomography~\citep{nielsen2021gst}, statistical drift
-tracking~\citep{proctor2020drift}, capability and stability
-benchmarks~\citep{proctor2022capabilities}, and dedicated crosstalk-error
-detection~\citep{sarovar2020crosstalk,rudinger2021crosstalk} --- relies on
-purpose-built characterization
+randomized benchmarking~\citep{magesan2011rb}, statistical drift
+tracking~\citep{proctor2020drift}, and dedicated crosstalk-error
+detection~\citep{sarovar2020crosstalk} --- relies on purpose-built characterization
 circuits executed as separate experiments; we ask instead what can be inferred
 \emph{passively}, from the multivariate calibration telemetry a processor already
 logs, with no additional circuits and no labels.
@@ -136,15 +132,10 @@ stochastic process and is naturally an element of a matrix algebra over the
 channels; which cross-channel, cross-time interactions a monitor can resolve is
 then exactly the question of which products in that algebra it computes --- the
 setting of kernel methods and operator- and vector-valued kernel
-learning~\citep{scholkopf2002kernels,micchelli2005vector,alvarez2012vvk}, built on
-the classical theory of reproducing kernels~\citep{aronszajn1950rkhs} and recently
-extended to reproducing kernel Hilbert
-C\textsuperscript{$\ast$}-modules~\citep{hashimoto2021rkhm}. Its unsupervised face
+learning~\citep{scholkopf2002kernels,micchelli2005vector}, whose unsupervised face
 --- comparing distributions through kernel mean
-embeddings~\citep{muandet2017kme} and the maximum mean
-discrepancy~\citep{gretton2012mmd}, with kernels tailored to the sequential
-structure of time series~\citep{cuturi2007ga} --- is precisely what an unlabeled
-drift detector requires. Commutative kernels, whose feature products are insensitive to the order
+embeddings~\citep{muandet2017kme} --- is precisely what an unlabeled drift detector
+requires. Commutative kernels, whose feature products are insensitive to the order
 or relative lag of their factors, cannot represent ordered lagged interactions at
 all. The recent spectral-truncation kernels of
 Hashimoto et~al.\ make this precise for functional data: truncating the algebra of
@@ -192,7 +183,7 @@ that noncommutativity is \emph{necessary}: on a physically motivated
 correlated-decoherence benchmark engineered so the drift lives in ordered, lagged
 cross-channel structure, the commutative monitors we evaluate --- raw-level,
 instantaneous-covariance, and the periodic spectral-truncation kernel --- all
-detect at chance (ROC-AUC $\approx0.5$), whereas the causal kernel detects at ROC-AUC~$0.90$ at a
+detect at chance, whereas the causal kernel detects at ROC-AUC~$0.90$ at a
 certifiable optimal truncation order $n{=}2$. \textbf{(iii)} We supply the
 supporting theory --- positive definiteness for every order, a blindness theorem
 for commutative monitors, and an \emph{optimal-truncation detection certificate}
@@ -310,7 +301,7 @@ Increasing the kernel's truncation order leaves this picture unchanged
 (Fig.~\ref{fig:forecast}c): the CST forecaster's eight-step skill is flat in $n$,
 moving only from $72\%$ at $n{=}1$ to $71\%$ at $n{=}4$. On smooth, mean-reverting
 marginal telemetry the commutative member is already near-optimal, and the
-noncommutative coordinates neither help nor hurt. This is the exact complement of
+noncommutative coordinates neither help nor hurt. This is the honest complement of
 the detection result that follows --- noncommutativity is decisive precisely when
 the drift lives in ordered cross-channel structure, and superfluous otherwise ---
 and it is what licenses the operational rule we state in the Discussion.
@@ -375,13 +366,7 @@ legitimate similarity throughout the family. The unsupervised detector fits a
 rank-$k$ nominal subspace in this feature space and scores a window by its residual
 energy off that subspace --- a C\textsuperscript{$\ast$}-algebraic generalization of
 the low-rank reconstruction detector~\citep{malhotra2016lstmad}, which it recovers
-exactly at $n{=}1$. Reconstruction-residual scoring sits alongside the classical
-unsupervised detectors --- one-class support-vector
-estimation~\citep{scholkopf2001ocsvm}, local outlier
-factors~\citep{breunig2000lof}, and isolation forests~\citep{liu2008iforest},
-surveyed broadly in~\citep{pang2021deepad} --- but, unlike them, the present detector
-inherits an operator-algebraic feature map whose noncommutativity is the object of
-study. The kernel is thus evaluated in closed form from a single pass
+exactly at $n{=}1$. The kernel is thus evaluated in closed form from a single pass
 over the window, with no training, no iterative optimization, and no
 hyperparameter beyond the order $n$ and rank $k$.
 
@@ -712,9 +697,7 @@ telemetry generator, although physically motivated, is a model rather than measu
 device data, and the correlated-decoherence mode is a controlled construction chosen
 to isolate the noncommutative effect in the cleanest possible setting; validation on
 archival calibration logs from operating processors and on a standard
-anomaly-detection benchmark~\citep{lavin2015nab}, and a head-to-head comparison
-against the classical change-point detectors catalogued in~\citep{truong2020cpd}
-and the cumulative-sum chart~\citep{page1954cusum}, is the priority follow-up. The
+anomaly-detection benchmark~\citep{lavin2015nab} is the priority follow-up. The
 kernel as presented is linear in its feature map, so composing it with an outer
 nonlinearity, and pairing the forecaster with an explicit recalibration policy under
 a cost model and uncertainty-aware predictions~\citep{gal2016dropout}, are concrete
@@ -804,8 +787,8 @@ truncated algebra is the causal shift (ours) or the periodic Fourier multiplier
 \paragraph{Forecasting.}
 We compare persistence (carry the last \T\ forward), climatology (the training-mean
 horizon trajectory), an autoregressive ridge on the $32$-step \T\ history, and a
-multivariate ridge~\citep{hoerl1970ridge} on the flattened $32\times7$ window
-(ridge penalty $\alpha=5$; this is the commutative $n{=}1$ kernel member), under a leak-free per-qubit $80/20$
+multivariate ridge on the flattened $32\times7$ window (ridge penalty $\alpha=5$;
+this is the commutative $n{=}1$ kernel member), under a leak-free per-qubit $80/20$
 chronological split, scoring MAE per horizon step over five generator seeds with
 skill $1-\mathrm{MAE}/\mathrm{MAE}_{\text{persistence}}$. The CST forecaster augments
 the window with the order-$n$ causal features before the ridge solve; its eight-step
@@ -814,8 +797,7 @@ chronological split guarantees that no future sample informs a past prediction.
 
 \paragraph{Detection.}
 The unsupervised detector standardizes the kernel feature map on nominal training
-windows, fits a rank-$k$ principal subspace by principal component
-analysis~\citep{pearson1901pca}, and scores each test window by its mean
+windows, fits a rank-$k$ principal subspace, and scores each test window by its mean
 squared reconstruction residual outside that subspace. Detection quality is ROC-AUC
 against the drift labels over eight randomized $70/30$ splits; because the detector
 is fit on nominal windows only, randomization cannot leak a label it never uses. The
@@ -882,7 +864,7 @@ no competing interests.
   \small
   \caption{\textbf{Detection ROC-AUC versus truncation order.} Mean~$\pm$~s.d.\
   over the $n=8$ randomized splits; best ROC-AUC over
-  bottleneck ranks $k\in\{1,\dots,16\}$ per order. Detection is at chance at the
+  bottleneck ranks $k\in\{1,\dots,16\}$ per order). Detection is at chance at the
   commutative order $n{=}1$, peaks sharply at $n{=}2$ (in \textbf{bold}), and decays
   monotonically toward chance as the representation becomes over-complete --- the
   certified mechanism of Theorem~\ref{thm:optn} and the source data for
@@ -896,7 +878,7 @@ no competing interests.
   \small
   \caption{\textbf{Per-horizon forecasting error.} Mean absolute error in
   \si{\micro\second}, mean~$\pm$~s.d.\ over the $n=5$
-  telemetry-generator seeds. Each row is one step of the eight-step \T\ horizon, and
+  telemetry-generator seeds). Each row is one step of the eight-step \T\ horizon, and
   the best (lowest) value per row is in \textbf{bold}. The learned ridge forecasters
   stay nearly flat across the horizon while persistence degrades monotonically and
   climatology is uniformly poor --- the per-step view underlying
@@ -987,7 +969,7 @@ unchanged, since a sum of independent white processes is white; and (iii) the
 $a^2\sigma_c\sigma_{c'}\mathbb{E}[u_{t-\delta_c}u_{t-\delta_{c'}}]=0$ for
 $\delta_c\neq\delta_{c'}$, matching nominal. The signal energy resides entirely in
 the lag-$\tau$ cross-covariance with $\tau=\delta_{c'}-\delta_c\ge1$. Two caveats
-bound the scope of this matching: per-window temporal centering over the finite $L=32$ window
+keep the account honest: per-window temporal centering over the finite $L=32$ window
 leaves a small $O(1/L)$ residual in the centered lag-$0$ cross-covariance of the
 drift class, so the matching is exact only in the stationary limit; and
 Theorem~\ref{thm:blind} is a statement about \emph{first-moment} discriminability,
@@ -1135,7 +1117,7 @@ Easwar Magesan, Jay~M. Gambetta, and Joseph Emerson.
 \newblock \doi{10.1103/PhysRevLett.106.180504}.
 
 \bibitem[Hashimoto et~al.(2024)]{hashimoto2024spectral}
-Yuka Hashimoto, Ayoub Hafid, Masahiro Ikeda, and Hachem Kadri.
+Yuka Hashimoto, Ayoub Ghriss, Masahiro Ikeda, and Hachem Kadri.
 \newblock Spectral truncation kernels: noncommutativity in
   {C}$^\ast$-algebraic kernel machines.
 \newblock In \emph{Advances in Neural Information Processing Systems (NeurIPS)},
@@ -1220,8 +1202,8 @@ Alexander Lavin and Subutai Ahmad.
 
 \bibitem[Huynh(2026{\natexlab{a}})]{huynh2026gctr}
 Molena Huynh.
-\newblock Query-Efficient Quantum Approximate Optimization via
-  Graph-Conditioned Trust Regions.
+\newblock Query-efficient quantum approximate optimization via
+  graph-conditioned trust regions.
 \newblock \emph{arXiv preprint arXiv:2604.24803}, 2026.
 \newblock \doi{10.48550/arXiv.2604.24803}.
 
@@ -1229,97 +1211,97 @@ Molena Huynh.
 Molena Huynh.
 \newblock Graph-conditioned trust regions for uncertainty-calibrated quantum
   approximate optimization.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{g}})]{huynh2026gctrcalpro}
 Molena Huynh.
 \newblock Graph-conditioned trust regions for uncertainty-calibrated quantum
   approximate optimization (extended).
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{h}})]{huynh2026meascost}
 Molena Huynh.
-\newblock The measurement cost of warm-started low-depth QAOA.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock The measurement cost of warm-started low-depth {QAOA}.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{i}})]{huynh2026certqb}
 Molena Huynh.
 \newblock Certified query budgets for the quantum approximate optimization
   algorithm.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{j}})]{huynh2026paramxfer}
 Molena Huynh.
-\newblock Topology-Conditioned QAOA Parameter Transfer for Budgeted Graph
-  Optimization.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock Topology-conditioned {QAOA} parameter transfer for budgeted graph
+  optimization.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{k}})]{huynh2026paramxferB}
 Molena Huynh.
-\newblock Topology-Conditioned QAOA Parameter Transfer for Budgeted Graph
-  Optimization (companion).
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock Topology-conditioned {QAOA} parameter transfer for budgeted graph
+  optimization (companion).
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{l}})]{huynh2026ostqaoa}
 Molena Huynh.
-\newblock Operator-Spectral Truncated Priors for Query-Efficient QAOA
-  Parameter Search.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock Operator-spectral truncated priors for query-efficient {QAOA}
+  parameter search.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{m}})]{huynh2026gnndec}
 Molena Huynh.
 \newblock Learning to decode correlated quantum errors: a topological graph
   neural decoder that surpasses minimum-weight matching under structured
   circuit-level noise.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{n}})]{huynh2026topoqec}
 Molena Huynh.
-\newblock Transfer-Operator Decoding of Structured Noise in Quantum Error
-  Correction.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock Transfer-operator decoding of structured noise in quantum error
+  correction.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{o}})]{huynh2026covdec}
 Molena Huynh.
 \newblock Covariance-aware hybrid decoding of surface codes under spatially and
   temporally correlated noise.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{p}})]{huynh2026fiber}
 Molena Huynh.
-\newblock Syndrome fiber bundle: Gauge-equivariant neural decoding with
+\newblock Syndrome fiber bundle: gauge-equivariant neural decoding with
   calibrated uncertainty for correlated quantum noise.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{q}})]{huynh2026dsto}
 Molena Huynh.
 \newblock Directed spectral-truncated operators for inductive classification of
   quantum phases across a control-parameter sweep.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{b}})]{huynh2026topoqaoa}
 Molena Huynh.
 \newblock Spectral-truncation graph kernels for {QAOA} warm starts:
   topology-conditioned schedule transfer beyond depth one.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{c}})]{huynh2026topoham}
 Molena Huynh.
-\newblock Zero-Overhead Cancellation of the Leading Trotter Error via
-  Commutator-Graph Scheduling.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock Zero-overhead cancellation of the leading {Trotter} error via
+  commutator-graph scheduling.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{d}})]{huynh2026lie}
 Molena Huynh.
 \newblock Advancing the product-formula error--cost frontier with a
   Lie-algebraic spectral truncation of the residual.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{e}})]{huynh2026cptppinn}
 Molena Huynh.
 \newblock Structure-preserving physics-informed learning of open quantum
   dynamics with spectral-frame encodings and operator-system truncation.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Nguyen and Jing(2025)]{nguyen2025zassenhaus}
 M.~Nguyen and Naihuan Jing.
@@ -1333,198 +1315,6 @@ Naihuan Jing and M.~Nguyen.
   representations.
 \newblock \emph{arXiv preprint arXiv:2603.07231}, 2026.
 \newblock \doi{10.48550/arXiv.2603.07231}.
-
-\bibitem[Klimov et~al.(2018)]{klimov2018fluctuations}
-P.~V. Klimov, J.~Kelly, Z.~Chen, M.~Neeley, A.~Megrant, B.~Burkett, R.~Barends,
-  K.~Arya, B.~Chiaro, Yu~Chen, et~al.
-\newblock Fluctuations of energy-relaxation times in superconducting qubits.
-\newblock \emph{Physical Review Letters}, 121\penalty0 (9):\penalty0 090502,
-  2018.
-\newblock \doi{10.1103/PhysRevLett.121.090502}.
-
-\bibitem[Burnett et~al.(2019)]{burnett2019decoherence}
-Jonathan~J. Burnett, Andreas Bengtsson, Marco Scigliuzzo, David Niepce, Marina
-  Kudra, Per Delsing, and Jonas Bylander.
-\newblock Decoherence benchmarking of superconducting qubits.
-\newblock \emph{npj Quantum Information}, 5\penalty0 (1):\penalty0 54, 2019.
-\newblock \doi{10.1038/s41534-019-0168-5}.
-
-\bibitem[M{\"u}ller et~al.(2019)]{muller2019tls}
-Clemens M{\"u}ller, Jared~H. Cole, and J{\"u}rgen Lisenfeld.
-\newblock Towards understanding two-level-systems in amorphous solids: insights
-  from quantum circuits.
-\newblock \emph{Reports on Progress in Physics}, 82\penalty0 (12):\penalty0
-  124501, 2019.
-\newblock \doi{10.1088/1361-6633/ab3a7e}.
-
-\bibitem[Wilen et~al.(2021)]{wilen2021correlated}
-C.~D. Wilen, S.~Abdullah, N.~A. Kurinsky, C.~Stanford, L.~Cardani, G.~D'Imperio,
-  C.~Tomei, L.~Faoro, L.~B. Ioffe, C.~H. Liu, et~al.
-\newblock Correlated charge noise and relaxation errors in superconducting
-  qubits.
-\newblock \emph{Nature}, 594\penalty0 (7863):\penalty0 369--373, 2021.
-\newblock \doi{10.1038/s41586-021-03557-5}.
-
-\bibitem[McEwen et~al.(2022)]{mcewen2022cosmic}
-Matt McEwen, Lara Faoro, Kunal Arya, Andrew Dunsworth, Trent Huang, Seon Kim,
-  Brian Burkett, Austin Fowler, Frank Arute, Joseph~C. Bardin, et~al.
-\newblock Resolving catastrophic error bursts from cosmic rays in large arrays
-  of superconducting qubits.
-\newblock \emph{Nature Physics}, 18\penalty0 (1):\penalty0 107--111, 2022.
-\newblock \doi{10.1038/s41567-021-01432-8}.
-
-\bibitem[{Google Quantum AI}(2021)]{google2021leakage}
-{Google Quantum AI}.
-\newblock Removing leakage-induced correlated errors in superconducting quantum
-  error correction.
-\newblock \emph{Nature Communications}, 12\penalty0 (1):\penalty0 1761, 2021.
-\newblock \doi{10.1038/s41467-021-21982-y}.
-
-\bibitem[Bylander et~al.(2011)]{bylander2011noise}
-Jonas Bylander, Simon Gustavsson, Fei Yan, Fumiki Yoshihara, Khalil Harrabi,
-  George Fitch, David~G. Cory, Yasunobu Nakamura, Jaw-Shen Tsai, and William~D.
-  Oliver.
-\newblock Noise spectroscopy through dynamical decoupling with a superconducting
-  flux qubit.
-\newblock \emph{Nature Physics}, 7\penalty0 (7):\penalty0 565--570, 2011.
-\newblock \doi{10.1038/nphys1994}.
-
-\bibitem[Proctor et~al.(2022)]{proctor2022capabilities}
-Timothy Proctor, Kenneth Rudinger, Kevin Young, Erik Nielsen, and Robin
-  Blume-Kohout.
-\newblock Measuring the capabilities of quantum computers.
-\newblock \emph{Nature Physics}, 18\penalty0 (1):\penalty0 75--79, 2022.
-\newblock \doi{10.1038/s41567-021-01409-7}.
-
-\bibitem[Gambetta et~al.(2012)]{gambetta2012addressability}
-Jay~M. Gambetta, A.~D. C{\'o}rcoles, S.~T. Merkel, B.~R. Johnson, John~A.
-  Smolin, Jerry~M. Chow, Colm~A. Ryan, Chad Rigetti, S.~Poletto, Thomas~A.
-  Ohki, Mark~B. Ketchen, and M.~Steffen.
-\newblock Characterization of addressability by simultaneous randomized
-  benchmarking.
-\newblock \emph{Physical Review Letters}, 109\penalty0 (24):\penalty0 240504,
-  2012.
-\newblock \doi{10.1103/PhysRevLett.109.240504}.
-
-\bibitem[Nielsen et~al.(2021)]{nielsen2021gst}
-Erik Nielsen, John~King Gamble, Kenneth Rudinger, Travis Scholten, Kevin Young,
-  and Robin Blume-Kohout.
-\newblock Gate set tomography.
-\newblock \emph{Quantum}, 5:\penalty0 557, 2021.
-\newblock \doi{10.22331/q-2021-10-05-557}.
-
-\bibitem[Rudinger et~al.(2021)]{rudinger2021crosstalk}
-Kenneth Rudinger, Craig~W. Hogle, Ravi~K. Naik, Akel Hashim, Daniel Lobser,
-  David~I. Santiago, Matthew~D. Grace, Erik Nielsen, Timothy Proctor, Stefan
-  Seritan, Susan~M. Clark, Robin Blume-Kohout, Irfan Siddiqi, and Kevin~C.
-  Young.
-\newblock Experimental characterization of crosstalk errors with simultaneous
-  gate set tomography.
-\newblock \emph{PRX Quantum}, 2\penalty0 (4):\penalty0 040338, 2021.
-\newblock \doi{10.1103/PRXQuantum.2.040338}.
-
-\bibitem[Krinner et~al.(2022)]{krinner2022d3}
-Sebastian Krinner, Nathan Lacroix, Ants Remm, Agustin Di~Paolo, Elie Genois,
-  Catherine Leroux, Christoph Hellings, Stefania Lazar, Fran{\c c}ois Swiadek,
-  Johannes Herrmann, et~al.
-\newblock Realizing repeated quantum error correction in a distance-three
-  surface code.
-\newblock \emph{Nature}, 605\penalty0 (7911):\penalty0 669--674, 2022.
-\newblock \doi{10.1038/s41586-022-04566-8}.
-
-\bibitem[{Google Quantum AI}(2025)]{acharya2025below}
-{Google Quantum AI and Collaborators}.
-\newblock Quantum error correction below the surface code threshold.
-\newblock \emph{Nature}, 638\penalty0 (8052):\penalty0 920--926, 2025.
-\newblock \doi{10.1038/s41586-024-08449-y}.
-
-\bibitem[Aronszajn(1950)]{aronszajn1950rkhs}
-Nachman Aronszajn.
-\newblock Theory of reproducing kernels.
-\newblock \emph{Transactions of the American Mathematical Society}, 68\penalty0
-  (3):\penalty0 337--404, 1950.
-\newblock \doi{10.1090/S0002-9947-1950-0051437-7}.
-
-\bibitem[{\'A}lvarez et~al.(2012)]{alvarez2012vvk}
-Mauricio~A. {\'A}lvarez, Lorenzo Rosasco, and Neil~D. Lawrence.
-\newblock Kernels for vector-valued functions: a review.
-\newblock \emph{Foundations and Trends in Machine Learning}, 4\penalty0
-  (3):\penalty0 195--266, 2012.
-\newblock \doi{10.1561/2200000036}.
-
-\bibitem[Hashimoto et~al.(2021)]{hashimoto2021rkhm}
-Yuka Hashimoto, Isao Ishikawa, Masahiro Ikeda, Fuyuta Komura, Takeshi Katsura,
-  and Yoshinobu Kawahara.
-\newblock Reproducing kernel {Hilbert} {C}$^\ast$-module and kernel mean
-  embeddings.
-\newblock \emph{Journal of Machine Learning Research}, 22\penalty0
-  (267):\penalty0 1--56, 2021.
-
-\bibitem[Gretton et~al.(2012)]{gretton2012mmd}
-Arthur Gretton, Karsten~M. Borgwardt, Malte~J. Rasch, Bernhard Sch{\"o}lkopf,
-  and Alexander Smola.
-\newblock A kernel two-sample test.
-\newblock \emph{Journal of Machine Learning Research}, 13:\penalty0 723--773,
-  2012.
-
-\bibitem[Cuturi et~al.(2007)]{cuturi2007ga}
-Marco Cuturi, Jean-Philippe Vert, {\O}ystein Birkenes, and Tomoko Matsui.
-\newblock A kernel for time series based on global alignments.
-\newblock In \emph{IEEE Int. Conf. on Acoustics, Speech and Signal Processing
-  (ICASSP)}, pages II--413--II--416, 2007.
-\newblock \doi{10.1109/ICASSP.2007.366260}.
-
-\bibitem[Sch{\"o}lkopf et~al.(2001)]{scholkopf2001ocsvm}
-Bernhard Sch{\"o}lkopf, John~C. Platt, John Shawe-Taylor, Alex~J. Smola, and
-  Robert~C. Williamson.
-\newblock Estimating the support of a high-dimensional distribution.
-\newblock \emph{Neural Computation}, 13\penalty0 (7):\penalty0 1443--1471,
-  2001.
-\newblock \doi{10.1162/089976601750264965}.
-
-\bibitem[Breunig et~al.(2000)]{breunig2000lof}
-Markus~M. Breunig, Hans-Peter Kriegel, Raymond~T. Ng, and J{\"o}rg Sander.
-\newblock {LOF}: identifying density-based local outliers.
-\newblock \emph{ACM SIGMOD Record}, 29\penalty0 (2):\penalty0 93--104, 2000.
-\newblock \doi{10.1145/335191.335388}.
-
-\bibitem[Liu et~al.(2008)]{liu2008iforest}
-Fei~Tony Liu, Kai~Ming Ting, and Zhi-Hua Zhou.
-\newblock Isolation forest.
-\newblock In \emph{IEEE Int. Conf. on Data Mining (ICDM)}, pages 413--422,
-  2008.
-\newblock \doi{10.1109/ICDM.2008.17}.
-
-\bibitem[Truong et~al.(2020)]{truong2020cpd}
-Charles Truong, Laurent Oudre, and Nicolas Vayatis.
-\newblock Selective review of offline change point detection methods.
-\newblock \emph{Signal Processing}, 167:\penalty0 107299, 2020.
-\newblock \doi{10.1016/j.sigpro.2019.107299}.
-
-\bibitem[Page(1954)]{page1954cusum}
-E.~S. Page.
-\newblock Continuous inspection schemes.
-\newblock \emph{Biometrika}, 41\penalty0 (1--2):\penalty0 100--115, 1954.
-\newblock \doi{10.1093/biomet/41.1-2.100}.
-
-\bibitem[Pang et~al.(2021)]{pang2021deepad}
-Guansong Pang, Chunhua Shen, Longbing Cao, and Anton van~den Hengel.
-\newblock Deep learning for anomaly detection: a review.
-\newblock \emph{ACM Computing Surveys}, 54\penalty0 (2):\penalty0 1--38, 2021.
-\newblock \doi{10.1145/3439950}.
-
-\bibitem[Hoerl and Kennard(1970)]{hoerl1970ridge}
-Arthur~E. Hoerl and Robert~W. Kennard.
-\newblock Ridge regression: biased estimation for nonorthogonal problems.
-\newblock \emph{Technometrics}, 12\penalty0 (1):\penalty0 55--67, 1970.
-\newblock \doi{10.1080/00401706.1970.10488634}.
-
-\bibitem[Pearson(1901)]{pearson1901pca}
-Karl Pearson.
-\newblock On lines and planes of closest fit to systems of points in space.
-\newblock \emph{Philosophical Magazine}, 2\penalty0 (11):\penalty0 559--572,
-  1901.
-\newblock \doi{10.1080/14786440109462720}.
 
 \end{thebibliography}
 

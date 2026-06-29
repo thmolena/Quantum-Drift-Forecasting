@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Causal Spectral-Truncation Kernels: Noncommutativity Certifies Trend Detectability in Quantum Hardware</title>
+  <title>Causal Spectral-Truncation Kernels: Noncommutativity Certifies Drift Detectability in Quantum Hardware</title>
   <meta name="description" content="A C*-algebra-valued causal spectral-truncation kernel whose truncation order controls the noncommutativity of the cross-channel products it represents. A correlated-decoherence drift mode with matched marginals and (in the stationary limit) matched instantaneous covariance concentrates its signal in ordered, lagged cross-channel structure; the commutative monitors evaluated are at chance, and the drift is detected only by the noncommutative kernel, through a certifiable optimal truncation order." />
 
   <!-- KaTeX for rendered mathematics -->
@@ -184,6 +184,9 @@
     canvas { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
 
     .footnote { font-size: 0.85rem; color: var(--muted); }
+    ol.refs { font-size: 0.9rem; line-height: 1.55; color: var(--ink); padding-left: 1.8em; margin: 8px 0 0; }
+    ol.refs li { margin-bottom: 10px; }
+    ol.refs .venue { font-style: italic; }
     footer { padding: 36px 0 60px; color: var(--muted); font-family: var(--font-sans); font-size: 0.85rem; }
     .limitations { border-left: 3px solid var(--warn); background: #fdfaf0; padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
   </style>
@@ -673,6 +676,58 @@ qdrift-reproduce                   # regenerates figures, tables and confidence 
       mixing) and the kernel definition (causal lower shift, weights $w_\tau=1/(L-\tau)$, ridge penalty
       $\alpha=5$). The synthetic telemetry requires no external download.
     </p>
+  </section>
+
+  <!-- REFERENCES -->
+  <section id="references">
+    <h2><span class="num">11</span>References</h2>
+    <p class="lede">Related work, and the manuscript's full bibliography.</p>
+
+    <h3>Related work</h3>
+    <p>
+      The construction sits at the meeting point of two literatures. On the learning side, the causal
+      spectral-truncation kernel is the causal counterpart of the periodic spectral-truncation kernels of
+      Hashimoto et&nbsp;al. (NeurIPS&nbsp;2024) [9]: where their truncation order limits a periodic
+      Fourier-multiplier algebra, ours truncates the nilpotent causal-shift algebra, so the kernel respects the
+      arrow of time and its noncommutative coordinates carry ordered, lagged structure. The reconstruction
+      detector is a C*-algebraic generalisation of the subspace residual detector of Malhotra et&nbsp;al.
+      (2016)&nbsp;[13], which it recovers at order $n=1$. On the hardware side, the targeted failure mode &mdash;
+      drift that is correlated across channels and lagged in time &mdash; is the regime studied by the drift-
+      and crosstalk-detection work of Proctor et&nbsp;al. (2020)&nbsp;[6] and Sarovar et&nbsp;al. (2020)&nbsp;[7],
+      whose per-channel and instantaneous diagnostics this work is designed to complement. The remaining
+      references supply the operator-valued kernel theory, the time-series forecasting baselines and the
+      benchmarking and uncertainty methodology drawn on throughout.
+    </p>
+
+    <ol class="refs">
+      <li>P.&nbsp;Krantz, M.&nbsp;Kjaergaard, F.&nbsp;Yan, T.&nbsp;P.&nbsp;Orlando, S.&nbsp;Gustavsson, and W.&nbsp;D.&nbsp;Oliver, &ldquo;A quantum engineer's guide to superconducting qubits,&rdquo; <span class="venue">Applied Physics Reviews</span> 6(2), 021318, 2019. <a href="https://doi.org/10.1063/1.5089550" target="_blank" rel="noreferrer">doi:10.1063/1.5089550</a>.</li>
+      <li>M.&nbsp;Kjaergaard, M.&nbsp;E.&nbsp;Schwartz, J.&nbsp;Braum&uuml;ller, P.&nbsp;Krantz, J.&nbsp;I.-J.&nbsp;Wang, S.&nbsp;Gustavsson, and W.&nbsp;D.&nbsp;Oliver, &ldquo;Superconducting qubits: current state of play,&rdquo; <span class="venue">Annual Review of Condensed Matter Physics</span> 11, 369&ndash;395, 2020. <a href="https://doi.org/10.1146/annurev-conmatphys-031119-050605" target="_blank" rel="noreferrer">doi:10.1146/annurev-conmatphys-031119-050605</a>.</li>
+      <li>J.&nbsp;Preskill, &ldquo;Quantum computing in the NISQ era and beyond,&rdquo; <span class="venue">Quantum</span> 2, 79, 2018. <a href="https://doi.org/10.22331/q-2018-08-06-79" target="_blank" rel="noreferrer">doi:10.22331/q-2018-08-06-79</a>.</li>
+      <li>Google Quantum AI, &ldquo;Suppressing quantum errors by scaling a surface code logical qubit,&rdquo; <span class="venue">Nature</span> 614(7949), 676&ndash;681, 2023. <a href="https://doi.org/10.1038/s41586-022-05434-1" target="_blank" rel="noreferrer">doi:10.1038/s41586-022-05434-1</a>.</li>
+      <li>F.&nbsp;Arute et&nbsp;al., &ldquo;Quantum supremacy using a programmable superconducting processor,&rdquo; <span class="venue">Nature</span> 574(7779), 505&ndash;510, 2019. <a href="https://doi.org/10.1038/s41586-019-1666-5" target="_blank" rel="noreferrer">doi:10.1038/s41586-019-1666-5</a>.</li>
+      <li>T.&nbsp;Proctor, M.&nbsp;Revelle, E.&nbsp;Nielsen, K.&nbsp;Rudinger, D.&nbsp;Lobser, P.&nbsp;Maunz, R.&nbsp;Blume-Kohout, and K.&nbsp;Young, &ldquo;Detecting and tracking drift in quantum information processors,&rdquo; <span class="venue">Nature Communications</span> 11(1), 5396, 2020. <a href="https://doi.org/10.1038/s41467-020-19074-4" target="_blank" rel="noreferrer">doi:10.1038/s41467-020-19074-4</a>.</li>
+      <li>M.&nbsp;Sarovar, T.&nbsp;Proctor, K.&nbsp;Rudinger, K.&nbsp;Young, E.&nbsp;Nielsen, and R.&nbsp;Blume-Kohout, &ldquo;Detecting crosstalk errors in quantum information processors,&rdquo; <span class="venue">Quantum</span> 4, 321, 2020. <a href="https://doi.org/10.22331/q-2020-09-11-321" target="_blank" rel="noreferrer">doi:10.22331/q-2020-09-11-321</a>.</li>
+      <li>E.&nbsp;Magesan, J.&nbsp;M.&nbsp;Gambetta, and J.&nbsp;Emerson, &ldquo;Scalable and robust randomized benchmarking of quantum processes,&rdquo; <span class="venue">Physical Review Letters</span> 106(18), 180504, 2011. <a href="https://doi.org/10.1103/PhysRevLett.106.180504" target="_blank" rel="noreferrer">doi:10.1103/PhysRevLett.106.180504</a>.</li>
+      <li>Y.&nbsp;Hashimoto, A.&nbsp;Ghriss, M.&nbsp;Ikeda, and H.&nbsp;Kadri, &ldquo;Spectral truncation kernels: noncommutativity in C*-algebraic kernel machines,&rdquo; in <span class="venue">Advances in Neural Information Processing Systems (NeurIPS)</span>, 2024. <a href="https://arxiv.org/abs/2405.17823" target="_blank" rel="noreferrer">arXiv:2405.17823</a>.</li>
+      <li>C.&nbsp;A.&nbsp;Micchelli and M.&nbsp;Pontil, &ldquo;On learning vector-valued functions,&rdquo; <span class="venue">Neural Computation</span> 17(1), 177&ndash;204, 2005. <a href="https://doi.org/10.1162/0899766052530802" target="_blank" rel="noreferrer">doi:10.1162/0899766052530802</a>.</li>
+      <li>B.&nbsp;Sch&ouml;lkopf and A.&nbsp;J.&nbsp;Smola, <span class="venue">Learning with Kernels: Support Vector Machines, Regularization, Optimization, and Beyond</span>, MIT Press, Cambridge, MA, 2002.</li>
+      <li>K.&nbsp;Muandet, K.&nbsp;Fukumizu, B.&nbsp;Sriperumbudur, and B.&nbsp;Sch&ouml;lkopf, &ldquo;Kernel mean embedding of distributions: a review and beyond,&rdquo; <span class="venue">Foundations and Trends in Machine Learning</span> 10(1&ndash;2), 1&ndash;141, 2017. <a href="https://doi.org/10.1561/2200000060" target="_blank" rel="noreferrer">doi:10.1561/2200000060</a>.</li>
+      <li>P.&nbsp;Malhotra, A.&nbsp;Ramakrishnan, G.&nbsp;Anand, L.&nbsp;Vig, P.&nbsp;Agarwal, and G.&nbsp;Shroff, &ldquo;LSTM-based encoder&ndash;decoder for multi-sensor anomaly detection,&rdquo; <span class="venue">arXiv preprint</span>, 2016. <a href="https://arxiv.org/abs/1607.00148" target="_blank" rel="noreferrer">arXiv:1607.00148</a>.</li>
+      <li>B.&nbsp;Lim and S.&nbsp;Zohren, &ldquo;Time-series forecasting with deep learning: a survey,&rdquo; <span class="venue">Philosophical Transactions of the Royal Society A</span> 379(2194), 20200209, 2021. <a href="https://doi.org/10.1098/rsta.2020.0209" target="_blank" rel="noreferrer">doi:10.1098/rsta.2020.0209</a>.</li>
+      <li>Q.&nbsp;Wen, T.&nbsp;Zhou, C.&nbsp;Zhang, W.&nbsp;Chen, Z.&nbsp;Ma, J.&nbsp;Yan, and L.&nbsp;Sun, &ldquo;Transformers in time series: a survey,&rdquo; in <span class="venue">Proc. Int. Joint Conf. on Artificial Intelligence (IJCAI)</span>, 6778&ndash;6786, 2023.</li>
+      <li>S.&nbsp;Hochreiter and J.&nbsp;Schmidhuber, &ldquo;Long short-term memory,&rdquo; <span class="venue">Neural Computation</span> 9(8), 1735&ndash;1780, 1997. <a href="https://doi.org/10.1162/neco.1997.9.8.1735" target="_blank" rel="noreferrer">doi:10.1162/neco.1997.9.8.1735</a>.</li>
+      <li>K.&nbsp;Cho, B.&nbsp;van&nbsp;Merri&euml;nboer, C.&nbsp;Gulcehre, D.&nbsp;Bahdanau, F.&nbsp;Bougares, H.&nbsp;Schwenk, and Y.&nbsp;Bengio, &ldquo;Learning phrase representations using RNN encoder&ndash;decoder for statistical machine translation,&rdquo; in <span class="venue">Proc. Conf. Empirical Methods in Natural Language Processing (EMNLP)</span>, 1724&ndash;1734, 2014.</li>
+      <li>A.&nbsp;Vaswani, N.&nbsp;Shazeer, N.&nbsp;Parmar, J.&nbsp;Uszkoreit, L.&nbsp;Jones, A.&nbsp;N.&nbsp;Gomez, L.&nbsp;Kaiser, and I.&nbsp;Polosukhin, &ldquo;Attention is all you need,&rdquo; in <span class="venue">Advances in Neural Information Processing Systems (NeurIPS)</span>, vol.&nbsp;30, 2017.</li>
+      <li>Y.&nbsp;Gal and Z.&nbsp;Ghahramani, &ldquo;Dropout as a Bayesian approximation: representing model uncertainty in deep learning,&rdquo; in <span class="venue">Proc. Int. Conf. on Machine Learning (ICML)</span>, 1050&ndash;1059, 2016.</li>
+      <li>A.&nbsp;Lavin and S.&nbsp;Ahmad, &ldquo;Evaluating real-time anomaly detection algorithms &mdash; the Numenta anomaly benchmark,&rdquo; in <span class="venue">IEEE Int. Conf. on Machine Learning and Applications (ICMLA)</span>, 38&ndash;44, 2015. <a href="https://doi.org/10.1109/ICMLA.2015.141" target="_blank" rel="noreferrer">doi:10.1109/ICMLA.2015.141</a>.</li>
+      <li>M.&nbsp;Huynh, &ldquo;Query-efficient quantum approximate optimization via graph-conditioned trust regions,&rdquo; <span class="venue">arXiv preprint</span>, 2026. <a href="https://arxiv.org/abs/2604.24803" target="_blank" rel="noreferrer">arXiv:2604.24803</a>.</li>
+      <li>M.&nbsp;Huynh, &ldquo;Topology-conditioned warm starts match spectral initialization for depth-one QAOA,&rdquo; manuscript in preparation, 2026.</li>
+      <li>M.&nbsp;Huynh, &ldquo;Commutator-graph term ordering reduces first-order Trotter error at matched gate cost,&rdquo; manuscript in preparation, 2026.</li>
+      <li>M.&nbsp;Huynh, &ldquo;Provable operator learning of size-transferable Trotter corrections for Hamiltonian simulation,&rdquo; manuscript in preparation, 2026.</li>
+      <li>M.&nbsp;Huynh, &ldquo;CPTP-Compiler-PINNs: structure-preserving residual learning and matrix-free compilation for open quantum dynamics,&rdquo; manuscript in preparation, 2026.</li>
+      <li>M.&nbsp;Nguyen and N.&nbsp;Jing, &ldquo;Zassenhaus expansion in solving the Schr&ouml;dinger equation,&rdquo; <span class="venue">arXiv preprint</span>, 2025. <a href="https://arxiv.org/abs/2505.09441" target="_blank" rel="noreferrer">arXiv:2505.09441</a>.</li>
+      <li>N.&nbsp;Jing and M.&nbsp;Nguyen, &ldquo;Complexity bounds for Hamiltonian simulation in unitary representations,&rdquo; <span class="venue">arXiv preprint</span>, 2026. <a href="https://arxiv.org/abs/2603.07231" target="_blank" rel="noreferrer">arXiv:2603.07231</a>.</li>
+    </ol>
   </section>
 
 </main>
