@@ -3,11 +3,11 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "qdriftforecast"
+name = "specops-cst"
 version = "2.0.0"
-description = "Causal spectral-truncation C*-algebraic kernels for quantum-hardware drift forecasting and noncommutative drift detection: deterministic regeneration of the manuscript figures and tables."
+description = "Causal spectral-truncation C*-algebraic kernels for quantum-hardware drift forecasting and noncommutative drift detection: deterministic regeneration of the manuscript figures and tables. Part of the spectral-truncation operators (SpecOps) program."
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Molena Huynh", email = "molena.huynh@jmp.com" }]
 keywords = [
@@ -25,6 +25,7 @@ classifiers = [
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -48,6 +49,7 @@ Homepage = "https://github.com/molena-huynh/Quantum-Drift-Forecasting"
 Repository = "https://github.com/molena-huynh/Quantum-Drift-Forecasting"
 
 [project.scripts]
+cst-reproduce = "qdriftforecast.reproduce:main"
 qdrift-reproduce = "qdriftforecast.reproduce:main"
 
 [tool.setuptools]

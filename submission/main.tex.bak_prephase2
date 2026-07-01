@@ -37,14 +37,6 @@
 \newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{corollary}[theorem]{Corollary}
-% Definition/assumption/remark environments for the change-point theory section
-% (shared counter with the results above; upright body via the definition style).
-\theoremstyle{definition}
-\newtheorem{definition}[theorem]{Definition}
-\newtheorem{assumption}[theorem]{Assumption}
-\theoremstyle{remark}
-\newtheorem{remark}[theorem]{Remark}
-\theoremstyle{plain}
 
 \begin{document}
 
@@ -61,34 +53,37 @@ Raleigh, North Carolina 27695, USA}
 
 % ── Abstract ─────────────────────────────────────────────────────────────────
 \begin{abstract}
-A quantum computer is a stochastic device: every quantity we know about it is
-estimated from samples, so its calibration record is itself a noisy multivariate
-time series and reliability monitoring is a statistical inference problem, not a
-gauge reading. Deciding that a device has drifted is sequential hypothesis testing,
-and predicting where its coherence is headed is estimation under uncertainty. We
-introduce the
-causal spectral-truncation (CST) kernel, a
+Fault-tolerant quantum computing is gated by hardware that drifts: relaxation and
+dephasing times, gate fidelities, and calibration parameters wander on timescales
+of hours, eroding the error budgets that quantum error correction presupposes.
+However, the most damaging drift mode --- correlated decoherence from control
+crosstalk, shared two-level-system baths, and correlated flux noise --- evades the
+per-channel, level-based monitors used in practice, because it can leave every
+marginal distribution and every instantaneous cross-channel covariance unchanged
+while living entirely in the \emph{ordered, lagged} cross-channel structure. We
+recast reliability monitoring as operator-algebraic learning on multivariate
+calibration telemetry and introduce the causal spectral-truncation (CST) kernel, a
 C\textsuperscript{$\ast$}-algebra-valued positive-definite kernel whose truncation
-order $n$ controls the noncommutativity of the cross-channel products it represents,
-and prove that this noncommutativity certifies detectability of hardware drift.
-Fault-tolerant quantum computing is gated by drift whose most damaging mode ---
-correlated decoherence from crosstalk, shared two-level-system baths, and flux noise
---- evades the per-channel monitors used in practice, because it leaves every
-marginal and every instantaneous covariance unchanged while living entirely in the
-\emph{ordered, lagged} cross-channel structure. CST resolves
-this with a \emph{causal lower-shift} truncation, replacing the periodic Fourier
-truncation of existing spectral-truncation kernels so it respects the arrow of time,
-plus a reconstruction detector whose order admits a provable optimum. On a correlated-decoherence benchmark with matched marginals and matched stationary
-covariance, every commutative monitor detects at chance
-(ROC-AUC $\approx0.5$), whereas the noncommutative CST kernel reaches ROC-AUC~$0.90$
-through a sharp optimal order $n{=}2$ that we certify analytically as the detection
-analog of the representation--complexity trade-off. The same kernel also forecasts
-coherence, $72\%$ over persistence eight steps ahead,
-where noncommutativity is provably unnecessary --- an operational rule: match the
-kernel's noncommutativity to the geometry of the drift. Training-free and
-hardware-agnostic, the pipeline installs with \texttt{pip} and deterministically
-regenerates every figure and table on a single CPU in seconds, delivering both a
-certificate for noncommutative monitoring and a reproducible reliability toolbox.
+order $n$ controls the noncommutativity of the cross-channel products it
+represents. The construction rests on two innovations: a \emph{causal lower-shift}
+truncation that replaces the periodic Fourier truncation of recently developed
+spectral-truncation kernels, so the kernel respects the arrow of time; and a
+reconstruction detector on the resulting feature algebra whose truncation order
+admits a provable optimum. On a physically motivated
+correlated-decoherence benchmark with matched marginals and matched stationary
+instantaneous covariance, every commutative monitor we evaluate --- raw-level,
+instantaneous-covariance, and the periodic spectral-truncation kernel --- detects
+at chance (ROC-AUC $\approx0.5$), whereas the noncommutative CST kernel detects at
+ROC-AUC~$0.90$ ($0.84$ at matched bottleneck rank) through a sharp optimal order
+$n{=}2$ that we certify analytically as the detection analog of the
+representation--complexity trade-off. The same kernel forecasts coherence with
+horizon-growing skill --- $72\%$ over persistence eight steps ahead --- a regime in
+which noncommutativity is provably unnecessary, yielding an operational rule:
+match the kernel's noncommutativity to the geometry of the drift. Training-free at
+inference, the pipeline is hardware-agnostic, installs with \texttt{pip}, and
+regenerates every figure and table deterministically on a single CPU in seconds,
+delivering both a theoretical certificate for when noncommutative monitoring is
+necessary and a practical, reproducible toolbox for quantum-processor reliability.
 \end{abstract}
 
 \maketitle
@@ -96,36 +91,16 @@ certificate for noncommutative monitoring and a reproducible reliability toolbox
 % ── Introduction ─────────────────────────────────────────────────────────────
 \section{Introduction}
 
-Statistics is under-rated in, and structural to, quantum computing. A quantum
-processor is interrogated only by sampling: the Born rule returns one bitstring
-per run, so every operational quantity --- an expectation value in a variational
-loop, a fidelity from randomized benchmarking, a state from tomography, a logical
-outcome decoded from a syndrome --- is the output of an estimator with a variance,
-a confidence interval, and a sample budget. Reliability is no exception. Whether a
-device is fit to run cannot be read off a gauge; it must be inferred from the noisy
-multivariate telemetry the machine already logs, which makes monitoring a
-statistical problem twice over: deciding \emph{that} the device has drifted is
-sequential hypothesis testing, and predicting \emph{where} its coherence is headed
-is estimation under uncertainty. Framing the problem this way is what lets a single
-kernel carry both tasks and lets an elementary probabilistic argument, rather than
-a tuned hyperparameter, say how much structure a monitor must represent.
-
 Quantum processors are not static devices. The relaxation time \T, the dephasing
 time \Ttwo, single- and two-qubit gate fidelities, readout-assignment error, and
 tunable-coupling parameters all evolve continuously with temperature, flux noise,
 two-level-system dynamics, and recalibration history
-\citep{krantz2019guide,kjaergaard2020superconducting}. The microscopic origins are
-well documented: relaxation times fluctuate as qubit frequencies sweep across
-near-resonant two-level-system defects~\citep{klimov2018fluctuations,burnett2019decoherence},
-whose universal low-temperature physics in the amorphous oxides of the device is
-itself an active subject~\citep{muller2019tls}, and the surrounding $1/f$ flux and
-charge noise is routinely mapped by dynamical-decoupling
-spectroscopy~\citep{bylander2011noise}. This drift is more than a
+\citep{krantz2019guide,kjaergaard2020superconducting}. This drift is more than a
 nuisance. In the noisy intermediate-scale quantum (NISQ) regime it limits the
 depth of usable circuits \citep{preskill2018nisq}; in the fault-tolerant regime it
 threatens the foundational assumption that physical error rates stay below
 threshold long enough for error correction to suppress logical errors
-\citep{google2023surfacecode,arute2019supremacy,krinner2022d3,acharya2025below}. As processors scale to hundreds
+\citep{google2023surfacecode,arute2019supremacy}. As processors scale to hundreds
 and then thousands of qubits, deciding \emph{when} a device has drifted out of
 specification, and \emph{which} qubits or intervals warrant the expensive
 intervention of recalibration, becomes a data problem at a scale manual inspection
@@ -137,23 +112,16 @@ channel. Control crosstalk, shared two-level-system baths, and correlated flux
 noise couple the errors of neighboring qubits and of distinct calibration
 channels, frequently with a \emph{propagation delay}: a disturbance that perturbs
 one qubit's coherence reappears, lagged, in a neighbor's readout or coupling phase
-\citep{krantz2019guide}. Such spatially and temporally correlated errors are now
-directly observed --- charge bursts and cosmic-ray impacts that depress relaxation
-across an entire chip~\citep{wilen2021correlated,mcewen2022cosmic} and mobile
-leakage that seeds correlated faults during error
-correction~\citep{google2021leakage}. Such \emph{correlated decoherence} is precisely the
+\citep{krantz2019guide}. Such \emph{correlated decoherence} is precisely the
 failure mode that quantum error correction is least able to absorb, and precisely
 the mode that per-channel, level-based monitors are worst equipped to see: an event
 can leave every marginal distribution and every instantaneous correlation unchanged
 while residing entirely in the \emph{ordered, lagged} cross-channel structure. A
 monitor blind to that structure is blind to the drift, and no amount of per-channel
 sensitivity recovers it. The established toolbox for diagnosing such errors ---
-randomized benchmarking~\citep{magesan2011rb,gambetta2012addressability},
-gate set tomography~\citep{nielsen2021gst}, statistical drift
-tracking~\citep{proctor2020drift}, capability and stability
-benchmarks~\citep{proctor2022capabilities}, and dedicated crosstalk-error
-detection~\citep{sarovar2020crosstalk,rudinger2021crosstalk} --- relies on
-purpose-built characterization
+randomized benchmarking~\citep{magesan2011rb}, statistical drift
+tracking~\citep{proctor2020drift}, and dedicated crosstalk-error
+detection~\citep{sarovar2020crosstalk} --- relies on purpose-built characterization
 circuits executed as separate experiments; we ask instead what can be inferred
 \emph{passively}, from the multivariate calibration telemetry a processor already
 logs, with no additional circuits and no labels.
@@ -164,15 +132,10 @@ stochastic process and is naturally an element of a matrix algebra over the
 channels; which cross-channel, cross-time interactions a monitor can resolve is
 then exactly the question of which products in that algebra it computes --- the
 setting of kernel methods and operator- and vector-valued kernel
-learning~\citep{scholkopf2002kernels,micchelli2005vector,alvarez2012vvk}, built on
-the classical theory of reproducing kernels~\citep{aronszajn1950rkhs} and recently
-extended to reproducing kernel Hilbert
-C\textsuperscript{$\ast$}-modules~\citep{hashimoto2021rkhm}. Its unsupervised face
+learning~\citep{scholkopf2002kernels,micchelli2005vector}, whose unsupervised face
 --- comparing distributions through kernel mean
-embeddings~\citep{muandet2017kme} and the maximum mean
-discrepancy~\citep{gretton2012mmd}, with kernels tailored to the sequential
-structure of time series~\citep{cuturi2007ga} --- is precisely what an unlabeled
-drift detector requires. Commutative kernels, whose feature products are insensitive to the order
+embeddings~\citep{muandet2017kme} --- is precisely what an unlabeled drift detector
+requires. Commutative kernels, whose feature products are insensitive to the order
 or relative lag of their factors, cannot represent ordered lagged interactions at
 all. The recent spectral-truncation kernels of
 Hashimoto et~al.\ make this precise for functional data: truncating the algebra of
@@ -184,16 +147,16 @@ construction was devised for periodic functional regression; it has not been
 brought to bear on time-ordered hardware telemetry, on causal monitoring, or on
 unsupervised detection. Bridging that gap is the object of this work.
 
-This study is the sixteenth entry in a program that treats spectral truncation of
+This study is the eighteenth entry in a program that treats spectral truncation of
 operators as a unifying primitive for resource-accounted, CPU-reproducible
 quantum-AI methods, and the causal spectral-truncation kernel imports that primitive
 into hardware reliability monitoring. The program spans query-efficient and
 uncertainty-calibrated QAOA through graph-conditioned trust
-regions~\citep{huynh2026gctr,huynh2026gctrcalpro}, the measurement
+regions~\citep{huynh2026gctr,huynh2026gctrcal,huynh2026gctrcalpro}, the measurement
 cost and certified query budgets of low-depth
 optimization~\citep{huynh2026meascost,huynh2026certqb}, topology-conditioned
 parameter transfer and operator-spectral priors for QAOA warm
-starts~\citep{huynh2026paramxferB,huynh2026ostqaoa,huynh2026topoqaoa},
+starts~\citep{huynh2026paramxfer,huynh2026paramxferB,huynh2026ostqaoa,huynh2026topoqaoa},
 commutator-graph scheduling and Lie-algebraic truncation of the Trotter
 residual~\citep{huynh2026topoham,huynh2026lie}, transfer-operator and graph-neural
 decoding of structured and correlated quantum
@@ -220,7 +183,7 @@ that noncommutativity is \emph{necessary}: on a physically motivated
 correlated-decoherence benchmark engineered so the drift lives in ordered, lagged
 cross-channel structure, the commutative monitors we evaluate --- raw-level,
 instantaneous-covariance, and the periodic spectral-truncation kernel --- all
-detect at chance (ROC-AUC $\approx0.5$), whereas the causal kernel detects at ROC-AUC~$0.90$ at a
+detect at chance, whereas the causal kernel detects at ROC-AUC~$0.90$ at a
 certifiable optimal truncation order $n{=}2$. \textbf{(iii)} We supply the
 supporting theory --- positive definiteness for every order, a blindness theorem
 for commutative monitors, and an \emph{optimal-truncation detection certificate}
@@ -338,7 +301,7 @@ Increasing the kernel's truncation order leaves this picture unchanged
 (Fig.~\ref{fig:forecast}c): the CST forecaster's eight-step skill is flat in $n$,
 moving only from $72\%$ at $n{=}1$ to $71\%$ at $n{=}4$. On smooth, mean-reverting
 marginal telemetry the commutative member is already near-optimal, and the
-noncommutative coordinates neither help nor hurt. This is the exact complement of
+noncommutative coordinates neither help nor hurt. This is the honest complement of
 the detection result that follows --- noncommutativity is decisive precisely when
 the drift lives in ordered cross-channel structure, and superfluous otherwise ---
 and it is what licenses the operational rule we state in the Discussion.
@@ -403,13 +366,7 @@ legitimate similarity throughout the family. The unsupervised detector fits a
 rank-$k$ nominal subspace in this feature space and scores a window by its residual
 energy off that subspace --- a C\textsuperscript{$\ast$}-algebraic generalization of
 the low-rank reconstruction detector~\citep{malhotra2016lstmad}, which it recovers
-exactly at $n{=}1$. Reconstruction-residual scoring sits alongside the classical
-unsupervised detectors --- one-class support-vector
-estimation~\citep{scholkopf2001ocsvm}, local outlier
-factors~\citep{breunig2000lof}, and isolation forests~\citep{liu2008iforest},
-surveyed broadly in~\citep{pang2021deepad} --- but, unlike them, the present detector
-inherits an operator-algebraic feature map whose noncommutativity is the object of
-study. The kernel is thus evaluated in closed form from a single pass
+exactly at $n{=}1$. The kernel is thus evaluated in closed form from a single pass
 over the window, with no training, no iterative optimization, and no
 hyperparameter beyond the order $n$ and rank $k$.
 
@@ -711,478 +668,6 @@ which those same coordinates are everything. Together the two theorems delimit w
 noncommutativity is necessary and when it is superfluous, which is the operational
 content of the work.
 
-% ── Change-point / sequential statistical theory ─────────────────────────────
-\section{Change-point detection and forecasting: statistical theory}
-\label{sec:cptheory}
-
-The results above certify \emph{what} a truncation order can represent. We now
-certify \emph{how well}, and \emph{how fast}, that representation supports the two
-statistical decisions a reliability monitor must actually make: declaring that a
-drift has begun (a sequential change-point decision) and predicting where the
-telemetry is headed (an estimation-with-uncertainty decision). The unifying view is
-that calibration monitoring is a time-series problem, drift onset is a change point,
-its detection is sequential hypothesis testing, and the causal spectral-truncation
-(CST) kernel is a \emph{structured probabilistic surrogate} for the drift process
-whose noncommutativity is exactly the quantity that makes the change-point testable.
-Four theorems make this precise: a Lorden-minimax optimality and delay--false-alarm
-tradeoff for a CST--CUSUM detector (Theorem~\ref{thm:cusum}); a Fisher-information /
-Kullback--Leibler certificate in which the commutator lower-bounds the detectable
-signal, so nonzero noncommutativity \emph{guarantees} detectability and vanishing
-noncommutativity makes the drift statistically invisible (Theorem~\ref{thm:fisher},
-Corollary~\ref{cor:crb}); a mixing-robust forecast-risk bound with a calibrated
-predictive interval (Theorem~\ref{thm:forecastrisk}, Corollary~\ref{cor:predint});
-and a distribution-free anomaly-flagging rule with a controlled false-positive rate
-(Theorem~\ref{thm:anomaly}). They complement the representation theorems without
-altering any of them: Theorems~\ref{thm:blind}--\ref{thm:optn} say the noncommutative
-coordinate carries the signal, and the theorems here quantify the sequential
-detection delay, the estimation floor, and the error control that carrying it buys.
-
-\subsection{The monitoring problem as a change point in the feature stream}
-
-Fix a truncation order $n$ and abbreviate the standardized, mean-centered CST feature
-vector of the window observed at (window) time $t$ by
-$\phi_t:=\operatorname{vec}\big(\Phi_n(X_t)-\bar\Phi\big)\in\mathbb{R}^{d}$,
-$d=nC^2$, with $\bar\Phi$ the nominal feature mean and the standardization fixed on
-nominal data. A monitor observes the stream $\phi_1,\phi_2,\dots$ sequentially. Under
-nominal operation the windows are governed by a law $P_0$; at an unknown
-\emph{change point} $\nu\in\{1,2,\dots\}$ the drift switches the law of every
-subsequent window to $P_1$, the correlated-decoherence law of
-Theorem~\ref{thm:blind}. A detector is a stopping time $T$ adapted to the stream
-(the alarm), and its quality is governed by two competing quantities in the
-Lorden~\citep{lorden1971procedures}/Page~\citep{page1954cusum} framework: the
-\emph{average run length to false alarm} under the pure-nominal law,
-$\mathrm{ARL}_0(T)=\mathbb{E}_\infty[T]$ (writing $\mathbb{E}_\infty$ for
-$\nu=\infty$, no change), and the \emph{worst-case average detection delay}
-\begin{equation}
-  \mathrm{ADD}(T)=\sup_{\nu\ge1}\ \operatorname*{ess\,sup}\
-  \mathbb{E}_\nu\!\big[(T-\nu+1)^+\,\big|\,\phi_1,\dots,\phi_{\nu-1}\big],
-  \label{eq:add}
-\end{equation}
-the largest expected delay after onset, taken over the change time and the
-pre-change history. The design goal is Lorden's: minimize $\mathrm{ADD}$ subject to a
-false-alarm floor $\mathrm{ARL}_0(T)\ge\gamma$.
-
-The log-likelihood ratio of a single window carries the discriminating information.
-Write $\ell_t=\log\big(\mathrm{d}P_1/\mathrm{d}P_0\big)(\phi_t)$ for the per-window
-log-likelihood-ratio (LLR) increment and
-\begin{equation}
-  I_1:=\mathbb{E}_{P_1}[\ell_t]
-       =D_{\mathrm{KL}}\!\big(P_1\,\|\,P_0\big)\ \ge 0,\qquad
-  I_1'=\mathbb{E}_{P_0}[-\ell_t]=D_{\mathrm{KL}}\!\big(P_0\,\|\,P_1\big)\ \ge 0
-  \label{eq:kl}
-\end{equation}
-for the two per-window Kullback--Leibler (KL) information numbers, assumed finite. The
-CST--CUSUM detector is Page's cumulative-sum statistic on these increments,
-\begin{equation}
-  W_0=0,\qquad W_t=\big(W_{t-1}+\ell_t\big)^+,\qquad
-  T_{\mathrm{c}}(h)=\inf\{t\ge1:\ W_t\ge h\},
-  \label{eq:cusum}
-\end{equation}
-with threshold $h>0$. When $P_0,P_1$ are the Gaussian surrogates fitted to the CST
-features (mean $\mu_0,\mu_1$, shared covariance $\Sigma$), the increment is the
-affine detector statistic $\ell_t=(\mu_1-\mu_0)^\top\Sigma^{-1}(\phi_t-\bar\mu)$ with
-$\bar\mu=\tfrac12(\mu_0+\mu_1)$, i.e.\ exactly the reconstruction-contrast direction
-of the CST detector projected onto the noncommutative coordinate; the CST--CUSUM is
-thus the sequential form of the very score whose ROC-AUC Fig.~\ref{fig:detection}
-reports. The next result shows this detector is not merely reasonable but
-asymptotically \emph{minimax-optimal}.
-
-\subsection{Optimal sequential detection and the delay--false-alarm tradeoff}
-
-\begin{theorem}[CST--CUSUM is Lorden-minimax with a $\log\gamma/I_1$ delay]
-\label{thm:cusum}
-Assume the per-window LLR increments $\{\ell_t\}$ are i.i.d.\ with law fixed by the
-regime (nominal before $\nu$, drift after), $0<I_1<\infty$, and $I_1'<\infty$. Choose
-the threshold $h=h(\gamma)=\log\gamma$. Then the CST--CUSUM stopping time
-$T_{\mathrm c}(h)$ of \eqref{eq:cusum} satisfies the false-alarm constraint
-$\mathrm{ARL}_0\big(T_{\mathrm c}\big)\ge \gamma$, and among \emph{all} stopping
-times meeting that same constraint it minimizes the worst-case delay
-\eqref{eq:add} to first order:
-\begin{equation}
-  \mathrm{ADD}\big(T_{\mathrm c}(h)\big)
-   \ \le\ \frac{h}{I_1}\,(1+o(1))
-   \ =\ \frac{\log\gamma}{I_1}\,(1+o(1)),
-  \qquad
-  \inf_{T:\,\mathrm{ARL}_0(T)\ge\gamma}\mathrm{ADD}(T)
-   \ \ge\ \frac{\log\gamma}{I_1}\,(1+o(1))
-  \label{eq:cusumbound}
-\end{equation}
-as $\gamma\to\infty$. Consequently the optimal delay--false-alarm tradeoff is
-$\mathrm{ADD}^\star(\gamma)\sim \log\gamma/I_1$: the minimum achievable detection
-delay grows only logarithmically in the tolerated mean time between false alarms, at
-a rate set by the per-window KL information $I_1$ of the drift.
-\end{theorem}
-
-\noindent The two halves of \eqref{eq:cusumbound} are a matching upper bound (Wald)
-and lower bound (Lorden); we prove them in Appendix~\ref{app:cusum} via
-Lemma~\ref{lem:wald}. The content for the paper is the coupling of this theorem to
-the noncommutativity theorem below: $I_1$ is not a free constant but is itself
-lower-bounded by the drift's noncommutativity, so a detector that carries the
-noncommutative coordinate has strictly positive $I_1$ and therefore finite delay,
-whereas a commutative monitor has $I_1=0$ and \emph{never} detects at any finite
-delay. The CST--CUSUM inherits its optimality from the CST feature map's ability to
-make $I_1>0$ at all.
-
-\begin{lemma}[Wald boundary identity and the ARL floor]
-\label{lem:wald}
-Let $\{\ell_t\}$ be i.i.d.\ with $\mathbb{E}_{P_1}[\ell_t]=I_1>0$ and let
-$T_h=\inf\{t:\sum_{s\le t}\ell_s\ge h\}$ be the first passage of the random walk
-$\sum_{s\le t}\ell_s$ above $h$. Then $\mathbb{E}_{P_1}[T_h]<\infty$ and, by Wald's
-identity, $\mathbb{E}_{P_1}\!\big[\sum_{s\le T_h}\ell_s\big]=I_1\,\mathbb{E}_{P_1}[T_h]$,
-whence $\mathbb{E}_{P_1}[T_h]=\big(h+\mathbb{E}_{P_1}[R_h]\big)/I_1$ with
-$R_h=\sum_{s\le T_h}\ell_s-h\ge0$ the nonnegative overshoot, so
-$\mathbb{E}_{P_1}[T_h]\le (h+\mathbb{E}[R_h])/I_1=h/I_1+O(1)$. Moreover, under the
-nominal law the nonnegative supermartingale $e^{\,W_t-t\cdot0}$ built from the
-one-sided CUSUM and the change-of-measure $\mathbb{E}_\infty[e^{\,S_t}]=1$ (with
-$S_t=\sum_{s\le t}\ell_s$) give, via optional stopping at $T_{\mathrm c}(h)$, the
-false-alarm floor $\mathrm{ARL}_0(T_{\mathrm c}(h))\ge e^{h}=\gamma$.
-\end{lemma}
-
-\begin{proof}
-Finiteness of $\mathbb{E}_{P_1}[T_h]$: since $I_1>0$, the strong law gives
-$S_t/t\to I_1>0$ a.s.\ under $P_1$, so $S_t\to+\infty$ and the level $h$ is crossed in
-finite time a.s.; a standard renewal bound
-($\mathbb{E}_{P_1}[T_h]\le (h+c)/I_1$ for a constant $c$ bounding the mean overshoot
-when $\ell_t$ has a finite second moment, which holds for the Gaussian surrogate)
-gives integrability. Wald's identity applies because $T_h$ is a stopping time with
-$\mathbb{E}_{P_1}[T_h]<\infty$ and $\mathbb{E}_{P_1}|\ell_t|<\infty$:
-$\mathbb{E}_{P_1}[S_{T_h}]=I_1\,\mathbb{E}_{P_1}[T_h]$. Writing
-$S_{T_h}=h+R_h$ with overshoot $R_h\ge0$ and rearranging yields
-$\mathbb{E}_{P_1}[T_h]=(h+\mathbb{E}_{P_1}[R_h])/I_1$; the overshoot has bounded mean
-(again by finite second moment of $\ell_t$), so $\mathbb{E}_{P_1}[T_h]=h/I_1+O(1)$.
-For the false-alarm floor, note $M_t=e^{\,S_t}$ is a nonnegative
-$P_0$-martingale because $\mathbb{E}_{P_0}[e^{\,\ell_t}]
-=\int (\mathrm{d}P_1/\mathrm{d}P_0)\,\mathrm{d}P_0=1$. The one-sided statistic
-satisfies $W_t=\max_{0\le j\le t}(S_t-S_j)\ge S_t-S_{k}$ for the last reset time $k$,
-and at the alarm $W_{T_{\mathrm c}}\ge h$, so the post-reset walk has crossed $h$;
-applying the optional-stopping inequality to $M_t$ at the (bounded-truncation of the)
-crossing time and taking truncation to infinity gives
-$\mathbb{E}_\infty[T_{\mathrm c}(h)]\ge e^{h}$. With $h=\log\gamma$ this is
-$\mathrm{ARL}_0\ge\gamma$.
-\end{proof}
-
-\subsection{Noncommutativity certifies detectability: a Fisher-information floor}
-
-We now prove the paper's central mechanism at the level of information, not just
-representation: the detectable drift signal is lower-bounded by the noncommutativity
-of channel selection with the causal shift, so the commutator that
-Theorem~\ref{thm:pd} identifies as the source of the kernel's expressivity is
-\emph{the same} quantity that guarantees the change-point is statistically testable.
-
-Parametrize the drift by a scalar amplitude $\theta\ge0$: the drift law $P_\theta$
-adds to the nominal feature covariance a rank-controlled lagged coupling supported at
-the informative lag $\tau^\star$,
-\begin{equation}
-  \Sigma_\theta=\Sigma_0+\theta\,\Delta,\qquad
-  \Delta=\Delta_{\tau^\star}\ \text{ supported on the lag-}\tau^\star\text{ block},
-  \label{eq:driftparam}
-\end{equation}
-with $\theta=0$ nominal and $\theta=1$ the benchmark drift, so
-$\Delta$ is exactly the mean-shift $\Delta_{\tau^\star}$ of Theorem~\ref{thm:blind}
-lifted to the feature covariance. Define the \emph{noncommutativity coefficient} of
-the drift as the norm of the part of $\Delta$ that no commutative rearrangement of
-channel and shift can remove,
-\begin{equation}
-  \kappa\ :=\ \big\lVert\,\big[\,S^{\tau^\star},\,E\,\big]\,\big\rVert_{\Delta}
-   \ :=\ \Big(\textstyle\sum_{c\ne c'} w_{\tau^\star}^2\,
-   \big(\langle X_{:,c},S^{\tau^\star}X_{:,c'}\rangle
-        -\langle X_{:,c'},S^{\tau^\star}X_{:,c}\rangle\big)^2\Big)^{1/2}_{P_1\text{-mean}},
-  \label{eq:kappa}
-\end{equation}
-where $E$ denotes channel selection and $[S^{\tau^\star},E]=S^{\tau^\star}E-E
-S^{\tau^\star}$ is the commutator whose nonvanishing at $\tau^\star\ge1$ is the
-noncommutativity of Theorem~\ref{thm:pd}; $\kappa$ is the root-mean-square of the
-order-sensitive (antisymmetric-in-$(c,c')$) lagged correlations that a commutative
-monitor cannot see. At $n{=}1$, or whenever $S^{\tau^\star}$ commutes with channel
-selection, $\kappa=0$.
-
-\begin{theorem}[Noncommutativity lower-bounds the KL information and the Fisher information]
-\label{thm:fisher}
-Let $P_\theta$ be the Gaussian CST-feature surrogate with covariance
-\eqref{eq:driftparam} and fixed mean, and let
-$\mathcal{I}(\theta)=-\mathbb{E}_\theta[\partial_\theta^2\log p_\theta]$ be the Fisher
-information about the drift amplitude carried by one window. Then, with
-$\lambda_{\max}=\lambda_{\max}(\Sigma_0)$,
-\begin{equation}
-  \mathcal{I}(0)=\tfrac12\operatorname{tr}\!\big[(\Sigma_0^{-1}\Delta)^2\big]
-  \ \ge\ \frac{\lVert\Delta\rVert_F^2}{2\lambda_{\max}^2}
-  \ \ge\ \frac{\kappa^2}{2\,\lambda_{\max}^2}\,,
-  \label{eq:fisher}
-\end{equation}
-and the per-window KL information of the benchmark drift obeys
-$I_1=D_{\mathrm{KL}}(P_1\|P_0)\ge \tfrac{1}{4}\mathcal{I}(0)\,(1+o(1))
-\ge \kappa^2/(8\lambda_{\max}^2)$ for small amplitude. Consequently:
-\begin{enumerate}\itemsep2pt
-\item[(i)] \emph{Nonzero noncommutativity certifies detectability.} If $\kappa>0$
-then $\mathcal{I}(0)>0$ and $I_1>0$, so by Theorem~\ref{thm:cusum} the CST--CUSUM
-detects the change point at finite worst-case delay
-$\mathrm{ADD}\le \log\gamma/I_1\le 8\lambda_{\max}^2\log\gamma/\kappa^2$.
-\item[(ii)] \emph{Vanishing noncommutativity makes the drift undetectable.} If
-$\kappa=0$ (in particular for the commutative $n{=}1$ monitor), then the
-noncommutative coordinate is absent from the feature map, $\Delta$ projects to $0$ in
-the monitor's coordinates, its $\mathcal{I}(0)=0$ and $I_1=0$, the change point
-induces no measure change in the observed statistic, and \emph{no} sequential test on
-that statistic attains a false-alarm floor $\gamma>1$ at any finite delay --- the
-detector is at chance, consistent with Theorem~\ref{thm:blind} and
-Proposition~\ref{prop:auc}.
-\end{enumerate}
-\end{theorem}
-
-\begin{proof}
-For two zero-mean Gaussians with covariances $\Sigma_\theta$ and $\Sigma_0$ the
-KL divergence is
-$D_{\mathrm{KL}}(P_\theta\|P_0)=\tfrac12\big(\operatorname{tr}(\Sigma_0^{-1}\Sigma_\theta)
--d-\log\det(\Sigma_0^{-1}\Sigma_\theta)\big)$. Substituting
-$\Sigma_\theta=\Sigma_0+\theta\Delta$, put $A=\Sigma_0^{-1/2}\Delta\Sigma_0^{-1/2}$,
-so $\Sigma_0^{-1}\Sigma_\theta=I+\theta\Sigma_0^{-1}\Delta$ is similar to
-$I+\theta A$. Using $\operatorname{tr}(I+\theta A)-d=\theta\operatorname{tr}A$ and
-$\log\det(I+\theta A)=\operatorname{tr}\log(I+\theta A)
-=\theta\operatorname{tr}A-\tfrac{\theta^2}{2}\operatorname{tr}(A^2)+O(\theta^3)$, the
-linear terms cancel and
-$D_{\mathrm{KL}}(P_\theta\|P_0)=\tfrac{\theta^2}{4}\operatorname{tr}(A^2)+O(\theta^3)$.
-Since Fisher information equals twice the curvature of the KL divergence at the truth,
-$\mathcal{I}(0)=\partial_\theta^2 D_{\mathrm{KL}}(P_\theta\|P_0)\big|_{\theta=0}
-=\tfrac12\operatorname{tr}(A^2)=\tfrac12\operatorname{tr}[(\Sigma_0^{-1}\Delta)^2]$,
-the first equality in \eqref{eq:fisher}. For the bound, $A$ is symmetric and
-$\operatorname{tr}(A^2)=\lVert A\rVert_F^2
-=\lVert\Sigma_0^{-1/2}\Delta\,\Sigma_0^{-1/2}\rVert_F^2$. For symmetric positive
-definite $B$ and any $M$ one has $\lVert BMB\rVert_F\ge\sigma_{\min}(B)^2\lVert
-M\rVert_F$, because $\operatorname{vec}(BMB)=(B\otimes B)\operatorname{vec}(M)$ and the
-smallest singular value of $B\otimes B$ is $\sigma_{\min}(B)^2$. Taking
-$B=\Sigma_0^{-1/2}$, so $\sigma_{\min}(B)^2=\lambda_{\min}(\Sigma_0^{-1})
-=\lambda_{\max}(\Sigma_0)^{-1}$, gives $\lVert A\rVert_F\ge
-\lambda_{\max}(\Sigma_0)^{-1}\lVert\Delta\rVert_F$, hence $\operatorname{tr}(A^2)\ge
-\lVert\Delta\rVert_F^2/\lambda_{\max}^2$ and
-$\mathcal{I}(0)\ge \lVert\Delta\rVert_F^2/(2\lambda_{\max}^2)$. Finally
-$\lVert\Delta\rVert_F^2\ge\kappa^2$ because $\kappa^2$ is the squared Frobenius norm
-of the antisymmetric-in-$(c,c')$ part of the lag-$\tau^\star$ block of $\Delta$, a
-sub-block of $\Delta$, so \eqref{eq:fisher} follows. The KL/Fisher relation
-$I_1=D_{\mathrm{KL}}(P_1\|P_0)=\tfrac{\theta^2}{4}\operatorname{tr}(A^2)+O(\theta^3)
-=\tfrac14\mathcal{I}(0)\theta^2(1+o(1))$ at $\theta=1$ gives the stated floor for
-small amplitude.
-
-Claim (i): $\kappa>0\Rightarrow\mathcal{I}(0)>0\Rightarrow I_1>0$ by \eqref{eq:fisher},
-and Theorem~\ref{thm:cusum} converts $I_1>0$ into the finite delay
-$\log\gamma/I_1\le 8\lambda_{\max}^2\log\gamma/\kappa^2$. Claim (ii): if $\kappa=0$,
-the lag-$\tau^\star$ antisymmetric block of $\Delta$ vanishes; for the commutative
-monitor the feature map excludes every $\tau\ge1$ coordinate, so the monitor's
-observed statistic $\phi_t$ has the same law under $P_0$ and $P_1$
-(Theorem~\ref{thm:blind}: equal marginals and equal instantaneous covariance). Then
-$\ell_t\equiv 0$ almost surely in the monitor's $\sigma$-field, $\mathcal{I}(0)=0$,
-$I_1=I_1'=0$, and the pre- and post-change measures on the observed stream coincide.
-By the data-processing inequality no statistic of that stream can have positive KL,
-so for any stopping time $T$ adapted to it, $\mathbb{E}_\nu[(T-\nu+1)^+]$ cannot be
-made finite while $\mathbb{E}_\infty[T]\ge\gamma>1$: a test achieving
-$\mathrm{ARL}_0\ge\gamma$ must, by the same measure identity, have
-$\mathbb{E}_\nu[T\mid T\ge\nu]=\mathbb{E}_\infty[T\mid T\ge\nu]$, so its post-change
-behaviour is indistinguishable from pure false alarm and its detection probability in
-any fixed window equals its false-alarm probability --- chance.
-\end{proof}
-
-\begin{corollary}[Cram\'er--Rao floor on drift-amplitude estimation]
-\label{cor:crb}
-Any unbiased estimator $\hat\theta_m$ of the drift amplitude from $m$ independent
-windows has variance
-$\operatorname{Var}(\hat\theta_m)\ge \big(m\,\mathcal{I}(0)\big)^{-1}
-\ge 2\lambda_{\max}^2/(m\,\kappa^2)$.
-Hence the estimable amplitude resolution improves as the noncommutativity $\kappa$
-grows and \emph{diverges} as $\kappa\to0$: a commutative monitor cannot estimate the
-drift amplitude at any finite rate, while the CST monitor with $\kappa>0$ attains the
-parametric $1/\sqrt{m}$ rate with constant $\sqrt{2}\,\lambda_{\max}/\kappa$.
-\end{corollary}
-
-\begin{proof}
-Windows are independent, so the sample Fisher information is $m\,\mathcal{I}(0)$; the
-Cram\'er--Rao inequality gives $\operatorname{Var}(\hat\theta_m)\ge
-(m\mathcal{I}(0))^{-1}$, and \eqref{eq:fisher} bounds $\mathcal{I}(0)\ge
-\kappa^2/(2\lambda_{\max}^2)$. Substituting yields the claim; $\kappa\to0$ sends the
-floor to $\infty$.
-\end{proof}
-
-\begin{remark}
-Theorem~\ref{thm:fisher} upgrades Theorem~\ref{thm:blind} from a first-moment
-statement to an information-theoretic one: it is not merely that the commutative
-monitor's \emph{mean} score fails to separate, but that the pre- and post-change
-\emph{laws} of its observed statistic are identical, so \emph{no} test on it --- linear
-or not, one-shot or sequential --- can beat chance. Noncommutativity is therefore
-necessary in the strong, Neyman--Pearson sense, and the commutator norm $\kappa$ of
-\eqref{eq:kappa} is the exact currency in which detectability is denominated.
-\end{remark}
-
-\subsection{Forecast-risk bound under temporal dependence, and a calibrated interval}
-
-The forecasting head is an estimator with uncertainty, and its telemetry is
-dependent, not i.i.d.: Fig.~\ref{fig:dynamics}b shows the detrended \T\ series is
-geometrically mixing (its autocorrelation decays like $\phi^{\,h}$ for the AR(1)
-factor of Theorem~\ref{thm:skill}). We bound the finite-sample excess risk of the CST
-ridge forecaster over its population optimum under this dependence and attach a
-predictive interval with asymptotically correct coverage. Let the forecaster be the
-linear map $\hat f_\beta(\phi)=\beta^\top\phi$ on the CST feature $\phi$ of a window,
-fit by ridge with penalty $\alpha>0$ on $m$ overlapping training windows, and let
-$\beta^\star=\arg\min_\beta R(\beta)$, $R(\beta)=\mathbb{E}[(y-\beta^\top\phi)^2]$, be
-the population optimum (the target whose single-lag specialization is
-Theorem~\ref{thm:skill}). Assume the stream is stationary and $\beta$-mixing with
-coefficients $\beta_{\mathrm{mix}}(k)\le \bar\beta\,e^{-c_\beta k}$
-(geometric mixing, implied by the AR(1) structure), and the features and target are
-bounded, $\lVert\phi\rVert\le B_\phi$, $|y|\le B_y$.
-
-\begin{theorem}[Excess forecast risk under geometric mixing]
-\label{thm:forecastrisk}
-Under the assumptions above, with probability at least $1-\delta$ over the training
-stream the ridge forecaster $\hat\beta$ satisfies
-\begin{equation}
-  R(\hat\beta)-R(\beta^\star)
-  \ \le\ \alpha\,\lVert\beta^\star\rVert^2
-   \ +\ c\,\big(B_\phi^2+B_\phi B_y\big)\,
-   \sqrt{\frac{\log(1/\delta)}{m_{\mathrm{eff}}}}\,,
-  \qquad
-  m_{\mathrm{eff}}=\frac{m}{1+2\sum_{k\ge1}e^{-c_\beta k}}
-  \ =\ \Theta\!\big(m\,(1-e^{-c_\beta})\big),
-  \label{eq:forecastrisk}
-\end{equation}
-for a universal constant $c$, where $m_{\mathrm{eff}}$ is the mixing-deflated
-effective sample size. The bound is the i.i.d.\ rate $O(m^{-1/2})$ inflated by the
-dependence factor $\sqrt{m/m_{\mathrm{eff}}}$, which is $O(1)$ whenever the mixing rate
-$c_\beta$ is bounded away from $0$; increasing the truncation order $n$ enlarges the
-feature dimension but leaves the rate unchanged, matching the empirical flatness of
-forecast skill in $n$ (Fig.~\ref{fig:forecast}c).
-\end{theorem}
-
-\noindent The proof (Appendix~\ref{app:forecast}) blocks the dependent stream into
-near-independent segments (Bernstein for mixing sequences via Berbee
-coupling~\citep{rio2017asymptotic}, Lemma~\ref{lem:bernstein}) and adds the ridge
-bias term; the noncommutative coordinates enter only through $B_\phi$ and never
-through the rate, which is why forecasting is agnostic to $n$.
-
-\begin{lemma}[Bernstein concentration for geometrically mixing sums]
-\label{lem:bernstein}
-Let $\{Z_t\}$ be a stationary, zero-mean, $\beta$-mixing sequence with
-$|Z_t|\le B$ and $\beta_{\mathrm{mix}}(k)\le\bar\beta e^{-c_\beta k}$. Then for the
-block size $q=\lceil (2/c_\beta)\log m\rceil$ there is a universal constant $c_0$ with
-\begin{equation}
-  \Pr\Big[\Big|\tfrac1m\textstyle\sum_{t=1}^m Z_t\Big|\ge\varepsilon\Big]
-  \ \le\ 2\exp\!\Big(-\frac{c_0\,m\,\varepsilon^2}{q\,B^2}\Big)
-   \ +\ \frac{m}{q}\,\bar\beta\,e^{-c_\beta q}.
-  \label{eq:bernstein}
-\end{equation}
-Choosing $q$ as above makes the second term $O(m^{-1})$, so the sum concentrates at
-scale $\varepsilon=\Theta\big(B\sqrt{q\log(1/\delta)/m}\big)
-=\Theta\big(B\sqrt{\log(1/\delta)/m_{\mathrm{eff}}}\big)$.
-\end{lemma}
-
-\begin{proof}
-Partition $\{1,\dots,m\}$ into $\lfloor m/q\rfloor$ consecutive blocks of length $q$
-and couple the odd (resp.\ even) blocks to an independent copy: by Berbee's coupling
-lemma the block sequence differs from an i.i.d.\ block sequence on an event of
-probability at most $(m/q)\,\beta_{\mathrm{mix}}(q)\le (m/q)\bar\beta e^{-c_\beta q}$,
-the second term of \eqref{eq:bernstein}. On the complementary event the block sums
-are independent, each bounded by $qB$, so the classical Bernstein/Hoeffding inequality
-for the $\lfloor m/q\rfloor$ independent block sums gives the first term with the
-variance proxy $q B^2$. Optimizing the block length as $q=\Theta(c_\beta^{-1}\log m)$
-balances the two terms and yields the stated effective-sample-size scaling.
-\end{proof}
-
-\begin{corollary}[Calibrated predictive interval for the coherence forecast]
-\label{cor:predint}
-Let $\hat q_{1-\alpha}$ be the empirical $(1-\alpha)$-quantile of the absolute
-forecast residuals $\{|y_i-\hat\beta^\top\phi_i|\}$ on a held-out calibration block of
-$m_{\mathrm c}$ windows drawn from the same stationary stream, and form the interval
-$\mathcal C(\phi)=[\hat\beta^\top\phi-\hat q_{1-\alpha},\,
-\hat\beta^\top\phi+\hat q_{1-\alpha}]$. Then the coverage satisfies
-\begin{equation}
-  \Pr\big[y\in\mathcal C(\phi)\big]\ \ge\ 1-\alpha
-  \ -\ 2\,\beta_{\mathrm{mix}}(1)
-  \ -\ O\!\big(m_{\mathrm c}^{-1/2}\big),
-  \label{eq:predint}
-\end{equation}
-so the interval is asymptotically calibrated at level $1-\alpha$, with a coverage gap
-controlled by the one-step mixing coefficient (which is exponentially small under
-geometric mixing) and the calibration-set size.
-\end{corollary}
-
-\begin{proof}
-For exchangeable residuals the split-conformal guarantee gives exact coverage
-$\Pr[y\in\mathcal C(\phi)]\ge 1-\alpha$ with the finite-sample correction
-$\lceil(1-\alpha)(m_{\mathrm c}+1)\rceil/(m_{\mathrm c}+1)=1-\alpha+O(m_{\mathrm
-c}^{-1})$. The calibration residuals here are not exchangeable but stationary and
-$\beta$-mixing; coupling the calibration block to an i.i.d.\ block (Berbee, as in
-Lemma~\ref{lem:bernstein}) changes the empirical residual quantile by at most the
-total-variation cost $2\beta_{\mathrm{mix}}(1)$ per adjacent pair, and the
-Dvoretzky--Kiefer--Wolfowitz inequality controls the quantile estimation error of the
-coupled i.i.d.\ residual CDF at rate $O(m_{\mathrm c}^{-1/2})$. Summing the two
-corrections gives \eqref{eq:predint}.
-\end{proof}
-
-\subsection{A distribution-free anomaly-flagging rule with controlled false alarms}
-
-Finally we give the one-shot (per-window) counterpart of the sequential detector: a
-probabilistic anomaly rule that flags a bad-data / drift-excursion window while
-controlling the false-positive rate \emph{without any distributional assumption on the
-nominal law} --- the data-quality guarantee a probabilistic surrogate must supply.
-The rule is a split-conformal test~\citep{vovk2005algorithmic} that thresholds the
-CST reconstruction score $s(X)=\lVert(I-P_k)(\Phi_n(X)-\bar\Phi)\rVert^2$ of
-Theorem~\ref{thm:blind} at a data-driven level.
-
-\begin{theorem}[Conformal false-positive control for CST anomaly flagging]
-\label{thm:anomaly}
-Fit the rank-$k$ nominal subspace $P_k$ on a training block, and let
-$s_{(1)}\le\dots\le s_{(m_{\mathrm c})}$ be the order statistics of the CST
-reconstruction scores on a disjoint calibration block of $m_{\mathrm c}$ nominal
-windows. For target level $\alpha\in(0,1)$ set the threshold
-$h_\alpha=s_{(\lceil(1-\alpha)(m_{\mathrm c}+1)\rceil)}$ and flag a test window $X$ as
-anomalous iff $s(X)>h_\alpha$. If the calibration and test nominal windows are
-exchangeable, then the per-window false-positive rate is controlled
-distribution-free,
-\begin{equation}
-  \Pr_{P_0}\big[\,\text{flag}\,\big]\ =\ \Pr_{P_0}\big[s(X)>h_\alpha\big]
-  \ \le\ \alpha,
-  \qquad\text{and}\qquad
-  \Pr_{P_0}\big[s(X)>h_\alpha\big]\ \ge\ \alpha-\tfrac{1}{m_{\mathrm c}+1}.
-  \label{eq:anomaly}
-\end{equation}
-Under only stationarity and $\beta$-mixing the same bound holds up to an additive
-$2\beta_{\mathrm{mix}}(1)$. Moreover the rule has nontrivial power against the drift:
-its detection probability is bounded below by
-$\Pr_{P_1}[s(X)>h_\alpha]\ge \alpha + \big(\text{energy of }(I-P_k)\Delta_{\tau^\star}
-\big)/\!\big(\text{score dispersion}\big) - o(1)$, which is strictly positive whenever
-$\kappa>0$ by Theorem~\ref{thm:fisher}, and equals $\alpha$ (chance) when $\kappa=0$.
-\end{theorem}
-
-\begin{proof}
-False-positive control is the standard split-conformal / rank argument. Under
-exchangeability of the $m_{\mathrm c}+1$ nominal scores
-$\{s_1,\dots,s_{m_{\mathrm c}},s(X)\}$, the rank of the test score $s(X)$ among them is
-uniform on $\{1,\dots,m_{\mathrm c}+1\}$. The event $\{s(X)>h_\alpha\}$ means $s(X)$
-exceeds the $\lceil(1-\alpha)(m_{\mathrm c}+1)\rceil$-th order statistic, i.e.\ its
-rank is at least $\lceil(1-\alpha)(m_{\mathrm c}+1)\rceil+1$, an event of probability
-$(m_{\mathrm c}+1-\lceil(1-\alpha)(m_{\mathrm c}+1)\rceil)/(m_{\mathrm c}+1)\le\alpha$;
-the matching lower bound $\ge\alpha-1/(m_{\mathrm c}+1)$ follows from the ceiling
-rounding, giving \eqref{eq:anomaly}. The distribution-free property is immediate: the
-argument uses only the rank, never the form of $P_0$. Replacing exchangeability by
-stationary $\beta$-mixing costs one Berbee coupling of the test window to the
-calibration block, an additive $2\beta_{\mathrm{mix}}(1)$ in total-variation, as in
-Corollary~\ref{cor:predint}. For power, decompose $s(X)=\lVert(I-P_k)(\Phi_n(X)-
-\bar\Phi)\rVert^2$; under $P_1$ the mean of the residual increases by
-$\lVert(I-P_k)\Delta_{\tau^\star}\rVert^2$ (Theorem~\ref{thm:blind}), so by Chebyshev
-the exceedance probability at the fixed nominal quantile $h_\alpha$ rises above
-$\alpha$ by the stated separation-to-dispersion ratio, which is positive iff the
-off-subspace drift energy is positive, i.e.\ iff $\kappa>0$; when $\kappa=0$ the
-residual law is unchanged and the exceedance probability stays at $\alpha$.
-\end{proof}
-
-\begin{remark}
-The four theorems assemble into a single sequential-statistics pipeline for the CST
-surrogate: Theorem~\ref{thm:anomaly} screens each window for bad data at a controlled
-false-positive rate; Theorem~\ref{thm:cusum} accumulates the surviving windows into a
-minimax-optimal change-point alarm; Theorem~\ref{thm:fisher} certifies that the alarm
-fires at finite delay exactly when the drift carries noncommutativity $\kappa>0$; and
-Theorem~\ref{thm:forecastrisk} with Corollary~\ref{cor:predint} turns the same
-features into a calibrated forecast. Statistics is thus not an add-on but the
-structure of the monitor: change-point testing, Fisher information, and mixing
-concentration are the mechanisms by which a C\textsuperscript{$\ast$}-algebraic
-kernel becomes an operational reliability instrument.
-\end{remark}
-
 % ── Discussion ───────────────────────────────────────────────────────────────
 \section{Discussion}
 
@@ -1212,34 +697,13 @@ telemetry generator, although physically motivated, is a model rather than measu
 device data, and the correlated-decoherence mode is a controlled construction chosen
 to isolate the noncommutative effect in the cleanest possible setting; validation on
 archival calibration logs from operating processors and on a standard
-anomaly-detection benchmark~\citep{lavin2015nab}, and a head-to-head comparison
-against the classical change-point detectors catalogued in~\citep{truong2020cpd}
-and the cumulative-sum chart~\citep{page1954cusum}, is the priority follow-up. The
+anomaly-detection benchmark~\citep{lavin2015nab} is the priority follow-up. The
 kernel as presented is linear in its feature map, so composing it with an outer
 nonlinearity, and pairing the forecaster with an explicit recalibration policy under
 a cost model and uncertainty-aware predictions~\citep{gal2016dropout}, are concrete
 extensions toward a deployed monitor. Because the entire pipeline is open,
 hardware-agnostic, and fast to reproduce, it is positioned to serve as a common,
 auditable substrate for that work.
-
-\paragraph{Outlook: monitoring as probabilistic surrogate modeling.}
-Read broadly, the CST kernel is a step toward treating hardware monitoring as
-statistical, uncertainty-aware modeling of an expensive stochastic system. The
-present detector is unsupervised and training-free, but its reconstruction score
-is a likelihood-ratio surrogate in disguise, and its natural successor is an
-explicit probabilistic surrogate --- a Bayesian emulator of the calibration
-process that returns not a point score but a calibrated posterior over drift
-state, propagating the sampling noise inherent in every telemetry entry through to
-a recalibration decision. Such a surrogate would let the monitor integrate
-mechanistic knowledge of the noise channels it watches (the two-level-system and
-$1/f$ physics that shapes the drift) as a prior rather than relearning it,
-support active experimental design that spends characterization circuits only
-where the posterior is uncertain, and keep the interpretability that makes the
-noncommutative order a physically meaningful, auditable quantity rather than a
-tuned knob. The representation--complexity certificate we prove here is, in that
-light, a first instance of a broader principle: when the object being monitored is
-statistical to its core, the right amount of model structure is itself something to
-be estimated and certified, not assumed.
 
 % ── Conclusions ──────────────────────────────────────────────────────────────
 \section{Conclusions}
@@ -1323,8 +787,8 @@ truncated algebra is the causal shift (ours) or the periodic Fourier multiplier
 \paragraph{Forecasting.}
 We compare persistence (carry the last \T\ forward), climatology (the training-mean
 horizon trajectory), an autoregressive ridge on the $32$-step \T\ history, and a
-multivariate ridge~\citep{hoerl1970ridge} on the flattened $32\times7$ window
-(ridge penalty $\alpha=5$; this is the commutative $n{=}1$ kernel member), under a leak-free per-qubit $80/20$
+multivariate ridge on the flattened $32\times7$ window (ridge penalty $\alpha=5$;
+this is the commutative $n{=}1$ kernel member), under a leak-free per-qubit $80/20$
 chronological split, scoring MAE per horizon step over five generator seeds with
 skill $1-\mathrm{MAE}/\mathrm{MAE}_{\text{persistence}}$. The CST forecaster augments
 the window with the order-$n$ causal features before the ridge solve; its eight-step
@@ -1333,8 +797,7 @@ chronological split guarantees that no future sample informs a past prediction.
 
 \paragraph{Detection.}
 The unsupervised detector standardizes the kernel feature map on nominal training
-windows, fits a rank-$k$ principal subspace by principal component
-analysis~\citep{pearson1901pca}, and scores each test window by its mean
+windows, fits a rank-$k$ principal subspace, and scores each test window by its mean
 squared reconstruction residual outside that subspace. Detection quality is ROC-AUC
 against the drift labels over eight randomized $70/30$ splits; because the detector
 is fit on nominal windows only, randomization cannot leak a label it never uses. The
@@ -1372,12 +835,24 @@ epoch are pinned and the vector PDF output is fixed across runs, so every number
 the manuscript is a reproducible function of integer seeds.
 
 % ── Availability ─────────────────────────────────────────────────────────────
+\section*{Data availability}
+The synthetic multi-qubit telemetry and the correlated-decoherence benchmark used in
+this study are generated deterministically by the released code from fixed integer
+seeds and require no external download. The exact metric values underlying every
+figure and table are reported in the manuscript and are reproducible from the
+released code.
+
 \section*{Code availability}
 The telemetry generator, the causal spectral-truncation kernel, the detection and
 forecasting modules, and the figure-and-table pipeline are openly available in the
 project repository under an MIT license as the installable \texttt{qdriftforecast}
 package. All figures, tables, and reported uncertainties regenerate from the released
 code on commodity CPU hardware in seconds.
+
+\begin{acknowledgments}
+The author thanks the open-source scientific-Python community. The author declares
+no competing interests.
+\end{acknowledgments}
 
 % ── Appendices ───────────────────────────────────────────────────────────────
 \appendix
@@ -1389,7 +864,7 @@ code on commodity CPU hardware in seconds.
   \small
   \caption{\textbf{Detection ROC-AUC versus truncation order.} Mean~$\pm$~s.d.\
   over the $n=8$ randomized splits; best ROC-AUC over
-  bottleneck ranks $k\in\{1,\dots,16\}$ per order. Detection is at chance at the
+  bottleneck ranks $k\in\{1,\dots,16\}$ per order). Detection is at chance at the
   commutative order $n{=}1$, peaks sharply at $n{=}2$ (in \textbf{bold}), and decays
   monotonically toward chance as the representation becomes over-complete --- the
   certified mechanism of Theorem~\ref{thm:optn} and the source data for
@@ -1403,7 +878,7 @@ code on commodity CPU hardware in seconds.
   \small
   \caption{\textbf{Per-horizon forecasting error.} Mean absolute error in
   \si{\micro\second}, mean~$\pm$~s.d.\ over the $n=5$
-  telemetry-generator seeds. Each row is one step of the eight-step \T\ horizon, and
+  telemetry-generator seeds). Each row is one step of the eight-step \T\ horizon, and
   the best (lowest) value per row is in \textbf{bold}. The learned ridge forecasters
   stay nearly flat across the horizon while persistence degrades monotonically and
   climatology is uniformly poor --- the per-step view underlying
@@ -1424,6 +899,7 @@ code on commodity CPU hardware in seconds.
   \bottomrule
 \end{tabular}
 \end{table*}
+
 
 % ── Supplementary derivations (Appendix) ─────────────────────────────────────
 \section{Supplementary derivations and reproduction details}
@@ -1493,7 +969,7 @@ unchanged, since a sum of independent white processes is white; and (iii) the
 $a^2\sigma_c\sigma_{c'}\mathbb{E}[u_{t-\delta_c}u_{t-\delta_{c'}}]=0$ for
 $\delta_c\neq\delta_{c'}$, matching nominal. The signal energy resides entirely in
 the lag-$\tau$ cross-covariance with $\tau=\delta_{c'}-\delta_c\ge1$. Two caveats
-bound the scope of this matching: per-window temporal centering over the finite $L=32$ window
+keep the account honest: per-window temporal centering over the finite $L=32$ window
 leaves a small $O(1/L)$ residual in the centered lag-$0$ cross-covariance of the
 drift class, so the matching is exact only in the stationary limit; and
 Theorem~\ref{thm:blind} is a statement about \emph{first-moment} discriminability,
@@ -1577,108 +1053,6 @@ CPU-reproducible, operator-algebraic foundation for quantum-processor reliabilit
 monitoring, together with a demonstration --- both empirical and certified --- that the
 geometry of the drift dictates the noncommutativity a monitor must have.
 
-% ── Deferred proofs for the change-point / forecasting theory ────────────────
-\section{Proofs for the sequential-detection theory}
-\label{app:sequential}
-
-This appendix collects the two longer proofs deferred from
-Sec.~\ref{sec:cptheory}: the Lorden-minimax optimality and delay bound of the
-CST--CUSUM detector (Theorem~\ref{thm:cusum}), and the mixing-robust forecast-risk
-bound (Theorem~\ref{thm:forecastrisk}). Both are self-contained given
-Lemmas~\ref{lem:wald} and~\ref{lem:bernstein}.
-
-\subsection{Proof of Theorem~\ref{thm:cusum} (CST--CUSUM minimax optimality)}
-\label{app:cusum}
-
-\begin{proof}
-The claim has two parts: an upper bound on the CST--CUSUM delay and a matching
-information lower bound over all admissible tests, both at threshold $h=\log\gamma$.
-
-\emph{False-alarm floor.} By Lemma~\ref{lem:wald}, the exponential-martingale
-change-of-measure gives $\mathrm{ARL}_0(T_{\mathrm c}(h))\ge e^{h}=\gamma$, so
-$T_{\mathrm c}(\log\gamma)$ is admissible for the constraint
-$\mathrm{ARL}_0\ge\gamma$.
-
-\emph{Delay upper bound.} Because the CUSUM resets at $0$ and the worst change time
-places the alarm just after the last reset, Lorden's reduction bounds the worst-case
-delay \eqref{eq:add} by the mean first passage of the post-change random walk above
-$h$ started at $0$: $\mathrm{ADD}(T_{\mathrm c}(h))\le \mathbb{E}_{P_1}[T_h]$ with
-$T_h=\inf\{t:\sum_{s\le t}\ell_s\ge h\}$. Lemma~\ref{lem:wald} evaluates this by
-Wald's identity as $\mathbb{E}_{P_1}[T_h]=(h+\mathbb{E}_{P_1}[R_h])/I_1
-=h/I_1+O(1)=\log\gamma/I_1+O(1)$, since the overshoot $R_h$ has bounded mean for the
-Gaussian surrogate increments. Dividing by $\log\gamma$, the $O(1)$ term is
-$o(\log\gamma/I_1)$, giving the upper half of \eqref{eq:cusumbound}.
-
-\emph{Delay lower bound (Lorden).} Lorden's theorem states that for any stopping time
-$T$ with $\mathrm{ARL}_0(T)\ge\gamma$,
-$\mathrm{ADD}(T)\ge \big(\log\gamma\big)/I_1\,(1+o(1))$ as $\gamma\to\infty$,
-whenever the per-window KL information $I_1$ is finite and positive. We reproduce the
-argument. Fix the change point at $\nu=1$ and let $T$ be admissible. A change of
-measure from $P_0^{\otimes}$ to $P_1^{\otimes}$ on the event $\{T\le t\}$ costs the
-likelihood ratio $e^{S_t}$, $S_t=\sum_{s\le t}\ell_s$; by Wald's likelihood-ratio
-identity and Jensen,
-\[
-  \mathbb{E}_1[S_{T\wedge t}]\ \le\ \log\frac{1}{\Pr_\infty[T\le t]}\,(1+o(1))
-  \ \le\ \log\gamma\,(1+o(1)),
-\]
-where the last step uses $\Pr_\infty[T\le t]\le t/\mathrm{ARL}_0\le t/\gamma$ over the
-relevant horizon $t=O(\mathrm{ADD})$ and Markov's inequality on $T$. On the other
-hand $\mathbb{E}_1[S_{T}]=I_1\,\mathbb{E}_1[T]$ by Wald's identity again, so
-$I_1\,\mathbb{E}_1[T]\ge \log\gamma\,(1+o(1))$, i.e.\
-$\mathbb{E}_1[T]\ge\log\gamma/I_1\,(1+o(1))$. Taking the supremum over change times
-(which only increases the delay) gives
-$\mathrm{ADD}(T)\ge \log\gamma/I_1\,(1+o(1))$, the lower half of
-\eqref{eq:cusumbound}.
-
-\emph{Conclusion.} The upper and lower bounds coincide to first order at
-$h=\log\gamma$, so $T_{\mathrm c}(\log\gamma)$ attains the minimax delay and
-$\mathrm{ADD}^\star(\gamma)\sim\log\gamma/I_1$. This is exactly the delay--false-alarm
-tradeoff \eqref{eq:cusumbound}, with the CST feature map entering only through $I_1$,
-which Theorem~\ref{thm:fisher} lower-bounds by the noncommutativity $\kappa$.
-\end{proof}
-
-\subsection{Proof of Theorem~\ref{thm:forecastrisk} (excess risk under mixing)}
-\label{app:forecast}
-
-\begin{proof}
-Write the ridge objective $R_\alpha(\beta)=R(\beta)+\alpha\lVert\beta\rVert^2$ and its
-empirical version $\widehat R_\alpha(\beta)=\widehat R(\beta)+\alpha\lVert\beta
-\rVert^2$ with $\widehat R(\beta)=\tfrac1m\sum_{i}(y_i-\beta^\top\phi_i)^2$. Let
-$\hat\beta=\arg\min\widehat R_\alpha$ and $\beta^\star=\arg\min R$. We control the
-excess risk by a uniform deviation of $\widehat R$ from $R$ plus the ridge bias. For
-any $\beta$ in the ridge-feasible ball $\mathcal B=\{\lVert\beta\rVert\le
-\lVert\beta^\star\rVert\}$ (the ridge solution lies in $\mathcal B$ because
-$\widehat R_\alpha(\hat\beta)\le\widehat R_\alpha(0)=\widehat R(0)$ bounds
-$\alpha\lVert\hat\beta\rVert^2\le\widehat R(0)$ and, by the same inequality in
-population after the deviation step, keeps $\lVert\hat\beta\rVert$ within a constant
-factor of $\lVert\beta^\star\rVert$; we absorb that constant into $c$), the loss
-$Z_t(\beta)=(y_t-\beta^\top\phi_t)^2$ is bounded by
-$B:=(B_y+B_\phi\lVert\beta^\star\rVert)^2$. Apply Lemma~\ref{lem:bernstein} to the
-centred process
-$Z_t(\beta)-\mathbb{E}Z_t(\beta)$ at each $\beta$ and take a union bound over a
-$1/m$-net of $\mathcal B$ (metric entropy $O(d\log m)$, $d=nC^2$): with probability
-$\ge 1-\delta$,
-\[
-  \sup_{\beta\in\mathcal B}\big|\widehat R(\beta)-R(\beta)\big|
-  \ \le\ c\,B\,\sqrt{\frac{\log(1/\delta)+d\log m}{m_{\mathrm{eff}}}},
-  \qquad
-  m_{\mathrm{eff}}=\frac{m}{1+2\sum_{k\ge1}\beta_{\mathrm{mix}}(k)}.
-\]
-Under geometric mixing $\sum_{k\ge1}\beta_{\mathrm{mix}}(k)\le \bar\beta
-\sum_{k\ge1}e^{-c_\beta k}=\bar\beta/(e^{c_\beta}-1)<\infty$, so
-$m_{\mathrm{eff}}=\Theta(m(1-e^{-c_\beta}))$ as claimed. Combining the uniform
-deviation with the standard ridge inequality
-$R(\hat\beta)-R(\beta^\star)\le \alpha\lVert\beta^\star\rVert^2
-+2\sup_{\beta\in\mathcal B}|\widehat R(\beta)-R(\beta)|$
-(the factor $2$ from evaluating the deviation at both $\hat\beta$ and $\beta^\star$)
-gives \eqref{eq:forecastrisk} after absorbing the $\sqrt{d\log m}$ metric-entropy
-factor into the constant $c$ and the leading $\log(1/\delta)$ dependence; the feature
-dimension $d=nC^2$ enters only inside the logarithm, so the $O(m_{\mathrm{eff}}^{-1/2})$
-rate is unchanged by the truncation order $n$. This is the analytic counterpart of the
-empirical flatness of forecast skill in $n$ (Fig.~\ref{fig:forecast}c): the
-noncommutative coordinates enlarge $d$ only logarithmically and never the rate.
-\end{proof}
-
 % ── References ───────────────────────────────────────────────────────────────
 % Bibliography inlined so this file is self-contained (no external .bib needed).
 \begin{thebibliography}{20}
@@ -1743,7 +1117,7 @@ Easwar Magesan, Jay~M. Gambetta, and Joseph Emerson.
 \newblock \doi{10.1103/PhysRevLett.106.180504}.
 
 \bibitem[Hashimoto et~al.(2024)]{hashimoto2024spectral}
-Yuka Hashimoto, Ayoub Hafid, Masahiro Ikeda, and Hachem Kadri.
+Yuka Hashimoto, Ayoub Ghriss, Masahiro Ikeda, and Hachem Kadri.
 \newblock Spectral truncation kernels: noncommutativity in
   {C}$^\ast$-algebraic kernel machines.
 \newblock In \emph{Advances in Neural Information Processing Systems (NeurIPS)},
@@ -1833,89 +1207,101 @@ Molena Huynh.
 \newblock \emph{arXiv preprint arXiv:2604.24803}, 2026.
 \newblock \doi{10.48550/arXiv.2604.24803}.
 
-\bibitem[Huynh(2026{\natexlab{f}})]{huynh2026gctrcalpro}
+\bibitem[Huynh(2026{\natexlab{f}})]{huynh2026gctrcal}
 Molena Huynh.
 \newblock Graph-conditioned trust regions for uncertainty-calibrated quantum
   approximate optimization.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
+
+\bibitem[Huynh(2026{\natexlab{g}})]{huynh2026gctrcalpro}
+Molena Huynh.
+\newblock Graph-conditioned trust regions for uncertainty-calibrated quantum
+  approximate optimization (extended).
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{h}})]{huynh2026meascost}
 Molena Huynh.
 \newblock The measurement cost of warm-started low-depth QAOA.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{i}})]{huynh2026certqb}
 Molena Huynh.
 \newblock Certified query budgets for the quantum approximate optimization
   algorithm.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
+
+\bibitem[Huynh(2026{\natexlab{j}})]{huynh2026paramxfer}
+Molena Huynh.
+\newblock Topology-Conditioned QAOA Parameter Transfer for Budgeted Graph
+  Optimization.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{k}})]{huynh2026paramxferB}
 Molena Huynh.
 \newblock Topology-Conditioned QAOA Parameter Transfer for Budgeted Graph
-  Optimization.
-\newblock \emph{Manuscript in preparation}, 2026.
+  Optimization (companion).
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{l}})]{huynh2026ostqaoa}
 Molena Huynh.
 \newblock Operator-Spectral Truncated Priors for Query-Efficient QAOA
   Parameter Search.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{m}})]{huynh2026gnndec}
 Molena Huynh.
 \newblock Learning to decode correlated quantum errors: a topological graph
   neural decoder that surpasses minimum-weight matching under structured
   circuit-level noise.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{n}})]{huynh2026topoqec}
 Molena Huynh.
 \newblock Transfer-Operator Decoding of Structured Noise in Quantum Error
   Correction.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{o}})]{huynh2026covdec}
 Molena Huynh.
 \newblock Covariance-aware hybrid decoding of surface codes under spatially and
   temporally correlated noise.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{p}})]{huynh2026fiber}
 Molena Huynh.
 \newblock Syndrome fiber bundle: Gauge-equivariant neural decoding with
   calibrated uncertainty for correlated quantum noise.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{q}})]{huynh2026dsto}
 Molena Huynh.
 \newblock Directed spectral-truncated operators for inductive classification of
   quantum phases across a control-parameter sweep.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{b}})]{huynh2026topoqaoa}
 Molena Huynh.
 \newblock Spectral-truncation graph kernels for {QAOA} warm starts:
   topology-conditioned schedule transfer beyond depth one.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{c}})]{huynh2026topoham}
 Molena Huynh.
 \newblock Zero-Overhead Cancellation of the Leading Trotter Error via
   Commutator-Graph Scheduling.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{d}})]{huynh2026lie}
 Molena Huynh.
 \newblock Advancing the product-formula error--cost frontier with a
   Lie-algebraic spectral truncation of the residual.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Huynh(2026{\natexlab{e}})]{huynh2026cptppinn}
 Molena Huynh.
 \newblock Structure-preserving physics-informed learning of open quantum
   dynamics with spectral-frame encodings and operator-system truncation.
-\newblock \emph{Manuscript in preparation}, 2026.
+\newblock \emph{arXiv preprint arXiv:2026.XXXXX}, 2026.
 
 \bibitem[Nguyen and Jing(2025)]{nguyen2025zassenhaus}
 M.~Nguyen and Naihuan Jing.
@@ -1929,217 +1315,6 @@ Naihuan Jing and M.~Nguyen.
   representations.
 \newblock \emph{arXiv preprint arXiv:2603.07231}, 2026.
 \newblock \doi{10.48550/arXiv.2603.07231}.
-
-\bibitem[Klimov et~al.(2018)]{klimov2018fluctuations}
-P.~V. Klimov, J.~Kelly, Z.~Chen, M.~Neeley, A.~Megrant, B.~Burkett, R.~Barends,
-  K.~Arya, B.~Chiaro, Yu~Chen, et~al.
-\newblock Fluctuations of energy-relaxation times in superconducting qubits.
-\newblock \emph{Physical Review Letters}, 121\penalty0 (9):\penalty0 090502,
-  2018.
-\newblock \doi{10.1103/PhysRevLett.121.090502}.
-
-\bibitem[Burnett et~al.(2019)]{burnett2019decoherence}
-Jonathan~J. Burnett, Andreas Bengtsson, Marco Scigliuzzo, David Niepce, Marina
-  Kudra, Per Delsing, and Jonas Bylander.
-\newblock Decoherence benchmarking of superconducting qubits.
-\newblock \emph{npj Quantum Information}, 5\penalty0 (1):\penalty0 54, 2019.
-\newblock \doi{10.1038/s41534-019-0168-5}.
-
-\bibitem[M{\"u}ller et~al.(2019)]{muller2019tls}
-Clemens M{\"u}ller, Jared~H. Cole, and J{\"u}rgen Lisenfeld.
-\newblock Towards understanding two-level-systems in amorphous solids: insights
-  from quantum circuits.
-\newblock \emph{Reports on Progress in Physics}, 82\penalty0 (12):\penalty0
-  124501, 2019.
-\newblock \doi{10.1088/1361-6633/ab3a7e}.
-
-\bibitem[Wilen et~al.(2021)]{wilen2021correlated}
-C.~D. Wilen, S.~Abdullah, N.~A. Kurinsky, C.~Stanford, L.~Cardani, G.~D'Imperio,
-  C.~Tomei, L.~Faoro, L.~B. Ioffe, C.~H. Liu, et~al.
-\newblock Correlated charge noise and relaxation errors in superconducting
-  qubits.
-\newblock \emph{Nature}, 594\penalty0 (7863):\penalty0 369--373, 2021.
-\newblock \doi{10.1038/s41586-021-03557-5}.
-
-\bibitem[McEwen et~al.(2022)]{mcewen2022cosmic}
-Matt McEwen, Lara Faoro, Kunal Arya, Andrew Dunsworth, Trent Huang, Seon Kim,
-  Brian Burkett, Austin Fowler, Frank Arute, Joseph~C. Bardin, et~al.
-\newblock Resolving catastrophic error bursts from cosmic rays in large arrays
-  of superconducting qubits.
-\newblock \emph{Nature Physics}, 18\penalty0 (1):\penalty0 107--111, 2022.
-\newblock \doi{10.1038/s41567-021-01432-8}.
-
-\bibitem[{Google Quantum AI}(2021)]{google2021leakage}
-{Google Quantum AI}.
-\newblock Removing leakage-induced correlated errors in superconducting quantum
-  error correction.
-\newblock \emph{Nature Communications}, 12\penalty0 (1):\penalty0 1761, 2021.
-\newblock \doi{10.1038/s41467-021-21982-y}.
-
-\bibitem[Bylander et~al.(2011)]{bylander2011noise}
-Jonas Bylander, Simon Gustavsson, Fei Yan, Fumiki Yoshihara, Khalil Harrabi,
-  George Fitch, David~G. Cory, Yasunobu Nakamura, Jaw-Shen Tsai, and William~D.
-  Oliver.
-\newblock Noise spectroscopy through dynamical decoupling with a superconducting
-  flux qubit.
-\newblock \emph{Nature Physics}, 7\penalty0 (7):\penalty0 565--570, 2011.
-\newblock \doi{10.1038/nphys1994}.
-
-\bibitem[Proctor et~al.(2022)]{proctor2022capabilities}
-Timothy Proctor, Kenneth Rudinger, Kevin Young, Erik Nielsen, and Robin
-  Blume-Kohout.
-\newblock Measuring the capabilities of quantum computers.
-\newblock \emph{Nature Physics}, 18\penalty0 (1):\penalty0 75--79, 2022.
-\newblock \doi{10.1038/s41567-021-01409-7}.
-
-\bibitem[Gambetta et~al.(2012)]{gambetta2012addressability}
-Jay~M. Gambetta, A.~D. C{\'o}rcoles, S.~T. Merkel, B.~R. Johnson, John~A.
-  Smolin, Jerry~M. Chow, Colm~A. Ryan, Chad Rigetti, S.~Poletto, Thomas~A.
-  Ohki, Mark~B. Ketchen, and M.~Steffen.
-\newblock Characterization of addressability by simultaneous randomized
-  benchmarking.
-\newblock \emph{Physical Review Letters}, 109\penalty0 (24):\penalty0 240504,
-  2012.
-\newblock \doi{10.1103/PhysRevLett.109.240504}.
-
-\bibitem[Nielsen et~al.(2021)]{nielsen2021gst}
-Erik Nielsen, John~King Gamble, Kenneth Rudinger, Travis Scholten, Kevin Young,
-  and Robin Blume-Kohout.
-\newblock Gate set tomography.
-\newblock \emph{Quantum}, 5:\penalty0 557, 2021.
-\newblock \doi{10.22331/q-2021-10-05-557}.
-
-\bibitem[Rudinger et~al.(2021)]{rudinger2021crosstalk}
-Kenneth Rudinger, Craig~W. Hogle, Ravi~K. Naik, Akel Hashim, Daniel Lobser,
-  David~I. Santiago, Matthew~D. Grace, Erik Nielsen, Timothy Proctor, Stefan
-  Seritan, Susan~M. Clark, Robin Blume-Kohout, Irfan Siddiqi, and Kevin~C.
-  Young.
-\newblock Experimental characterization of crosstalk errors with simultaneous
-  gate set tomography.
-\newblock \emph{PRX Quantum}, 2\penalty0 (4):\penalty0 040338, 2021.
-\newblock \doi{10.1103/PRXQuantum.2.040338}.
-
-\bibitem[Krinner et~al.(2022)]{krinner2022d3}
-Sebastian Krinner, Nathan Lacroix, Ants Remm, Agustin Di~Paolo, Elie Genois,
-  Catherine Leroux, Christoph Hellings, Stefania Lazar, Fran{\c c}ois Swiadek,
-  Johannes Herrmann, et~al.
-\newblock Realizing repeated quantum error correction in a distance-three
-  surface code.
-\newblock \emph{Nature}, 605\penalty0 (7911):\penalty0 669--674, 2022.
-\newblock \doi{10.1038/s41586-022-04566-8}.
-
-\bibitem[{Google Quantum AI}(2025)]{acharya2025below}
-{Google Quantum AI and Collaborators}.
-\newblock Quantum error correction below the surface code threshold.
-\newblock \emph{Nature}, 638\penalty0 (8052):\penalty0 920--926, 2025.
-\newblock \doi{10.1038/s41586-024-08449-y}.
-
-\bibitem[Aronszajn(1950)]{aronszajn1950rkhs}
-Nachman Aronszajn.
-\newblock Theory of reproducing kernels.
-\newblock \emph{Transactions of the American Mathematical Society}, 68\penalty0
-  (3):\penalty0 337--404, 1950.
-\newblock \doi{10.1090/S0002-9947-1950-0051437-7}.
-
-\bibitem[{\'A}lvarez et~al.(2012)]{alvarez2012vvk}
-Mauricio~A. {\'A}lvarez, Lorenzo Rosasco, and Neil~D. Lawrence.
-\newblock Kernels for vector-valued functions: a review.
-\newblock \emph{Foundations and Trends in Machine Learning}, 4\penalty0
-  (3):\penalty0 195--266, 2012.
-\newblock \doi{10.1561/2200000036}.
-
-\bibitem[Hashimoto et~al.(2021)]{hashimoto2021rkhm}
-Yuka Hashimoto, Isao Ishikawa, Masahiro Ikeda, Fuyuta Komura, Takeshi Katsura,
-  and Yoshinobu Kawahara.
-\newblock Reproducing kernel {Hilbert} {C}$^\ast$-module and kernel mean
-  embeddings.
-\newblock \emph{Journal of Machine Learning Research}, 22\penalty0
-  (267):\penalty0 1--56, 2021.
-
-\bibitem[Gretton et~al.(2012)]{gretton2012mmd}
-Arthur Gretton, Karsten~M. Borgwardt, Malte~J. Rasch, Bernhard Sch{\"o}lkopf,
-  and Alexander Smola.
-\newblock A kernel two-sample test.
-\newblock \emph{Journal of Machine Learning Research}, 13:\penalty0 723--773,
-  2012.
-
-\bibitem[Cuturi et~al.(2007)]{cuturi2007ga}
-Marco Cuturi, Jean-Philippe Vert, {\O}ystein Birkenes, and Tomoko Matsui.
-\newblock A kernel for time series based on global alignments.
-\newblock In \emph{IEEE Int. Conf. on Acoustics, Speech and Signal Processing
-  (ICASSP)}, pages II--413--II--416, 2007.
-\newblock \doi{10.1109/ICASSP.2007.366260}.
-
-\bibitem[Sch{\"o}lkopf et~al.(2001)]{scholkopf2001ocsvm}
-Bernhard Sch{\"o}lkopf, John~C. Platt, John Shawe-Taylor, Alex~J. Smola, and
-  Robert~C. Williamson.
-\newblock Estimating the support of a high-dimensional distribution.
-\newblock \emph{Neural Computation}, 13\penalty0 (7):\penalty0 1443--1471,
-  2001.
-\newblock \doi{10.1162/089976601750264965}.
-
-\bibitem[Breunig et~al.(2000)]{breunig2000lof}
-Markus~M. Breunig, Hans-Peter Kriegel, Raymond~T. Ng, and J{\"o}rg Sander.
-\newblock {LOF}: identifying density-based local outliers.
-\newblock \emph{ACM SIGMOD Record}, 29\penalty0 (2):\penalty0 93--104, 2000.
-\newblock \doi{10.1145/335191.335388}.
-
-\bibitem[Liu et~al.(2008)]{liu2008iforest}
-Fei~Tony Liu, Kai~Ming Ting, and Zhi-Hua Zhou.
-\newblock Isolation forest.
-\newblock In \emph{IEEE Int. Conf. on Data Mining (ICDM)}, pages 413--422,
-  2008.
-\newblock \doi{10.1109/ICDM.2008.17}.
-
-\bibitem[Truong et~al.(2020)]{truong2020cpd}
-Charles Truong, Laurent Oudre, and Nicolas Vayatis.
-\newblock Selective review of offline change point detection methods.
-\newblock \emph{Signal Processing}, 167:\penalty0 107299, 2020.
-\newblock \doi{10.1016/j.sigpro.2019.107299}.
-
-\bibitem[Page(1954)]{page1954cusum}
-E.~S. Page.
-\newblock Continuous inspection schemes.
-\newblock \emph{Biometrika}, 41\penalty0 (1--2):\penalty0 100--115, 1954.
-\newblock \doi{10.1093/biomet/41.1-2.100}.
-
-\bibitem[Lorden(1971)]{lorden1971procedures}
-Gary Lorden.
-\newblock Procedures for reacting to a change in distribution.
-\newblock \emph{Annals of Mathematical Statistics}, 42\penalty0 (6):\penalty0
-  1897--1908, 1971.
-\newblock \doi{10.1214/aoms/1177693055}.
-
-\bibitem[Rio(2017)]{rio2017asymptotic}
-Emmanuel Rio.
-\newblock \emph{Asymptotic Theory of Weakly Dependent Random Variables}.
-\newblock Springer, Berlin, 2017.
-\newblock \doi{10.1007/978-3-662-54323-8}.
-
-\bibitem[Vovk et~al.(2005)]{vovk2005algorithmic}
-Vladimir Vovk, Alexander Gammerman, and Glenn Shafer.
-\newblock \emph{Algorithmic Learning in a Random World}.
-\newblock Springer, New York, 2005.
-\newblock \doi{10.1007/b106715}.
-
-\bibitem[Pang et~al.(2021)]{pang2021deepad}
-Guansong Pang, Chunhua Shen, Longbing Cao, and Anton van~den Hengel.
-\newblock Deep learning for anomaly detection: a review.
-\newblock \emph{ACM Computing Surveys}, 54\penalty0 (2):\penalty0 1--38, 2021.
-\newblock \doi{10.1145/3439950}.
-
-\bibitem[Hoerl and Kennard(1970)]{hoerl1970ridge}
-Arthur~E. Hoerl and Robert~W. Kennard.
-\newblock Ridge regression: biased estimation for nonorthogonal problems.
-\newblock \emph{Technometrics}, 12\penalty0 (1):\penalty0 55--67, 1970.
-\newblock \doi{10.1080/00401706.1970.10488634}.
-
-\bibitem[Pearson(1901)]{pearson1901pca}
-Karl Pearson.
-\newblock On lines and planes of closest fit to systems of points in space.
-\newblock \emph{Philosophical Magazine}, 2\penalty0 (11):\penalty0 559--572,
-  1901.
-\newblock \doi{10.1080/14786440109462720}.
 
 \end{thebibliography}
 
