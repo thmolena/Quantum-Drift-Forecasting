@@ -214,8 +214,8 @@
 <main class="wrap">
 
 <div style="margin:26px 0 6px;padding:18px 20px;border:1px solid rgba(127,140,170,.32);border-left:4px solid var(--accent,#1f6feb);border-radius:8px;background:rgba(127,140,170,.06);">
-  <strong style="display:block;font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent,#1f6feb);margin-bottom:7px;">AI for quantum, at HPC scale</strong>
-  <p style="margin:0;font-size:1.02rem;line-height:1.6;">Reliability monitoring is recast as <em>operator-algebraic machine learning</em> on calibration telemetry: a C*-algebra-valued kernel whose truncation order tunes the noncommutativity it can represent, exposing the ordered, lagged cross-channel structure of correlated drift that every commutative monitor misses (<strong>ROC-AUC 0.84 vs 0.46</strong> at chance). It is positive-definite at every order and reduces to standard low-rank detection and ridge forecasting at order one, so it strictly generalizes established monitors; its kernel evaluations are GPU-batchable for fleet-scale telemetry, and the pipeline is byte-deterministic.</p>
+  <strong style="display:block;font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent,#1f6feb);margin-bottom:7px;">Summary for the non-specialist</strong>
+  <p style="margin:0;font-size:1.02rem;line-height:1.6;">A quantum processor is a stochastic device whose reliability can only be inferred from the noisy calibration record it already logs; deciding that it has drifted is therefore a statistical inference problem. This work recasts reliability monitoring as <em>operator-algebraic learning</em> on that calibration telemetry. A window of telemetry is mapped into a C*-algebra of channel matrices through a kernel whose truncation order tunes the noncommutativity it can represent, exposing the ordered, lagged cross-channel structure of correlated drift that every commutative monitor misses (<strong>ROC-AUC 0.84 versus 0.46</strong>, chance being 0.50). The kernel is positive-definite at every order and reduces to standard low-rank detection and ridge forecasting at order one, so it strictly generalizes established monitors; it is training-free at inference and reproduces byte-for-byte on a single CPU in seconds.</p>
 </div>
 
   <!-- BACKGROUND -->
@@ -665,22 +665,44 @@
       figure, table and confidence interval on this page regenerates deterministically from fixed seeds on commodity
       CPU hardware in seconds, with no optimiser randomness to reproduce.
     </p>
-    <pre><code>pip install qdriftforecast         # installs the package (numpy, scipy, scikit-learn, ...)
+    <pre><code>pip install specops-cst             # distribution name; importable package is qdriftforecast
 
-qdrift-reproduce                   # regenerates figures, tables and confidence intervals
+cst-reproduce                       # regenerates figures, tables and confidence intervals
 </code></pre>
     <p class="footnote">
       Equivalently, from a checkout, <code>pip install submission/code</code> then
-      <code>python -m qdriftforecast.reproduce</code>. The Methods document the deterministic seeding, the
+      <code>cst-reproduce</code> (alias <code>qdrift-reproduce</code>, or
+      <code>python -m qdriftforecast.reproduce</code>). The Methods document the deterministic seeding, the
       correlated-decoherence construction (shared white latent, channel delays $(0,1,2,3)$, variance-preserving
       mixing) and the kernel definition (causal lower shift, weights $w_\tau=1/(L-\tau)$, ridge penalty
       $\alpha=5$). The synthetic telemetry requires no external download.
     </p>
   </section>
 
+  <!-- CITE -->
+  <section id="cite">
+    <h2><span class="num">11</span>Cite This Work</h2>
+    <p>
+      If this kernel, its theory, or the reproduction package informs subsequent work, please cite the manuscript.
+      Software metadata is additionally provided in <code>submission/code/CITATION.cff</code>.
+    </p>
+    <pre><code>@article{huynh2026cst,
+  author  = {Huynh, Molena},
+  title   = {Causal Spectral-Truncation Kernels: Noncommutativity
+             Certifies Drift Detectability in Quantum Hardware},
+  year    = {2026},
+  note    = {Part of the spectral-truncation operators (SpecOps) program},
+}</code></pre>
+    <p class="footnote">
+      Distribution name <code>specops-cst</code> (version 2.0.0); importable package <code>qdriftforecast</code>.
+      Manuscript PDF:
+      <a href="https://thmolena.github.io/Quantum-Drift-Forecasting/submission/main.pdf">https://thmolena.github.io/Quantum-Drift-Forecasting/submission/main.pdf</a>.
+    </p>
+  </section>
+
   <!-- REFERENCES -->
   <section id="references">
-    <h2><span class="num">11</span>References</h2>
+    <h2><span class="num">12</span>References</h2>
     <p class="lede">Related work, and the manuscript's full bibliography.</p>
 
     <h3>Related work</h3>
